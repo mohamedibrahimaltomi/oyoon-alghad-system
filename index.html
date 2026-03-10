@@ -237,7 +237,7 @@
     }
 
     .placeholder-chart{
-      height:280px;
+      min-height:280px;
       border-radius:16px;
       background:linear-gradient(180deg,#eef6ff,#ffffff);
       border:1px dashed #bfd5eb;
@@ -246,6 +246,8 @@
       justify-content:center;
       color:var(--muted);
       font-size:15px;
+      padding:20px;
+      text-align:center;
     }
 
     .table-wrap{
@@ -309,6 +311,7 @@
     .b-red{background:#fef2f2;color:#b91c1c}
     .b-orange{background:#fff7ed;color:#c2410c}
     .b-blue{background:#eff6ff;color:#1d4ed8}
+    .b-gray{background:#f3f4f6;color:#374151}
 
     .alerts{
       display:flex;
@@ -324,45 +327,6 @@
       font-size:14px;
     }
 
-    .calendar{
-      display:grid;
-      grid-template-columns:repeat(7,1fr);
-      gap:8px;
-    }
-
-    .day{
-      background:#fff;
-      border:1px solid var(--border);
-      border-radius:12px;
-      min-height:88px;
-      padding:10px;
-      font-size:13px;
-    }
-
-    .day strong{
-      display:block;
-      margin-bottom:8px;
-    }
-
-    .legend{
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-      margin-top:12px;
-    }
-
-    .legend span{
-      display:flex;
-      align-items:center;
-      gap:6px;
-      font-size:13px;
-    }
-
-    .dot{
-      width:12px;height:12px;border-radius:50%;
-      display:inline-block;
-    }
-
     .login-note{
       background:#fff;
       border:1px solid var(--border);
@@ -370,6 +334,12 @@
       padding:18px;
       margin-top:14px;
       line-height:2;
+    }
+
+    .empty{
+      padding:18px;
+      text-align:center;
+      color:var(--muted);
     }
 
     @media (max-width: 1100px){
@@ -439,11 +409,6 @@
           <span>الرواتب</span>
         </button>
 
-        <button onclick="showSection('calendar', this)">
-          <span class="icon i-pink">📅</span>
-          <span>التقويم</span>
-        </button>
-
         <button onclick="showSection('reports', this)">
           <span class="icon i-blue">📑</span>
           <span>التقارير</span>
@@ -464,7 +429,6 @@
         </div>
 
         <div class="top-left">
-          <input class="search" placeholder="بحث سريع..." />
           <div class="pill" id="dateBox"></div>
           <div class="pill">المستخدم: مدير النظام</div>
           <button class="logout" onclick="logout()">تسجيل الخروج</button>
@@ -475,35 +439,32 @@
         <div class="cards">
           <div class="card">
             <div class="stat-title">عدد الموظفين</div>
-            <div class="stat-value">100</div>
+            <div class="stat-value" id="stat-total-employees">0</div>
           </div>
           <div class="card">
             <div class="stat-title">الحضور اليوم</div>
-            <div class="stat-value" style="color:var(--green)">82</div>
+            <div class="stat-value" id="stat-attendance-today" style="color:var(--green)">0</div>
           </div>
           <div class="card">
             <div class="stat-title">الغياب اليوم</div>
-            <div class="stat-value" style="color:var(--red)">6</div>
+            <div class="stat-value" id="stat-absent-today" style="color:var(--red)">0</div>
           </div>
           <div class="card">
             <div class="stat-title">المتأخرون اليوم</div>
-            <div class="stat-value" style="color:var(--orange)">12</div>
+            <div class="stat-value" id="stat-late-today" style="color:var(--orange)">0</div>
           </div>
         </div>
 
         <div class="grid-2">
           <div class="card">
-            <h3>إحصائيات الحضور</h3>
-            <div class="placeholder-chart">سيتم هنا لاحقًا الرسم البياني الحقيقي</div>
+            <h3>ملخص النظام</h3>
+            <div class="placeholder-chart" id="summaryBox">جارِ تحميل البيانات...</div>
           </div>
 
           <div class="card">
             <h3>تنبيهات النظام</h3>
-            <div class="alerts">
-              <div class="alert">⚠ الموظف رقم 15 لم يسجل بصمة اليوم</div>
-              <div class="alert">⚠ تأخير متكرر للموظف رقم 8</div>
-              <div class="alert">ℹ توجد سلفة جديدة بانتظار المراجعة</div>
-              <div class="alert">⚠ الشهر الحالي بانتظار مراجعة الشؤون الإدارية</div>
+            <div class="alerts" id="alertsBox">
+              <div class="alert">جارِ تحميل التنبيهات...</div>
             </div>
           </div>
         </div>
@@ -511,10 +472,8 @@
 
       <section id="employees" class="section">
         <div class="actions">
-          <button class="btn btn-primary">إضافة موظف</button>
-          <button class="btn btn-light">تعديل</button>
-          <button class="btn btn-light">حذف</button>
-          <button class="btn btn-green">تصدير Excel</button>
+          <button class="btn btn-primary" onclick="addEmployee()">إضافة موظف</button>
+          <button class="btn btn-green" onclick="loadEmployees()">تحديث</button>
         </div>
 
         <div class="table-wrap">
@@ -529,41 +488,15 @@
                 <th>الحالة</th>
               </tr>
             </thead>
-            <tbody>
-              <tr>
-                <td>1</td>
-                <td>أحمد سالم</td>
-                <td>الإدارة</td>
-                <td>مدير إدارة</td>
-                <td>2800 د.ل</td>
-                <td><span class="badge b-green">نشط</span></td>
-              </tr>
-              <tr>
-                <td>2</td>
-                <td>محمد علي</td>
-                <td>المبيعات</td>
-                <td>مشرف</td>
-                <td>2200 د.ل</td>
-                <td><span class="badge b-green">نشط</span></td>
-              </tr>
-              <tr>
-                <td>3</td>
-                <td>خالد مفتاح</td>
-                <td>المخازن</td>
-                <td>أمين مخزن</td>
-                <td>1800 د.ل</td>
-                <td><span class="badge b-orange">موقوف</span></td>
-              </tr>
-            </tbody>
+            <tbody id="employees-tbody"></tbody>
           </table>
         </div>
       </section>
 
       <section id="attendance" class="section">
         <div class="actions">
-          <button class="btn btn-primary">إضافة حضور</button>
-          <button class="btn btn-light">تعديل السجل</button>
-          <button class="btn btn-red">حذف السجل</button>
+          <button class="btn btn-primary" onclick="addAttendance()">إضافة حضور</button>
+          <button class="btn btn-light" onclick="loadAttendance()">تحديث</button>
         </div>
 
         <div class="table-wrap">
@@ -578,56 +511,21 @@
                 <th>التأخير</th>
               </tr>
             </thead>
-            <tbody>
-              <tr>
-                <td>2026-03-10</td>
-                <td>1</td>
-                <td>أحمد سالم</td>
-                <td><span class="badge b-green">حضور</span></td>
-                <td>08:02</td>
-                <td>0 دقيقة</td>
-              </tr>
-              <tr>
-                <td>2026-03-10</td>
-                <td>2</td>
-                <td>محمد علي</td>
-                <td><span class="badge b-orange">تأخير</span></td>
-                <td>08:25</td>
-                <td>25 دقيقة</td>
-              </tr>
-              <tr>
-                <td>2026-03-10</td>
-                <td>3</td>
-                <td>خالد مفتاح</td>
-                <td><span class="badge b-red">غياب</span></td>
-                <td>-</td>
-                <td>-</td>
-              </tr>
-            </tbody>
+            <tbody id="attendance-tbody"></tbody>
           </table>
         </div>
       </section>
 
       <section id="fingerprint" class="section">
-        <div class="actions">
-          <button class="btn btn-primary">استيراد ملف Excel</button>
-          <button class="btn btn-light">استيراد CSV</button>
-        </div>
-
         <div class="login-note">
-          <strong>نظام البصمة المعتمد:</strong><br>
-          - يدعم أكثر من شكل لملف البصمة<br>
-          - يعتمد أول دخول فقط<br>
-          - يملأ الأيام السابقة تلقائيًا<br>
-          - يقترح إضافة الموظف غير الموجود في النظام
+          هذه الصفحة ستكون لاحقًا خاصة باستيراد ملفات البصمة وربطها بالحضور.
         </div>
       </section>
 
       <section id="loans" class="section">
         <div class="actions">
-          <button class="btn btn-primary">إضافة سلفة أو دين</button>
-          <button class="btn btn-light">تعديل</button>
-          <button class="btn btn-red">حذف</button>
+          <button class="btn btn-primary" onclick="addLoan()">إضافة سلفة أو دين</button>
+          <button class="btn btn-light" onclick="loadLoans()">تحديث</button>
         </div>
 
         <div class="table-wrap">
@@ -643,36 +541,15 @@
                 <th>الحالة</th>
               </tr>
             </thead>
-            <tbody>
-              <tr>
-                <td>أحمد سالم</td>
-                <td>سلفة</td>
-                <td>1000 د.ل</td>
-                <td>5</td>
-                <td>200 د.ل</td>
-                <td>600 د.ل</td>
-                <td><span class="badge b-blue">جارية</span></td>
-              </tr>
-              <tr>
-                <td>محمد علي</td>
-                <td>مديونية</td>
-                <td>500 د.ل</td>
-                <td>5</td>
-                <td>100 د.ل</td>
-                <td>300 د.ل</td>
-                <td><span class="badge b-blue">جارية</span></td>
-              </tr>
-            </tbody>
+            <tbody id="loans-tbody"></tbody>
           </table>
         </div>
       </section>
 
       <section id="payroll" class="section">
         <div class="actions">
-          <button class="btn btn-primary">إنشاء رواتب الشهر</button>
-          <button class="btn btn-orange">مراجعة</button>
-          <button class="btn btn-green">اعتماد</button>
-          <button class="btn btn-light">طباعة PDF</button>
+          <button class="btn btn-primary" onclick="generateMonthlyPayroll()">إنشاء رواتب الشهر</button>
+          <button class="btn btn-light" onclick="loadPayroll()">تحديث</button>
         </div>
 
         <div class="table-wrap">
@@ -689,70 +566,14 @@
                 <th>الصافي</th>
               </tr>
             </thead>
-            <tbody>
-              <tr>
-                <td>1</td>
-                <td>أحمد سالم</td>
-                <td>26</td>
-                <td>24</td>
-                <td>2</td>
-                <td>2584 د.ل</td>
-                <td>200 د.ل</td>
-                <td>2384 د.ل</td>
-              </tr>
-              <tr>
-                <td>2</td>
-                <td>محمد علي</td>
-                <td>26</td>
-                <td>23</td>
-                <td>3</td>
-                <td>1946 د.ل</td>
-                <td>150 د.ل</td>
-                <td>1796 د.ل</td>
-              </tr>
-            </tbody>
+            <tbody id="payroll-tbody"></tbody>
           </table>
         </div>
       </section>
 
-      <section id="calendar" class="section">
-        <div class="card">
-          <h3>التقويم الشهري للحضور - مارس 2026</h3>
-          <div class="calendar">
-            <div class="day"><strong>1</strong><span class="badge b-green">حضور</span></div>
-            <div class="day"><strong>2</strong><span class="badge b-green">حضور</span></div>
-            <div class="day"><strong>3</strong><span class="badge b-orange">تأخير</span></div>
-            <div class="day"><strong>4</strong><span class="badge b-green">حضور</span></div>
-            <div class="day"><strong>5</strong><span class="badge b-red">غياب</span></div>
-            <div class="day"><strong>6</strong><span class="badge b-blue">إجازة</span></div>
-            <div class="day"><strong>7</strong><span class="badge b-green">حضور</span></div>
-          </div>
-
-          <div class="legend">
-            <span><i class="dot" style="background:#16a34a"></i> حضور</span>
-            <span><i class="dot" style="background:#dc2626"></i> غياب</span>
-            <span><i class="dot" style="background:#f59e0b"></i> تأخير</span>
-            <span><i class="dot" style="background:#2563eb"></i> إجازة</span>
-          </div>
-        </div>
-      </section>
-
       <section id="reports" class="section">
-        <div class="actions">
-          <button class="btn btn-primary">كشف راتب PDF</button>
-          <button class="btn btn-green">تصدير Excel</button>
-          <button class="btn btn-light">تصدير CSV</button>
-          <button class="btn btn-orange">طباعة مباشرة</button>
-        </div>
-
         <div class="login-note">
-          التقارير المعتمدة في النظام:
-          <br> - كشف راتب تفصيلي
-          <br> - مسير رواتب
-          <br> - تقرير حضور
-          <br> - تقرير غياب
-          <br> - تقرير السلف والديون
-          <br> - تقرير المصروفات
+          سيتم لاحقًا إضافة تقارير الرواتب والحضور والسلف.
         </div>
       </section>
 
@@ -760,24 +581,32 @@
         <div class="card">
           <h3>الإعدادات</h3>
           <div class="login-note">
-            <strong>الإعدادات المعتمدة:</strong>
-            <br>اسم النظام: شركة عيون الغد - نظام إدارة الموارد والمرتبات
-            <br>العملة: الدينار الليبي (د.ل)
-            <br>بداية الأسبوع: السبت
-            <br>العطلة الأسبوعية: الجمعة فقط
-            <br>الوضع الليلي: اختياري
-            <br>اللون الرئيسي: أزرق داكن
+            اسم النظام: شركة عيون الغد - نظام إدارة الموارد والمرتبات
+            <br>العملة: الدينار الليبي
+            <br>العطلة الأسبوعية: الجمعة
           </div>
         </div>
       </section>
     </main>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
+    const SUPABASE_URL = "https://okyujxqzzrxtmtuimndk.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9reXVqeHF6enJ4dG10dWltbmRrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMxMDIyNjYsImV4cCI6MjA4ODY3ODI2Nn0.KAk2TEAm_QVBo15wK5AWk4RfT5I7CNWd7SoiACqs7Yw";
+
+    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    const state = {
+      employees: [],
+      attendance: [],
+      loans: [],
+      payroll: []
+    };
+
     function showSection(id, btn){
       document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
       document.getElementById(id).classList.add('active');
-
       document.querySelectorAll('.menu button').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
 
@@ -788,7 +617,6 @@
         fingerprint:'البصمة',
         loans:'السلف والديون',
         payroll:'الرواتب',
-        calendar:'التقويم',
         reports:'التقارير',
         settings:'الإعدادات'
       };
@@ -807,8 +635,332 @@
       document.getElementById('dateBox').textContent = text;
     }
 
-    updateDateTime();
-    setInterval(updateDateTime, 1000);
+    function formatCurrency(value){
+      return `${Number(value || 0).toFixed(2)} د.ل`;
+    }
+
+    function badge(status){
+      if(status === 'نشط' || status === 'حضور') return `<span class="badge b-green">${status}</span>`;
+      if(status === 'غياب') return `<span class="badge b-red">${status}</span>`;
+      if(status === 'تأخير') return `<span class="badge b-orange">${status}</span>`;
+      return `<span class="badge b-blue">${status || '-'}</span>`;
+    }
+
+    async function loadEmployees(){
+      const { data, error } = await supabaseClient
+        .from('employees')
+        .select('*')
+        .order('employee_no', { ascending:true });
+
+      if(error){ alert('خطأ في تحميل الموظفين'); return; }
+
+      state.employees = data || [];
+      const tbody = document.getElementById('employees-tbody');
+
+      if(!state.employees.length){
+        tbody.innerHTML = `<tr><td colspan="6" class="empty">لا يوجد موظفون</td></tr>`;
+      } else {
+        tbody.innerHTML = state.employees.map(emp => `
+          <tr>
+            <td>${emp.employee_no || ''}</td>
+            <td>${emp.full_name || ''}</td>
+            <td>${emp.department || ''}</td>
+            <td>${emp.branch || ''}</td>
+            <td>${formatCurrency(emp.basic_salary)}</td>
+            <td>${badge(emp.status || 'نشط')}</td>
+          </tr>
+        `).join('');
+      }
+
+      document.getElementById('stat-total-employees').textContent = state.employees.length;
+      updateSummary();
+    }
+
+    async function loadAttendance(){
+      const today = new Date().toISOString().split('T')[0];
+
+      const { data, error } = await supabaseClient
+        .from('attendance')
+        .select('*, employees(employee_no, full_name)')
+        .eq('attendance_date', today)
+        .order('created_at', { ascending:false });
+
+      if(error){ alert('خطأ في تحميل الحضور'); return; }
+
+      state.attendance = data || [];
+      const tbody = document.getElementById('attendance-tbody');
+
+      if(!state.attendance.length){
+        tbody.innerHTML = `<tr><td colspan="6" class="empty">لا يوجد حضور اليوم</td></tr>`;
+      } else {
+        tbody.innerHTML = state.attendance.map(row => `
+          <tr>
+            <td>${row.attendance_date || ''}</td>
+            <td>${row.employees?.employee_no || ''}</td>
+            <td>${row.employees?.full_name || ''}</td>
+            <td>${badge(row.status || '')}</td>
+            <td>${row.check_in || '-'}</td>
+            <td>${row.late_minutes || 0} دقيقة</td>
+          </tr>
+        `).join('');
+      }
+
+      const present = state.attendance.filter(x => x.status === 'حضور').length;
+      const absent = state.attendance.filter(x => x.status === 'غياب').length;
+      const late = state.attendance.filter(x => x.status === 'تأخير').length;
+
+      document.getElementById('stat-attendance-today').textContent = present;
+      document.getElementById('stat-absent-today').textContent = absent;
+      document.getElementById('stat-late-today').textContent = late;
+
+      updateSummary();
+      updateAlerts();
+    }
+
+    async function loadLoans(){
+      const { data, error } = await supabaseClient
+        .from('loans')
+        .select('*, employees(full_name)')
+        .order('created_at', { ascending:false });
+
+      if(error){ alert('خطأ في تحميل السلف والديون'); return; }
+
+      state.loans = data || [];
+      const tbody = document.getElementById('loans-tbody');
+
+      if(!state.loans.length){
+        tbody.innerHTML = `<tr><td colspan="7" class="empty">لا توجد سلف أو ديون</td></tr>`;
+      } else {
+        tbody.innerHTML = state.loans.map(row => `
+          <tr>
+            <td>${row.employees?.full_name || ''}</td>
+            <td>${row.type || ''}</td>
+            <td>${formatCurrency(row.amount)}</td>
+            <td>${row.months_count || 0}</td>
+            <td>${formatCurrency(row.monthly_installment)}</td>
+            <td>${formatCurrency(row.remaining_amount)}</td>
+            <td>${badge(row.status || 'جارية')}</td>
+          </tr>
+        `).join('');
+      }
+
+      updateAlerts();
+    }
+
+    async function loadPayroll(){
+      const month = new Date().toISOString().slice(0,7);
+
+      const { data, error } = await supabaseClient
+        .from('payroll')
+        .select('*, employees(employee_no, full_name)')
+        .eq('pay_month', month)
+        .order('created_at', { ascending:false });
+
+      if(error){ alert('خطأ في تحميل الرواتب'); return; }
+
+      state.payroll = data || [];
+      const tbody = document.getElementById('payroll-tbody');
+
+      if(!state.payroll.length){
+        tbody.innerHTML = `<tr><td colspan="8" class="empty">لا توجد رواتب لهذا الشهر</td></tr>`;
+      } else {
+        tbody.innerHTML = state.payroll.map(row => `
+          <tr>
+            <td>${row.employees?.employee_no || ''}</td>
+            <td>${row.employees?.full_name || ''}</td>
+            <td>${row.working_days || 0}</td>
+            <td>${row.present_days || 0}</td>
+            <td>${row.absent_days || 0}</td>
+            <td>${formatCurrency(row.deserved_salary)}</td>
+            <td>${formatCurrency(row.deductions)}</td>
+            <td>${formatCurrency(row.net_salary)}</td>
+          </tr>
+        `).join('');
+      }
+    }
+
+    function updateSummary(){
+      document.getElementById('summaryBox').innerHTML = `
+        عدد الموظفين: <strong>${state.employees.length}</strong><br><br>
+        حضور اليوم: <strong>${state.attendance.filter(x => x.status === 'حضور').length}</strong><br><br>
+        غياب اليوم: <strong>${state.attendance.filter(x => x.status === 'غياب').length}</strong><br><br>
+        عدد السلف والديون: <strong>${state.loans.length}</strong>
+      `;
+    }
+
+    function updateAlerts(){
+      const alerts = [];
+
+      state.attendance.filter(x => x.status === 'غياب').slice(0,2).forEach(row => {
+        alerts.push(`⚠ غياب اليوم: ${row.employees?.full_name || ''}`);
+      });
+
+      state.attendance.filter(x => x.status === 'تأخير').slice(0,2).forEach(row => {
+        alerts.push(`⚠ تأخير: ${row.employees?.full_name || ''} - ${row.late_minutes || 0} دقيقة`);
+      });
+
+      if(state.loans.length){
+        alerts.push(`ℹ يوجد ${state.loans.length} سلفة/دين في النظام`);
+      }
+
+      if(!alerts.length){
+        alerts.push('✅ لا توجد تنبيهات حالياً');
+      }
+
+      document.getElementById('alertsBox').innerHTML = alerts.map(a => `<div class="alert">${a}</div>`).join('');
+    }
+
+    async function addEmployee(){
+      const employee_no = prompt('الرقم الوظيفي');
+      if(!employee_no) return;
+
+      const full_name = prompt('اسم الموظف');
+      if(!full_name) return;
+
+      const department = prompt('القسم') || '';
+      const branch = prompt('التفرع / الوظيفة') || '';
+      const basic_salary = prompt('الراتب الأساسي', '0') || '0';
+      const status = prompt('الحالة', 'نشط') || 'نشط';
+
+      const { error } = await supabaseClient.from('employees').insert([{
+        employee_no, full_name, department, branch,
+        basic_salary:Number(basic_salary), status
+      }]);
+
+      if(error){ alert('فشل إضافة الموظف'); return; }
+
+      alert('تمت إضافة الموظف');
+      await loadEmployees();
+    }
+
+    async function addAttendance(){
+      if(!state.employees.length){
+        alert('أضف موظفاً أولاً');
+        return;
+      }
+
+      const employee_no = prompt('الرقم الوظيفي');
+      if(!employee_no) return;
+
+      const emp = state.employees.find(x => String(x.employee_no) === String(employee_no));
+      if(!emp){
+        alert('الموظف غير موجود');
+        return;
+      }
+
+      const attendance_date = prompt('التاريخ YYYY-MM-DD', new Date().toISOString().split('T')[0]);
+      if(!attendance_date) return;
+
+      const status = prompt('الحالة: حضور / غياب / تأخير', 'حضور');
+      if(!status) return;
+
+      const check_in = (status === 'حضور' || status === 'تأخير') ? (prompt('وقت الدخول HH:MM', '08:00') || null) : null;
+      const late_minutes = status === 'تأخير' ? Number(prompt('دقائق التأخير', '0') || 0) : 0;
+
+      const { error } = await supabaseClient.from('attendance').insert([{
+        employee_id: emp.id,
+        attendance_date,
+        status,
+        check_in,
+        late_minutes
+      }]);
+
+      if(error){ alert('فشل إضافة الحضور'); return; }
+
+      alert('تم حفظ الحضور');
+      await loadAttendance();
+    }
+
+    async function addLoan(){
+      if(!state.employees.length){
+        alert('أضف موظفاً أولاً');
+        return;
+      }
+
+      const employee_no = prompt('الرقم الوظيفي');
+      if(!employee_no) return;
+
+      const emp = state.employees.find(x => String(x.employee_no) === String(employee_no));
+      if(!emp){
+        alert('الموظف غير موجود');
+        return;
+      }
+
+      const type = prompt('النوع: سلفة أو مديونية', 'سلفة');
+      const amount = Number(prompt('المبلغ', '0') || 0);
+      const months_count = Number(prompt('عدد الشهور', '1') || 1);
+      const monthly_installment = Number(prompt('القسط الشهري', String(amount / months_count)) || 0);
+      const remaining_amount = Number(prompt('المتبقي', String(amount)) || amount);
+      const status = prompt('الحالة', 'جارية') || 'جارية';
+
+      const { error } = await supabaseClient.from('loans').insert([{
+        employee_id: emp.id,
+        type,
+        amount,
+        months_count,
+        monthly_installment,
+        remaining_amount,
+        status
+      }]);
+
+      if(error){ alert('فشل إضافة السلفة أو الدين'); return; }
+
+      alert('تمت إضافة السلفة / الدين');
+      await loadLoans();
+    }
+
+    async function generateMonthlyPayroll(){
+      const month = prompt('أدخل الشهر بصيغة YYYY-MM', new Date().toISOString().slice(0,7));
+      if(!month) return;
+
+      for(const emp of state.employees){
+        const { data: attendanceRows } = await supabaseClient
+          .from('attendance')
+          .select('*')
+          .eq('employee_id', emp.id)
+          .gte('attendance_date', `${month}-01`)
+          .lte('attendance_date', `${month}-31`);
+
+        const working_days = 26;
+        const present_days = (attendanceRows || []).filter(r => r.status === 'حضور' || r.status === 'تأخير').length;
+        const absent_days = Math.max(working_days - present_days, 0);
+        const deserved_salary = (Number(emp.basic_salary || 0) / working_days) * present_days;
+
+        const { data: loanRows } = await supabaseClient
+          .from('loans')
+          .select('*')
+          .eq('employee_id', emp.id)
+          .eq('status', 'جارية');
+
+        const deductions = (loanRows || []).reduce((sum, item) => sum + Number(item.monthly_installment || 0), 0);
+        const net_salary = Math.max(deserved_salary - deductions, 0);
+
+        await supabaseClient.from('payroll').insert([{
+          employee_id: emp.id,
+          pay_month: month,
+          working_days,
+          present_days,
+          absent_days,
+          deserved_salary,
+          deductions,
+          net_salary
+        }]);
+      }
+
+      alert('تم إنشاء رواتب الشهر');
+      await loadPayroll();
+    }
+
+    async function initApp(){
+      updateDateTime();
+      setInterval(updateDateTime, 1000);
+      await loadEmployees();
+      await loadAttendance();
+      await loadLoans();
+      await loadPayroll();
+    }
+
+    initApp();
   </script>
 </body>
 </html>
