@@ -324,42 +324,18 @@
         <div class="form-card">
           <h3 class="form-title">إضافة / تعديل موظف</h3>
           <div class="form-grid">
-            <div class="field">
-              <label>الرقم الوظيفي</label>
-              <input id="emp_no" />
-            </div>
-            <div class="field">
-              <label>اسم الموظف</label>
-              <input id="emp_name" />
-            </div>
-            <div class="field">
-              <label>القسم</label>
-              <select id="emp_department"></select>
-            </div>
-            <div class="field">
-              <label>الفرع</label>
-              <select id="emp_branch"></select>
-            </div>
-            <div class="field">
-              <label>المسمى الوظيفي</label>
-              <input id="emp_job_title" />
-            </div>
-            <div class="field">
-              <label>الراتب الأساسي</label>
-              <input id="emp_salary" type="number" step="0.01" />
-            </div>
-            <div class="field">
-              <label>الحالة</label>
+            <div class="field"><label>الرقم الوظيفي</label><input id="emp_no" /></div>
+            <div class="field"><label>اسم الموظف</label><input id="emp_name" /></div>
+            <div class="field"><label>القسم</label><select id="emp_department"></select></div>
+            <div class="field"><label>الفرع</label><select id="emp_branch"></select></div>
+            <div class="field"><label>المسمى الوظيفي</label><input id="emp_job_title" /></div>
+            <div class="field"><label>الراتب الأساسي</label><input id="emp_salary" type="number" step="0.01" /></div>
+            <div class="field"><label>الحالة</label>
               <select id="emp_status">
-                <option>نشط</option>
-                <option>موقوف</option>
-                <option>إجازة</option>
+                <option>نشط</option><option>موقوف</option><option>إجازة</option>
               </select>
             </div>
-            <div class="field">
-              <label>ملاحظات</label>
-              <input id="emp_notes" />
-            </div>
+            <div class="field"><label>ملاحظات</label><input id="emp_notes" /></div>
           </div>
           <div class="actions">
             <button class="btn btn-primary" onclick="saveEmployee()">حفظ الموظف</button>
@@ -382,14 +358,7 @@
             <table id="employeesTable">
               <thead>
                 <tr>
-                  <th>الرقم</th>
-                  <th>الاسم</th>
-                  <th>القسم</th>
-                  <th>الفرع</th>
-                  <th>المسمى</th>
-                  <th>الراتب</th>
-                  <th>الحالة</th>
-                  <th>الإجراءات</th>
+                  <th>الرقم</th><th>الاسم</th><th>القسم</th><th>الفرع</th><th>المسمى</th><th>الراتب</th><th>الحالة</th><th>الإجراءات</th>
                 </tr>
               </thead>
               <tbody id="employeesBody"></tbody>
@@ -402,10 +371,7 @@
         <div class="form-card">
           <h3 class="form-title">إدارة الأقسام</h3>
           <div class="form-grid two">
-            <div class="field">
-              <label>اسم القسم</label>
-              <input id="department_name" />
-            </div>
+            <div class="field"><label>اسم القسم</label><input id="department_name" /></div>
             <div class="field">
               <label>&nbsp;</label>
               <div class="actions" style="margin-top:0">
@@ -416,24 +382,9 @@
           </div>
           <input type="hidden" id="department_id" />
         </div>
-
         <div class="table-card">
-          <div class="toolbar">
-            <div class="left"></div>
-            <div class="right">
-              <button class="btn btn-green" onclick="loadDepartments()">تحديث</button>
-            </div>
-          </div>
           <div class="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>اسم القسم</th>
-                  <th>الإجراءات</th>
-                </tr>
-              </thead>
-              <tbody id="departmentsBody"></tbody>
-            </table>
+            <table><thead><tr><th>اسم القسم</th><th>الإجراءات</th></tr></thead><tbody id="departmentsBody"></tbody></table>
           </div>
         </div>
       </section>
@@ -442,10 +393,7 @@
         <div class="form-card">
           <h3 class="form-title">إدارة الفروع</h3>
           <div class="form-grid two">
-            <div class="field">
-              <label>اسم الفرع</label>
-              <input id="branch_name" />
-            </div>
+            <div class="field"><label>اسم الفرع</label><input id="branch_name" /></div>
             <div class="field">
               <label>&nbsp;</label>
               <div class="actions" style="margin-top:0">
@@ -456,24 +404,9 @@
           </div>
           <input type="hidden" id="branch_id" />
         </div>
-
         <div class="table-card">
-          <div class="toolbar">
-            <div class="left"></div>
-            <div class="right">
-              <button class="btn btn-green" onclick="loadBranches()">تحديث</button>
-            </div>
-          </div>
           <div class="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>اسم الفرع</th>
-                  <th>الإجراءات</th>
-                </tr>
-              </thead>
-              <tbody id="branchesBody"></tbody>
-            </table>
+            <table><thead><tr><th>اسم الفرع</th><th>الإجراءات</th></tr></thead><tbody id="branchesBody"></tbody></table>
           </div>
         </div>
       </section>
@@ -482,35 +415,17 @@
         <div class="form-card">
           <h3 class="form-title">إضافة / تعديل حضور</h3>
           <div class="form-grid">
-            <div class="field">
-              <label>الموظف</label>
-              <select id="att_employee"></select>
-            </div>
-            <div class="field">
-              <label>التاريخ</label>
-              <input id="att_date" type="date" />
-            </div>
+            <div class="field"><label>الموظف</label><select id="att_employee"></select></div>
+            <div class="field"><label>التاريخ</label><input id="att_date" type="date" /></div>
             <div class="field">
               <label>الحالة</label>
               <select id="att_status">
-                <option>حضور</option>
-                <option>غياب</option>
-                <option>تأخير</option>
-                <option>إجازة</option>
+                <option>حضور</option><option>غياب</option><option>تأخير</option><option>إجازة</option>
               </select>
             </div>
-            <div class="field">
-              <label>وقت الدخول</label>
-              <input id="att_checkin" type="time" />
-            </div>
-            <div class="field">
-              <label>دقائق التأخير</label>
-              <input id="att_late" type="number" value="0" />
-            </div>
-            <div class="field">
-              <label>ملاحظات</label>
-              <input id="att_notes" />
-            </div>
+            <div class="field"><label>وقت الدخول</label><input id="att_checkin" type="time" /></div>
+            <div class="field"><label>دقائق التأخير</label><input id="att_late" type="number" value="0" /></div>
+            <div class="field"><label>ملاحظات</label><input id="att_notes" /></div>
           </div>
           <div class="actions">
             <button class="btn btn-primary" onclick="saveAttendance()">حفظ السجل</button>
@@ -533,14 +448,7 @@
             <table id="attendanceTable">
               <thead>
                 <tr>
-                  <th>التاريخ</th>
-                  <th>الرقم</th>
-                  <th>الموظف</th>
-                  <th>الحالة</th>
-                  <th>الدخول</th>
-                  <th>التأخير</th>
-                  <th>الملاحظات</th>
-                  <th>الإجراءات</th>
+                  <th>التاريخ</th><th>الرقم</th><th>الموظف</th><th>الحالة</th><th>الدخول</th><th>التأخير</th><th>الملاحظات</th><th>الإجراءات</th>
                 </tr>
               </thead>
               <tbody id="attendanceBody"></tbody>
@@ -553,15 +461,13 @@
         <div class="form-card">
           <h3 class="form-title">استيراد ملف بصمة Excel</h3>
           <div class="note">
-            النسخة الحالية تقرأ أول ورقة في ملف Excel وتبحث عن أعمدة شائعة مثل:
+            يدعم أعمدة شائعة مثل:
             <br>employee_no / الرقم / رقم وظيفي
             <br>date / التاريخ
             <br>status / الحالة
             <br>check_in / وقت الدخول
             <br>late_minutes / التأخير
             <br>notes / ملاحظات
-            <br><br>
-            إذا كانت أسماء الأعمدة مختلفة جدًا يمكننا تعديلها لاحقًا بعد التجربة.
           </div>
           <div class="actions">
             <input type="file" id="fingerprintFile" accept=".xlsx,.xls,.csv" />
@@ -574,40 +480,13 @@
         <div class="form-card">
           <h3 class="form-title">إضافة / تعديل سلفة أو دين</h3>
           <div class="form-grid">
-            <div class="field">
-              <label>الموظف</label>
-              <select id="loan_employee"></select>
-            </div>
-            <div class="field">
-              <label>النوع</label>
-              <select id="loan_type">
-                <option>سلفة</option>
-                <option>مديونية</option>
-              </select>
-            </div>
-            <div class="field">
-              <label>المبلغ</label>
-              <input id="loan_amount" type="number" step="0.01" />
-            </div>
-            <div class="field">
-              <label>عدد الشهور</label>
-              <input id="loan_months" type="number" value="1" />
-            </div>
-            <div class="field">
-              <label>القسط الشهري</label>
-              <input id="loan_installment" type="number" step="0.01" />
-            </div>
-            <div class="field">
-              <label>المتبقي</label>
-              <input id="loan_remaining" type="number" step="0.01" />
-            </div>
-            <div class="field">
-              <label>الحالة</label>
-              <select id="loan_status">
-                <option>جارية</option>
-                <option>مغلقة</option>
-              </select>
-            </div>
+            <div class="field"><label>الموظف</label><select id="loan_employee"></select></div>
+            <div class="field"><label>النوع</label><select id="loan_type"><option>سلفة</option><option>مديونية</option></select></div>
+            <div class="field"><label>المبلغ</label><input id="loan_amount" type="number" step="0.01" /></div>
+            <div class="field"><label>عدد الشهور</label><input id="loan_months" type="number" value="1" /></div>
+            <div class="field"><label>القسط الشهري</label><input id="loan_installment" type="number" step="0.01" /></div>
+            <div class="field"><label>المتبقي</label><input id="loan_remaining" type="number" step="0.01" /></div>
+            <div class="field"><label>الحالة</label><select id="loan_status"><option>جارية</option><option>مغلقة</option></select></div>
           </div>
           <div class="actions">
             <button class="btn btn-primary" onclick="saveLoan()">حفظ</button>
@@ -628,14 +507,7 @@
             <table id="loansTable">
               <thead>
                 <tr>
-                  <th>الموظف</th>
-                  <th>النوع</th>
-                  <th>المبلغ</th>
-                  <th>عدد الشهور</th>
-                  <th>القسط</th>
-                  <th>المتبقي</th>
-                  <th>الحالة</th>
-                  <th>الإجراءات</th>
+                  <th>الموظف</th><th>النوع</th><th>المبلغ</th><th>عدد الشهور</th><th>القسط</th><th>المتبقي</th><th>الحالة</th><th>الإجراءات</th>
                 </tr>
               </thead>
               <tbody id="loansBody"></tbody>
@@ -648,33 +520,12 @@
         <div class="form-card">
           <h3 class="form-title">الإضافات والخصومات اليدوية</h3>
           <div class="form-grid">
-            <div class="field">
-              <label>الموظف</label>
-              <select id="adj_employee"></select>
-            </div>
-            <div class="field">
-              <label>النوع</label>
-              <select id="adj_type">
-                <option value="إضافة">إضافة</option>
-                <option value="خصم">خصم</option>
-              </select>
-            </div>
-            <div class="field">
-              <label>العنوان</label>
-              <input id="adj_title" />
-            </div>
-            <div class="field">
-              <label>المبلغ</label>
-              <input id="adj_amount" type="number" step="0.01" />
-            </div>
-            <div class="field">
-              <label>الشهر</label>
-              <input id="adj_month" type="month" />
-            </div>
-            <div class="field">
-              <label>ملاحظات</label>
-              <input id="adj_notes" />
-            </div>
+            <div class="field"><label>الموظف</label><select id="adj_employee"></select></div>
+            <div class="field"><label>النوع</label><select id="adj_type"><option value="إضافة">إضافة</option><option value="خصم">خصم</option></select></div>
+            <div class="field"><label>العنوان</label><input id="adj_title" /></div>
+            <div class="field"><label>المبلغ</label><input id="adj_amount" type="number" step="0.01" /></div>
+            <div class="field"><label>الشهر</label><input id="adj_month" type="month" /></div>
+            <div class="field"><label>ملاحظات</label><input id="adj_notes" /></div>
           </div>
           <div class="actions">
             <button class="btn btn-primary" onclick="saveAdjustment()">حفظ</button>
@@ -695,13 +546,7 @@
             <table id="adjustmentsTable">
               <thead>
                 <tr>
-                  <th>الموظف</th>
-                  <th>النوع</th>
-                  <th>العنوان</th>
-                  <th>المبلغ</th>
-                  <th>الشهر</th>
-                  <th>الملاحظات</th>
-                  <th>الإجراءات</th>
+                  <th>الموظف</th><th>النوع</th><th>العنوان</th><th>المبلغ</th><th>الشهر</th><th>الملاحظات</th><th>الإجراءات</th>
                 </tr>
               </thead>
               <tbody id="adjustmentsBody"></tbody>
@@ -731,17 +576,7 @@
             <table id="payrollTable">
               <thead>
                 <tr>
-                  <th>الرقم</th>
-                  <th>الموظف</th>
-                  <th>أيام العمل</th>
-                  <th>الحضور</th>
-                  <th>الغياب</th>
-                  <th>الراتب المستحق</th>
-                  <th>إضافات</th>
-                  <th>خصم سلف</th>
-                  <th>خصومات يدوية</th>
-                  <th>الصافي</th>
-                  <th>الحالة</th>
+                  <th>الرقم</th><th>الموظف</th><th>أيام العمل</th><th>الحضور</th><th>الغياب</th><th>الراتب المستحق</th><th>إضافات</th><th>خصم سلف</th><th>خصومات يدوية</th><th>الصافي</th><th>الحالة</th>
                 </tr>
               </thead>
               <tbody id="payrollBody"></tbody>
@@ -754,30 +589,14 @@
         <div class="form-card">
           <h3 class="form-title">المستخدمون والصلاحيات</h3>
           <div class="form-grid">
-            <div class="field">
-              <label>اسم المستخدم</label>
-              <input id="user_username" />
-            </div>
-            <div class="field">
-              <label>كلمة المرور</label>
-              <input id="user_password" />
-            </div>
-            <div class="field">
-              <label>الدور</label>
+            <div class="field"><label>اسم المستخدم</label><input id="user_username" /></div>
+            <div class="field"><label>كلمة المرور</label><input id="user_password" /></div>
+            <div class="field"><label>الدور</label>
               <select id="user_role">
-                <option>مدير النظام</option>
-                <option>HR</option>
-                <option>محاسب</option>
-                <option>إدارة</option>
+                <option>مدير النظام</option><option>HR</option><option>محاسب</option><option>إدارة</option>
               </select>
             </div>
-            <div class="field">
-              <label>الحالة</label>
-              <select id="user_status">
-                <option value="active">active</option>
-                <option value="inactive">inactive</option>
-              </select>
-            </div>
+            <div class="field"><label>الحالة</label><select id="user_status"><option value="active">active</option><option value="inactive">inactive</option></select></div>
           </div>
           <div class="actions">
             <button class="btn btn-primary" onclick="saveUser()">حفظ</button>
@@ -789,14 +608,7 @@
         <div class="table-card">
           <div class="table-wrap">
             <table>
-              <thead>
-                <tr>
-                  <th>اسم المستخدم</th>
-                  <th>الدور</th>
-                  <th>الحالة</th>
-                  <th>الإجراءات</th>
-                </tr>
-              </thead>
+              <thead><tr><th>اسم المستخدم</th><th>الدور</th><th>الحالة</th><th>الإجراءات</th></tr></thead>
               <tbody id="usersBody"></tbody>
             </table>
           </div>
@@ -973,11 +785,7 @@
       `).join("");
     }
 
-    function resetDepartmentForm(){
-      department_id.value = "";
-      department_name.value = "";
-    }
-
+    function resetDepartmentForm(){ department_id.value = ""; department_name.value = ""; }
     function editDepartment(d){
       department_id.value = d.id || "";
       department_name.value = d.name || "";
@@ -988,12 +796,8 @@
       const id = department_id.value;
       const name = department_name.value.trim();
       if(!name) return showMessage("أدخل اسم القسم", "error");
-
       let q = sb.from("departments");
-      const { error } = id
-        ? await q.update({ name }).eq("id", id)
-        : await q.insert([{ name }]);
-
+      const { error } = id ? await q.update({ name }).eq("id", id) : await q.insert([{ name }]);
       if(error) return showMessage("فشل حفظ القسم", "error");
       showMessage("تم حفظ القسم");
       resetDepartmentForm();
@@ -1033,11 +837,7 @@
       `).join("");
     }
 
-    function resetBranchForm(){
-      branch_id.value = "";
-      branch_name.value = "";
-    }
-
+    function resetBranchForm(){ branch_id.value = ""; branch_name.value = ""; }
     function editBranch(b){
       branch_id.value = b.id || "";
       branch_name.value = b.name || "";
@@ -1048,12 +848,8 @@
       const id = branch_id.value;
       const name = branch_name.value.trim();
       if(!name) return showMessage("أدخل اسم الفرع", "error");
-
       let q = sb.from("branches");
-      const { error } = id
-        ? await q.update({ name }).eq("id", id)
-        : await q.insert([{ name }]);
-
+      const { error } = id ? await q.update({ name }).eq("id", id) : await q.insert([{ name }]);
       if(error) return showMessage("فشل حفظ الفرع", "error");
       showMessage("تم حفظ الفرع");
       resetBranchForm();
@@ -1264,11 +1060,7 @@
     }
 
     async function loadLoans(){
-      const { data, error } = await sb
-        .from("loans")
-        .select("*, employees(full_name)")
-        .order("created_at", { ascending:false });
-
+      const { data, error } = await sb.from("loans").select("*, employees(full_name)").order("created_at", { ascending:false });
       if(error) return showMessage("خطأ في تحميل السلف والديون", "error");
       state.loans = data || [];
       renderLoans();
@@ -1362,12 +1154,7 @@
     }
 
     async function loadAdjustments(){
-      const { data, error } = await sb
-        .from("adjustments")
-        .select("*, employees(full_name)")
-        .order("pay_month", { ascending:false })
-        .order("created_at", { ascending:false });
-
+      const { data, error } = await sb.from("adjustments").select("*, employees(full_name)").order("pay_month", { ascending:false }).order("created_at", { ascending:false });
       if(error) return showMessage("خطأ في تحميل الإضافات والخصومات", "error");
       state.adjustments = data || [];
       renderAdjustments();
@@ -1453,13 +1240,7 @@
     async function loadPayroll(){
       const month = payroll_month.value || currentMonth();
       payroll_month.value = month;
-
-      const { data, error } = await sb
-        .from("payroll")
-        .select("*, employees(employee_no, full_name)")
-        .eq("pay_month", month)
-        .order("created_at", { ascending:false });
-
+      const { data, error } = await sb.from("payroll").select("*, employees(employee_no, full_name)").eq("pay_month", month).order("created_at", { ascending:false });
       if(error) return showMessage("خطأ في تحميل الرواتب", "error");
       state.payroll = data || [];
       renderPayroll();
@@ -1491,56 +1272,27 @@
     async function generatePayroll(){
       const month = payroll_month.value || currentMonth();
       payroll_month.value = month;
-
-      if(!state.employees.length){
-        return showMessage("لا يوجد موظفون", "error");
-      }
+      if(!state.employees.length) return showMessage("لا يوجد موظفون", "error");
 
       const workDays = workingDaysExcludingFridays(month);
       const { start, end } = monthDateRange(month);
 
       for(const emp of state.employees){
-        const { data: attRows } = await sb
-          .from("attendance")
-          .select("*")
-          .eq("employee_id", emp.id)
-          .gte("attendance_date", start)
-          .lte("attendance_date", end);
-
-        const presentDays = (attRows || []).filter(r =>
-          ["حضور","تأخير","إجازة"].includes(r.status)
-        ).length;
-
+        const { data: attRows } = await sb.from("attendance").select("*").eq("employee_id", emp.id).gte("attendance_date", start).lte("attendance_date", end);
+        const presentDays = (attRows || []).filter(r => ["حضور","تأخير","إجازة"].includes(r.status)).length;
         const absentDays = Math.max(workDays - presentDays, 0);
-        const deservedSalary = workDays > 0
-          ? (Number(emp.basic_salary || 0) / workDays) * presentDays
-          : 0;
+        const deservedSalary = workDays > 0 ? (Number(emp.basic_salary || 0) / workDays) * presentDays : 0;
 
-        const { data: loanRows } = await sb
-          .from("loans")
-          .select("*")
-          .eq("employee_id", emp.id)
-          .eq("status", "جارية");
-
+        const { data: loanRows } = await sb.from("loans").select("*").eq("employee_id", emp.id).eq("status", "جارية");
         const loanDeductions = (loanRows || []).reduce((s, x) => s + Number(x.monthly_installment || 0), 0);
 
-        const { data: adjRows } = await sb
-          .from("adjustments")
-          .select("*")
-          .eq("employee_id", emp.id)
-          .eq("pay_month", month);
-
-        const additions = (adjRows || [])
-          .filter(x => x.type === "إضافة")
-          .reduce((s, x) => s + Number(x.amount || 0), 0);
-
-        const manualDeductions = (adjRows || [])
-          .filter(x => x.type === "خصم")
-          .reduce((s, x) => s + Number(x.amount || 0), 0);
+        const { data: adjRows } = await sb.from("adjustments").select("*").eq("employee_id", emp.id).eq("pay_month", month);
+        const additions = (adjRows || []).filter(x => x.type === "إضافة").reduce((s, x) => s + Number(x.amount || 0), 0);
+        const manualDeductions = (adjRows || []).filter(x => x.type === "خصم").reduce((s, x) => s + Number(x.amount || 0), 0);
 
         const netSalary = Math.max(deservedSalary + additions - loanDeductions - manualDeductions, 0);
 
-        const { error } = await sb.from("payroll").upsert([{
+        await sb.from("payroll").upsert([{
           employee_id: emp.id,
           pay_month: month,
           working_days: workDays,
@@ -1555,10 +1307,6 @@
           status: "مسودة",
           notes: ""
         }], { onConflict:"employee_id,pay_month" });
-
-        if(error){
-          console.error(error);
-        }
       }
 
       showMessage(`تم إنشاء / تحديث رواتب شهر ${month}`);
@@ -1567,11 +1315,7 @@
 
     async function approvePayroll(){
       const month = payroll_month.value || currentMonth();
-      const { error } = await sb
-        .from("payroll")
-        .update({ status:"معتمد" })
-        .eq("pay_month", month);
-
+      const { error } = await sb.from("payroll").update({ status:"معتمد" }).eq("pay_month", month);
       if(error) return showMessage("فشل اعتماد الرواتب", "error");
       showMessage("تم اعتماد الرواتب");
       await loadPayroll();
@@ -1631,12 +1375,8 @@
       if(!payload.username || !payload.password){
         return showMessage("أدخل اسم المستخدم وكلمة المرور", "error");
       }
-
       const id = user_id.value;
-      const { error } = id
-        ? await sb.from("users").update(payload).eq("id", id)
-        : await sb.from("users").insert([payload]);
-
+      const { error } = id ? await sb.from("users").update(payload).eq("id", id) : await sb.from("users").insert([payload]);
       if(error) return showMessage("فشل حفظ المستخدم", "error");
       showMessage("تم حفظ المستخدم");
       resetUserForm();
@@ -1673,17 +1413,12 @@
       `;
 
       const alerts = [];
-      todayRows.filter(x => x.status === "غياب").slice(0,3).forEach(r => {
-        alerts.push(`⚠ غياب اليوم: ${r.employees?.full_name || "موظف"}`);
-      });
-      todayRows.filter(x => x.status === "تأخير").slice(0,3).forEach(r => {
-        alerts.push(`⚠ تأخير: ${r.employees?.full_name || "موظف"} - ${r.late_minutes || 0} دقيقة`);
-      });
+      todayRows.filter(x => x.status === "غياب").slice(0,3).forEach(r => alerts.push(`⚠ غياب اليوم: ${r.employees?.full_name || "موظف"}`));
+      todayRows.filter(x => x.status === "تأخير").slice(0,3).forEach(r => alerts.push(`⚠ تأخير: ${r.employees?.full_name || "موظف"} - ${r.late_minutes || 0} دقيقة`));
       if(state.loans.filter(x => x.status === "جارية").length){
         alerts.push(`ℹ توجد سلف/ديون جارية بعدد ${state.loans.filter(x => x.status === "جارية").length}`);
       }
       if(!alerts.length) alerts.push("✅ لا توجد تنبيهات حالياً");
-
       alertsBox.innerHTML = alerts.map(a => `<div class="alert">${a}</div>`).join("");
     }
 
@@ -1695,10 +1430,7 @@
       showMessage("تم تصدير الملف");
     }
 
-    function normalizeHeader(v){
-      return String(v || "").trim().toLowerCase();
-    }
-
+    function normalizeHeader(v){ return String(v || "").trim().toLowerCase(); }
     function pickValue(row, names){
       for(const k of Object.keys(row)){
         const nk = normalizeHeader(k);
@@ -1720,7 +1452,6 @@
         if(!rows.length) return showMessage("الملف فارغ", "error");
 
         let successCount = 0;
-
         for(const row of rows){
           const employeeNo = pickValue(row, ["employee_no","رقم","الرقم","رقم وظيفي","employee id","id"]);
           const dateValue = pickValue(row, ["date","التاريخ","attendance_date"]);
@@ -1730,18 +1461,12 @@
           const notesValue = pickValue(row, ["notes","ملاحظات"]);
 
           if(!employeeNo || !dateValue) continue;
-
           const emp = state.employees.find(e => String(e.employee_no).trim() === String(employeeNo).trim());
           if(!emp) continue;
 
-          const dateStr = String(dateValue).includes("T")
-            ? String(dateValue).split("T")[0]
-            : String(dateValue).trim();
-
+          const dateStr = String(dateValue).includes("T") ? String(dateValue).split("T")[0] : String(dateValue).trim();
           let status = String(statusValue || "حضور").trim();
-          if(!["حضور","غياب","تأخير","إجازة"].includes(status)){
-            status = "حضور";
-          }
+          if(!["حضور","غياب","تأخير","إجازة"].includes(status)) status = "حضور";
 
           const payload = {
             employee_id: emp.id,
