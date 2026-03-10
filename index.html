@@ -1,22 +1,814 @@
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="ar" dir="rtl">
 <head>
-<meta charset="UTF-8">
-<title>شركة عيون الغد - نظام الموارد والمرتبات</title>
-<style>
-body{font-family:Arial;background:#f5f6fa;text-align:center;padding:40px}
-h1{color:#2c3e50}
-button{padding:12px 20px;font-size:18px;background:#2c7be5;color:white;border:none;border-radius:8px}
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>شركة عيون الغد - نظام إدارة الموارد والمرتبات</title>
+  <style>
+    :root{
+      --primary:#0f4c81;
+      --primary-soft:#eaf3fb;
+      --bg:#f5f7fb;
+      --card:#ffffff;
+      --text:#1f2937;
+      --muted:#6b7280;
+      --border:#e5e7eb;
+      --green:#16a34a;
+      --orange:#f59e0b;
+      --red:#dc2626;
+      --purple:#7c3aed;
+      --teal:#0d9488;
+      --pink:#db2777;
+      --shadow:0 8px 24px rgba(15,76,129,.08);
+    }
+
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:Tahoma, Arial, sans-serif;
+      background:var(--bg);
+      color:var(--text);
+    }
+
+    .app{
+      display:flex;
+      min-height:100vh;
+    }
+
+    .sidebar{
+      width:260px;
+      background:#fff;
+      border-left:1px solid var(--border);
+      box-shadow:var(--shadow);
+      padding:18px 14px;
+      position:fixed;
+      top:0;
+      right:0;
+      bottom:0;
+      overflow:auto;
+    }
+
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      margin-bottom:18px;
+      padding-bottom:14px;
+      border-bottom:1px solid var(--border);
+    }
+
+    .brand-logo{
+      width:42px;
+      height:42px;
+      border-radius:12px;
+      background:var(--primary-soft);
+      color:var(--primary);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:22px;
+      font-weight:bold;
+    }
+
+    .brand h1{
+      margin:0;
+      font-size:17px;
+      line-height:1.5;
+    }
+
+    .brand p{
+      margin:0;
+      font-size:12px;
+      color:var(--muted);
+    }
+
+    .menu{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+    }
+
+    .menu button{
+      border:none;
+      background:transparent;
+      border-radius:14px;
+      padding:12px 14px;
+      display:flex;
+      align-items:center;
+      gap:12px;
+      cursor:pointer;
+      text-align:right;
+      width:100%;
+      color:var(--text);
+      font-size:15px;
+    }
+
+    .menu button:hover{
+      background:#f3f6fa;
+    }
+
+    .menu button.active{
+      background:var(--primary);
+      color:#fff;
+    }
+
+    .icon{
+      width:34px;
+      height:34px;
+      border-radius:10px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:18px;
+      flex-shrink:0;
+    }
+
+    .i-blue{background:#e8f1ff;color:#2563eb}
+    .i-green{background:#ecfdf3;color:#16a34a}
+    .i-orange{background:#fff7ed;color:#ea580c}
+    .i-purple{background:#f3e8ff;color:#7c3aed}
+    .i-red{background:#fef2f2;color:#dc2626}
+    .i-teal{background:#ecfeff;color:#0d9488}
+    .i-pink{background:#fdf2f8;color:#db2777}
+    .i-gray{background:#f3f4f6;color:#4b5563}
+
+    .content{
+      flex:1;
+      margin-right:260px;
+      padding:20px;
+    }
+
+    .topbar{
+      background:#fff;
+      border:1px solid var(--border);
+      border-radius:18px;
+      box-shadow:var(--shadow);
+      padding:16px 18px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:16px;
+      margin-bottom:20px;
+      flex-wrap:wrap;
+    }
+
+    .top-right h2{
+      margin:0;
+      font-size:22px;
+    }
+
+    .top-right p{
+      margin:6px 0 0;
+      color:var(--muted);
+      font-size:13px;
+    }
+
+    .top-left{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+
+    .search{
+      border:1px solid var(--border);
+      border-radius:12px;
+      padding:10px 14px;
+      min-width:220px;
+      background:#fff;
+    }
+
+    .pill{
+      background:var(--primary-soft);
+      color:var(--primary);
+      border-radius:12px;
+      padding:10px 12px;
+      font-size:13px;
+      font-weight:bold;
+    }
+
+    .logout{
+      border:none;
+      background:var(--primary);
+      color:#fff;
+      border-radius:12px;
+      padding:10px 14px;
+      cursor:pointer;
+    }
+
+    .section{
+      display:none;
+    }
+
+    .section.active{
+      display:block;
+    }
+
+    .cards{
+      display:grid;
+      grid-template-columns:repeat(4,1fr);
+      gap:14px;
+      margin-bottom:18px;
+    }
+
+    .card{
+      background:var(--card);
+      border:1px solid var(--border);
+      border-radius:18px;
+      box-shadow:var(--shadow);
+      padding:18px;
+    }
+
+    .stat-title{
+      font-size:13px;
+      color:var(--muted);
+      margin-bottom:10px;
+    }
+
+    .stat-value{
+      font-size:28px;
+      font-weight:bold;
+    }
+
+    .grid-2{
+      display:grid;
+      grid-template-columns:2fr 1fr;
+      gap:14px;
+    }
+
+    .placeholder-chart{
+      height:280px;
+      border-radius:16px;
+      background:linear-gradient(180deg,#eef6ff,#ffffff);
+      border:1px dashed #bfd5eb;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      color:var(--muted);
+      font-size:15px;
+    }
+
+    .table-wrap{
+      overflow:auto;
+      background:#fff;
+      border:1px solid var(--border);
+      border-radius:18px;
+      box-shadow:var(--shadow);
+    }
+
+    table{
+      width:100%;
+      border-collapse:collapse;
+      min-width:760px;
+      background:#fff;
+    }
+
+    th,td{
+      padding:14px 12px;
+      border-bottom:1px solid var(--border);
+      text-align:right;
+      font-size:14px;
+    }
+
+    th{
+      background:#f8fafc;
+      color:#374151;
+      font-weight:bold;
+    }
+
+    .actions{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      margin-bottom:14px;
+    }
+
+    .btn{
+      border:none;
+      border-radius:12px;
+      padding:10px 14px;
+      cursor:pointer;
+      font-size:14px;
+    }
+
+    .btn-primary{background:var(--primary);color:#fff}
+    .btn-light{background:#fff;border:1px solid var(--border)}
+    .btn-green{background:var(--green);color:#fff}
+    .btn-orange{background:var(--orange);color:#fff}
+    .btn-red{background:var(--red);color:#fff}
+
+    .badge{
+      padding:6px 10px;
+      border-radius:999px;
+      font-size:12px;
+      font-weight:bold;
+      display:inline-block;
+    }
+
+    .b-green{background:#ecfdf3;color:#15803d}
+    .b-red{background:#fef2f2;color:#b91c1c}
+    .b-orange{background:#fff7ed;color:#c2410c}
+    .b-blue{background:#eff6ff;color:#1d4ed8}
+
+    .alerts{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+
+    .alert{
+      background:#fff;
+      border:1px solid var(--border);
+      border-radius:14px;
+      padding:12px 14px;
+      font-size:14px;
+    }
+
+    .calendar{
+      display:grid;
+      grid-template-columns:repeat(7,1fr);
+      gap:8px;
+    }
+
+    .day{
+      background:#fff;
+      border:1px solid var(--border);
+      border-radius:12px;
+      min-height:88px;
+      padding:10px;
+      font-size:13px;
+    }
+
+    .day strong{
+      display:block;
+      margin-bottom:8px;
+    }
+
+    .legend{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top:12px;
+    }
+
+    .legend span{
+      display:flex;
+      align-items:center;
+      gap:6px;
+      font-size:13px;
+    }
+
+    .dot{
+      width:12px;height:12px;border-radius:50%;
+      display:inline-block;
+    }
+
+    .login-note{
+      background:#fff;
+      border:1px solid var(--border);
+      border-radius:18px;
+      padding:18px;
+      margin-top:14px;
+      line-height:2;
+    }
+
+    @media (max-width: 1100px){
+      .cards{grid-template-columns:repeat(2,1fr)}
+      .grid-2{grid-template-columns:1fr}
+    }
+
+    @media (max-width: 820px){
+      .sidebar{
+        position:static;
+        width:100%;
+        border-left:none;
+        border-bottom:1px solid var(--border);
+        box-shadow:none;
+      }
+      .content{
+        margin-right:0;
+      }
+      .app{
+        flex-direction:column;
+      }
+      .cards{grid-template-columns:1fr}
+      .topbar{flex-direction:column;align-items:flex-start}
+      .search{min-width:100%}
+    }
+  </style>
 </head>
 <body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-logo">ع</div>
+        <div>
+          <h1>شركة عيون الغد</h1>
+          <p>نظام إدارة الموارد والمرتبات</p>
+        </div>
+      </div>
 
-<h1>شركة عيون الغد</h1>
-<h2>نظام إدارة الموارد والمرتبات</h2>
+      <div class="menu">
+        <button class="active" onclick="showSection('dashboard', this)">
+          <span class="icon i-blue">📊</span>
+          <span>لوحة التحكم</span>
+        </button>
 
-<p>تم إنشاء النظام بنجاح</p>
+        <button onclick="showSection('employees', this)">
+          <span class="icon i-green">👥</span>
+          <span>الموظفون</span>
+        </button>
 
-<button onclick="alert('النظام قيد التطوير')">الدخول للنظام</button>
+        <button onclick="showSection('attendance', this)">
+          <span class="icon i-orange">⏰</span>
+          <span>الحضور</span>
+        </button>
 
+        <button onclick="showSection('fingerprint', this)">
+          <span class="icon i-purple">🖐</span>
+          <span>البصمة</span>
+        </button>
+
+        <button onclick="showSection('loans', this)">
+          <span class="icon i-red">💰</span>
+          <span>السلف والديون</span>
+        </button>
+
+        <button onclick="showSection('payroll', this)">
+          <span class="icon i-teal">🧾</span>
+          <span>الرواتب</span>
+        </button>
+
+        <button onclick="showSection('calendar', this)">
+          <span class="icon i-pink">📅</span>
+          <span>التقويم</span>
+        </button>
+
+        <button onclick="showSection('reports', this)">
+          <span class="icon i-blue">📑</span>
+          <span>التقارير</span>
+        </button>
+
+        <button onclick="showSection('settings', this)">
+          <span class="icon i-gray">⚙️</span>
+          <span>الإعدادات</span>
+        </button>
+      </div>
+    </aside>
+
+    <main class="content">
+      <div class="topbar">
+        <div class="top-right">
+          <h2 id="pageTitle">لوحة التحكم</h2>
+          <p>شركة عيون الغد - نظام إدارة الموارد والمرتبات</p>
+        </div>
+
+        <div class="top-left">
+          <input class="search" placeholder="بحث سريع..." />
+          <div class="pill" id="dateBox"></div>
+          <div class="pill">المستخدم: مدير النظام</div>
+          <button class="logout" onclick="logout()">تسجيل الخروج</button>
+        </div>
+      </div>
+
+      <section id="dashboard" class="section active">
+        <div class="cards">
+          <div class="card">
+            <div class="stat-title">عدد الموظفين</div>
+            <div class="stat-value">100</div>
+          </div>
+          <div class="card">
+            <div class="stat-title">الحضور اليوم</div>
+            <div class="stat-value" style="color:var(--green)">82</div>
+          </div>
+          <div class="card">
+            <div class="stat-title">الغياب اليوم</div>
+            <div class="stat-value" style="color:var(--red)">6</div>
+          </div>
+          <div class="card">
+            <div class="stat-title">المتأخرون اليوم</div>
+            <div class="stat-value" style="color:var(--orange)">12</div>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="card">
+            <h3>إحصائيات الحضور</h3>
+            <div class="placeholder-chart">سيتم هنا لاحقًا الرسم البياني الحقيقي</div>
+          </div>
+
+          <div class="card">
+            <h3>تنبيهات النظام</h3>
+            <div class="alerts">
+              <div class="alert">⚠ الموظف رقم 15 لم يسجل بصمة اليوم</div>
+              <div class="alert">⚠ تأخير متكرر للموظف رقم 8</div>
+              <div class="alert">ℹ توجد سلفة جديدة بانتظار المراجعة</div>
+              <div class="alert">⚠ الشهر الحالي بانتظار مراجعة الشؤون الإدارية</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="employees" class="section">
+        <div class="actions">
+          <button class="btn btn-primary">إضافة موظف</button>
+          <button class="btn btn-light">تعديل</button>
+          <button class="btn btn-light">حذف</button>
+          <button class="btn btn-green">تصدير Excel</button>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>الرقم الوظيفي</th>
+                <th>اسم الموظف</th>
+                <th>القسم</th>
+                <th>التفرع</th>
+                <th>الراتب الأساسي</th>
+                <th>الحالة</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>1</td>
+                <td>أحمد سالم</td>
+                <td>الإدارة</td>
+                <td>مدير إدارة</td>
+                <td>2800 د.ل</td>
+                <td><span class="badge b-green">نشط</span></td>
+              </tr>
+              <tr>
+                <td>2</td>
+                <td>محمد علي</td>
+                <td>المبيعات</td>
+                <td>مشرف</td>
+                <td>2200 د.ل</td>
+                <td><span class="badge b-green">نشط</span></td>
+              </tr>
+              <tr>
+                <td>3</td>
+                <td>خالد مفتاح</td>
+                <td>المخازن</td>
+                <td>أمين مخزن</td>
+                <td>1800 د.ل</td>
+                <td><span class="badge b-orange">موقوف</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="attendance" class="section">
+        <div class="actions">
+          <button class="btn btn-primary">إضافة حضور</button>
+          <button class="btn btn-light">تعديل السجل</button>
+          <button class="btn btn-red">حذف السجل</button>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>التاريخ</th>
+                <th>الرقم الوظيفي</th>
+                <th>الموظف</th>
+                <th>الحالة</th>
+                <th>وقت الدخول</th>
+                <th>التأخير</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>2026-03-10</td>
+                <td>1</td>
+                <td>أحمد سالم</td>
+                <td><span class="badge b-green">حضور</span></td>
+                <td>08:02</td>
+                <td>0 دقيقة</td>
+              </tr>
+              <tr>
+                <td>2026-03-10</td>
+                <td>2</td>
+                <td>محمد علي</td>
+                <td><span class="badge b-orange">تأخير</span></td>
+                <td>08:25</td>
+                <td>25 دقيقة</td>
+              </tr>
+              <tr>
+                <td>2026-03-10</td>
+                <td>3</td>
+                <td>خالد مفتاح</td>
+                <td><span class="badge b-red">غياب</span></td>
+                <td>-</td>
+                <td>-</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="fingerprint" class="section">
+        <div class="actions">
+          <button class="btn btn-primary">استيراد ملف Excel</button>
+          <button class="btn btn-light">استيراد CSV</button>
+        </div>
+
+        <div class="login-note">
+          <strong>نظام البصمة المعتمد:</strong><br>
+          - يدعم أكثر من شكل لملف البصمة<br>
+          - يعتمد أول دخول فقط<br>
+          - يملأ الأيام السابقة تلقائيًا<br>
+          - يقترح إضافة الموظف غير الموجود في النظام
+        </div>
+      </section>
+
+      <section id="loans" class="section">
+        <div class="actions">
+          <button class="btn btn-primary">إضافة سلفة أو دين</button>
+          <button class="btn btn-light">تعديل</button>
+          <button class="btn btn-red">حذف</button>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>الموظف</th>
+                <th>النوع</th>
+                <th>المبلغ</th>
+                <th>عدد الشهور</th>
+                <th>القسط</th>
+                <th>المتبقي</th>
+                <th>الحالة</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>أحمد سالم</td>
+                <td>سلفة</td>
+                <td>1000 د.ل</td>
+                <td>5</td>
+                <td>200 د.ل</td>
+                <td>600 د.ل</td>
+                <td><span class="badge b-blue">جارية</span></td>
+              </tr>
+              <tr>
+                <td>محمد علي</td>
+                <td>مديونية</td>
+                <td>500 د.ل</td>
+                <td>5</td>
+                <td>100 د.ل</td>
+                <td>300 د.ل</td>
+                <td><span class="badge b-blue">جارية</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="payroll" class="section">
+        <div class="actions">
+          <button class="btn btn-primary">إنشاء رواتب الشهر</button>
+          <button class="btn btn-orange">مراجعة</button>
+          <button class="btn btn-green">اعتماد</button>
+          <button class="btn btn-light">طباعة PDF</button>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>الرقم</th>
+                <th>الموظف</th>
+                <th>أيام العمل</th>
+                <th>الحضور</th>
+                <th>الغياب</th>
+                <th>الراتب المستحق</th>
+                <th>الخصومات</th>
+                <th>الصافي</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>1</td>
+                <td>أحمد سالم</td>
+                <td>26</td>
+                <td>24</td>
+                <td>2</td>
+                <td>2584 د.ل</td>
+                <td>200 د.ل</td>
+                <td>2384 د.ل</td>
+              </tr>
+              <tr>
+                <td>2</td>
+                <td>محمد علي</td>
+                <td>26</td>
+                <td>23</td>
+                <td>3</td>
+                <td>1946 د.ل</td>
+                <td>150 د.ل</td>
+                <td>1796 د.ل</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="calendar" class="section">
+        <div class="card">
+          <h3>التقويم الشهري للحضور - مارس 2026</h3>
+          <div class="calendar">
+            <div class="day"><strong>1</strong><span class="badge b-green">حضور</span></div>
+            <div class="day"><strong>2</strong><span class="badge b-green">حضور</span></div>
+            <div class="day"><strong>3</strong><span class="badge b-orange">تأخير</span></div>
+            <div class="day"><strong>4</strong><span class="badge b-green">حضور</span></div>
+            <div class="day"><strong>5</strong><span class="badge b-red">غياب</span></div>
+            <div class="day"><strong>6</strong><span class="badge b-blue">إجازة</span></div>
+            <div class="day"><strong>7</strong><span class="badge b-green">حضور</span></div>
+          </div>
+
+          <div class="legend">
+            <span><i class="dot" style="background:#16a34a"></i> حضور</span>
+            <span><i class="dot" style="background:#dc2626"></i> غياب</span>
+            <span><i class="dot" style="background:#f59e0b"></i> تأخير</span>
+            <span><i class="dot" style="background:#2563eb"></i> إجازة</span>
+          </div>
+        </div>
+      </section>
+
+      <section id="reports" class="section">
+        <div class="actions">
+          <button class="btn btn-primary">كشف راتب PDF</button>
+          <button class="btn btn-green">تصدير Excel</button>
+          <button class="btn btn-light">تصدير CSV</button>
+          <button class="btn btn-orange">طباعة مباشرة</button>
+        </div>
+
+        <div class="login-note">
+          التقارير المعتمدة في النظام:
+          <br> - كشف راتب تفصيلي
+          <br> - مسير رواتب
+          <br> - تقرير حضور
+          <br> - تقرير غياب
+          <br> - تقرير السلف والديون
+          <br> - تقرير المصروفات
+        </div>
+      </section>
+
+      <section id="settings" class="section">
+        <div class="card">
+          <h3>الإعدادات</h3>
+          <div class="login-note">
+            <strong>الإعدادات المعتمدة:</strong>
+            <br>اسم النظام: شركة عيون الغد - نظام إدارة الموارد والمرتبات
+            <br>العملة: الدينار الليبي (د.ل)
+            <br>بداية الأسبوع: السبت
+            <br>العطلة الأسبوعية: الجمعة فقط
+            <br>الوضع الليلي: اختياري
+            <br>اللون الرئيسي: أزرق داكن
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    function showSection(id, btn){
+      document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+
+      document.querySelectorAll('.menu button').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+
+      const titles = {
+        dashboard:'لوحة التحكم',
+        employees:'الموظفون',
+        attendance:'الحضور',
+        fingerprint:'البصمة',
+        loans:'السلف والديون',
+        payroll:'الرواتب',
+        calendar:'التقويم',
+        reports:'التقارير',
+        settings:'الإعدادات'
+      };
+      document.getElementById('pageTitle').textContent = titles[id] || 'النظام';
+    }
+
+    function logout(){
+      alert('تم تسجيل الخروج');
+    }
+
+    function updateDateTime(){
+      const now = new Date();
+      const days = ['الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
+      const months = ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+      const text = `${days[now.getDay()]} ${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()} - ${now.toLocaleTimeString('ar-EG')}`;
+      document.getElementById('dateBox').textContent = text;
+    }
+
+    updateDateTime();
+    setInterval(updateDateTime, 1000);
+  </script>
 </body>
 </html>
