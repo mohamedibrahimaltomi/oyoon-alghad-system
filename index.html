@@ -3,13 +3,18 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>شركة عيون الغد - نظام إدارة الموارد والمرتبات</title>
+  <title>شركة عيون الغد - نظام إدارة الموارد البشرية والمرتبات</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+
   <style>
     :root{
       --primary:#0f4c81;
-      --primary-soft:#eaf3fb;
+      --primary2:#0b3b63;
+      --soft:#eaf3fb;
       --bg:#f5f7fb;
-      --card:#ffffff;
+      --card:#fff;
       --text:#1f2937;
       --muted:#6b7280;
       --border:#e5e7eb;
@@ -19,7 +24,9 @@
       --purple:#7c3aed;
       --teal:#0d9488;
       --pink:#db2777;
-      --shadow:0 8px 24px rgba(15,76,129,.08);
+      --blue:#2563eb;
+      --shadow:0 10px 28px rgba(15,76,129,.08);
+      --radius:18px;
     }
 
     *{box-sizing:border-box}
@@ -30,13 +37,10 @@
       color:var(--text);
     }
 
-    .app{
-      display:flex;
-      min-height:100vh;
-    }
+    .app{display:flex;min-height:100vh}
 
     .sidebar{
-      width:260px;
+      width:280px;
       background:#fff;
       border-left:1px solid var(--border);
       box-shadow:var(--shadow);
@@ -46,322 +50,200 @@
       right:0;
       bottom:0;
       overflow:auto;
+      z-index:10;
     }
 
     .brand{
       display:flex;
       align-items:center;
-      gap:10px;
-      margin-bottom:18px;
+      gap:12px;
       padding-bottom:14px;
+      margin-bottom:16px;
       border-bottom:1px solid var(--border);
     }
 
     .brand-logo{
-      width:42px;
-      height:42px;
-      border-radius:12px;
-      background:var(--primary-soft);
+      width:46px;
+      height:46px;
+      border-radius:14px;
+      background:var(--soft);
       color:var(--primary);
       display:flex;
       align-items:center;
       justify-content:center;
-      font-size:22px;
       font-weight:bold;
+      font-size:24px;
     }
 
-    .brand h1{
-      margin:0;
-      font-size:17px;
-      line-height:1.5;
-    }
+    .brand h1{margin:0;font-size:18px}
+    .brand p{margin:4px 0 0;color:var(--muted);font-size:12px}
 
-    .brand p{
-      margin:0;
-      font-size:12px;
-      color:var(--muted);
-    }
-
-    .menu{
-      display:flex;
-      flex-direction:column;
-      gap:8px;
-    }
-
+    .menu{display:flex;flex-direction:column;gap:8px}
     .menu button{
-      border:none;
-      background:transparent;
-      border-radius:14px;
-      padding:12px 14px;
-      display:flex;
-      align-items:center;
-      gap:12px;
-      cursor:pointer;
-      text-align:right;
-      width:100%;
-      color:var(--text);
-      font-size:15px;
+      border:none;background:transparent;width:100%;cursor:pointer;
+      display:flex;align-items:center;gap:12px;text-align:right;
+      padding:12px 14px;border-radius:14px;font-size:15px;color:var(--text)
     }
-
-    .menu button:hover{
-      background:#f3f6fa;
-    }
-
-    .menu button.active{
-      background:var(--primary);
-      color:#fff;
-    }
-
+    .menu button:hover{background:#f3f6fa}
+    .menu button.active{background:var(--primary);color:#fff}
     .icon{
-      width:34px;
-      height:34px;
-      border-radius:10px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      font-size:18px;
-      flex-shrink:0;
+      width:34px;height:34px;border-radius:10px;
+      display:flex;align-items:center;justify-content:center;
+      background:#eff6ff;color:#2563eb;flex-shrink:0
     }
-
-    .i-blue{background:#e8f1ff;color:#2563eb}
-    .i-green{background:#ecfdf3;color:#16a34a}
-    .i-orange{background:#fff7ed;color:#ea580c}
-    .i-purple{background:#f3e8ff;color:#7c3aed}
-    .i-red{background:#fef2f2;color:#dc2626}
-    .i-teal{background:#ecfeff;color:#0d9488}
-    .i-pink{background:#fdf2f8;color:#db2777}
-    .i-gray{background:#f3f4f6;color:#4b5563}
 
     .content{
       flex:1;
-      margin-right:260px;
+      margin-right:280px;
       padding:20px;
     }
 
     .topbar{
-      background:#fff;
-      border:1px solid var(--border);
-      border-radius:18px;
-      box-shadow:var(--shadow);
-      padding:16px 18px;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:16px;
-      margin-bottom:20px;
-      flex-wrap:wrap;
+      background:#fff;border:1px solid var(--border);border-radius:var(--radius);
+      box-shadow:var(--shadow);padding:16px 18px;margin-bottom:18px;
+      display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap
     }
 
-    .top-right h2{
-      margin:0;
-      font-size:22px;
-    }
+    .topbar h2{margin:0;font-size:24px}
+    .topbar p{margin:6px 0 0;font-size:13px;color:var(--muted)}
 
-    .top-right p{
-      margin:6px 0 0;
-      color:var(--muted);
-      font-size:13px;
-    }
-
-    .top-left{
-      display:flex;
-      align-items:center;
-      gap:10px;
-      flex-wrap:wrap;
-    }
-
-    .search{
-      border:1px solid var(--border);
-      border-radius:12px;
-      padding:10px 14px;
-      min-width:220px;
-      background:#fff;
-    }
-
+    .top-actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
     .pill{
-      background:var(--primary-soft);
-      color:var(--primary);
-      border-radius:12px;
-      padding:10px 12px;
-      font-size:13px;
-      font-weight:bold;
+      background:var(--soft);color:var(--primary);padding:10px 12px;border-radius:12px;
+      font-size:13px;font-weight:bold
     }
 
-    .logout{
-      border:none;
-      background:var(--primary);
-      color:#fff;
-      border-radius:12px;
-      padding:10px 14px;
-      cursor:pointer;
-    }
-
-    .section{
-      display:none;
-    }
-
-    .section.active{
-      display:block;
-    }
+    .section{display:none}
+    .section.active{display:block}
 
     .cards{
       display:grid;
       grid-template-columns:repeat(4,1fr);
       gap:14px;
-      margin-bottom:18px;
+      margin-bottom:16px;
     }
 
-    .card{
-      background:var(--card);
-      border:1px solid var(--border);
-      border-radius:18px;
-      box-shadow:var(--shadow);
-      padding:18px;
+    .card,.table-card,.form-card{
+      background:#fff;border:1px solid var(--border);border-radius:var(--radius);
+      box-shadow:var(--shadow)
     }
 
-    .stat-title{
-      font-size:13px;
-      color:var(--muted);
-      margin-bottom:10px;
+    .card{padding:18px}
+    .stat-title{font-size:13px;color:var(--muted);margin-bottom:8px}
+    .stat-value{font-size:30px;font-weight:bold}
+
+    .grid-2{display:grid;grid-template-columns:1.2fr .8fr;gap:14px}
+    .table-card{padding:14px}
+    .form-card{padding:16px;margin-bottom:14px}
+
+    .form-title{
+      font-size:18px;font-weight:bold;margin:0 0 14px 0;
+      color:var(--primary)
     }
 
-    .stat-value{
-      font-size:28px;
-      font-weight:bold;
-    }
-
-    .grid-2{
+    .form-grid{
       display:grid;
-      grid-template-columns:2fr 1fr;
-      gap:14px;
+      grid-template-columns:repeat(4,1fr);
+      gap:12px;
     }
+    .form-grid.two{grid-template-columns:repeat(2,1fr)}
+    .form-grid.three{grid-template-columns:repeat(3,1fr)}
 
-    .placeholder-chart{
-      min-height:280px;
-      border-radius:16px;
-      background:linear-gradient(180deg,#eef6ff,#ffffff);
-      border:1px dashed #bfd5eb;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      color:var(--muted);
-      font-size:15px;
-      padding:20px;
-      text-align:center;
+    .field{display:flex;flex-direction:column;gap:6px}
+    .field label{font-size:13px;color:#374151;font-weight:bold}
+    .field input,.field select,.field textarea{
+      width:100%;padding:11px 12px;border:1px solid var(--border);border-radius:12px;
+      font-family:inherit;background:#fff
     }
-
-    .table-wrap{
-      overflow:auto;
-      background:#fff;
-      border:1px solid var(--border);
-      border-radius:18px;
-      box-shadow:var(--shadow);
-    }
-
-    table{
-      width:100%;
-      border-collapse:collapse;
-      min-width:760px;
-      background:#fff;
-    }
-
-    th,td{
-      padding:14px 12px;
-      border-bottom:1px solid var(--border);
-      text-align:right;
-      font-size:14px;
-    }
-
-    th{
-      background:#f8fafc;
-      color:#374151;
-      font-weight:bold;
-    }
+    .field textarea{min-height:92px;resize:vertical}
 
     .actions{
-      display:flex;
-      gap:8px;
-      flex-wrap:wrap;
-      margin-bottom:14px;
+      display:flex;gap:8px;flex-wrap:wrap;margin-top:14px
     }
 
     .btn{
-      border:none;
-      border-radius:12px;
-      padding:10px 14px;
-      cursor:pointer;
-      font-size:14px;
+      border:none;border-radius:12px;padding:10px 14px;cursor:pointer;font-size:14px
     }
-
     .btn-primary{background:var(--primary);color:#fff}
     .btn-light{background:#fff;border:1px solid var(--border)}
     .btn-green{background:var(--green);color:#fff}
     .btn-orange{background:var(--orange);color:#fff}
     .btn-red{background:var(--red);color:#fff}
+    .btn-blue{background:var(--blue);color:#fff}
+    .btn-purple{background:var(--purple);color:#fff}
+    .btn-teal{background:var(--teal);color:#fff}
 
-    .badge{
-      padding:6px 10px;
-      border-radius:999px;
-      font-size:12px;
-      font-weight:bold;
-      display:inline-block;
+    .toolbar{
+      display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;
+      margin-bottom:12px;align-items:center
+    }
+    .toolbar .left,.toolbar .right{
+      display:flex;gap:8px;flex-wrap:wrap;align-items:center
     }
 
+    .search{
+      border:1px solid var(--border);border-radius:12px;padding:10px 14px;min-width:260px
+    }
+
+    .table-wrap{overflow:auto}
+    table{width:100%;border-collapse:collapse;min-width:880px}
+    th,td{
+      padding:12px;border-bottom:1px solid var(--border);text-align:right;font-size:14px
+    }
+    th{background:#f8fafc;color:#374151}
+
+    .badge{
+      display:inline-block;padding:6px 10px;border-radius:999px;font-size:12px;font-weight:bold
+    }
     .b-green{background:#ecfdf3;color:#15803d}
     .b-red{background:#fef2f2;color:#b91c1c}
     .b-orange{background:#fff7ed;color:#c2410c}
     .b-blue{background:#eff6ff;color:#1d4ed8}
+    .b-purple{background:#f3e8ff;color:#7c3aed}
     .b-gray{background:#f3f4f6;color:#374151}
 
-    .alerts{
-      display:flex;
-      flex-direction:column;
-      gap:10px;
+    .note{
+      background:#fff;border:1px dashed #bfd5eb;border-radius:16px;
+      padding:16px;line-height:1.9;color:#374151
     }
 
+    .summary-box{
+      min-height:240px;border:1px dashed #bfd5eb;border-radius:16px;
+      background:linear-gradient(180deg,#eef6ff,#fff);padding:18px;line-height:2
+    }
+
+    .alerts{display:flex;flex-direction:column;gap:10px}
     .alert{
-      background:#fff;
-      border:1px solid var(--border);
-      border-radius:14px;
-      padding:12px 14px;
-      font-size:14px;
+      background:#fff;border:1px solid var(--border);border-radius:14px;padding:12px 14px
     }
 
-    .login-note{
-      background:#fff;
-      border:1px solid var(--border);
-      border-radius:18px;
-      padding:18px;
-      margin-top:14px;
-      line-height:2;
+    .hidden{display:none!important}
+
+    .message{
+      position:fixed;left:20px;bottom:20px;z-index:999;
+      min-width:280px;max-width:420px;padding:14px 16px;border-radius:14px;
+      color:#fff;box-shadow:var(--shadow);display:none
+    }
+    .message.show{display:block}
+    .message.success{background:var(--green)}
+    .message.error{background:var(--red)}
+    .message.info{background:var(--primary)}
+
+    .small{font-size:12px;color:var(--muted)}
+    .month-box{
+      display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px
     }
 
-    .empty{
-      padding:18px;
-      text-align:center;
-      color:var(--muted);
-    }
-
-    @media (max-width: 1100px){
+    @media (max-width:1200px){
       .cards{grid-template-columns:repeat(2,1fr)}
       .grid-2{grid-template-columns:1fr}
+      .form-grid{grid-template-columns:repeat(2,1fr)}
     }
-
-    @media (max-width: 820px){
-      .sidebar{
-        position:static;
-        width:100%;
-        border-left:none;
-        border-bottom:1px solid var(--border);
-        box-shadow:none;
-      }
-      .content{
-        margin-right:0;
-      }
-      .app{
-        flex-direction:column;
-      }
-      .cards{grid-template-columns:1fr}
+    @media (max-width:860px){
+      .app{flex-direction:column}
+      .sidebar{position:static;width:100%;border-left:none;border-bottom:1px solid var(--border);box-shadow:none}
+      .content{margin-right:0}
+      .cards,.form-grid,.form-grid.two,.form-grid.three{grid-template-columns:1fr}
       .topbar{flex-direction:column;align-items:flex-start}
       .search{min-width:100%}
     }
@@ -374,64 +256,35 @@
         <div class="brand-logo">ع</div>
         <div>
           <h1>شركة عيون الغد</h1>
-          <p>نظام إدارة الموارد والمرتبات</p>
+          <p>نظام إدارة الموارد البشرية والمرتبات</p>
         </div>
       </div>
 
       <div class="menu">
-        <button class="active" onclick="showSection('dashboard', this)">
-          <span class="icon i-blue">📊</span>
-          <span>لوحة التحكم</span>
-        </button>
-
-        <button onclick="showSection('employees', this)">
-          <span class="icon i-green">👥</span>
-          <span>الموظفون</span>
-        </button>
-
-        <button onclick="showSection('attendance', this)">
-          <span class="icon i-orange">⏰</span>
-          <span>الحضور</span>
-        </button>
-
-        <button onclick="showSection('fingerprint', this)">
-          <span class="icon i-purple">🖐</span>
-          <span>البصمة</span>
-        </button>
-
-        <button onclick="showSection('loans', this)">
-          <span class="icon i-red">💰</span>
-          <span>السلف والديون</span>
-        </button>
-
-        <button onclick="showSection('payroll', this)">
-          <span class="icon i-teal">🧾</span>
-          <span>الرواتب</span>
-        </button>
-
-        <button onclick="showSection('reports', this)">
-          <span class="icon i-blue">📑</span>
-          <span>التقارير</span>
-        </button>
-
-        <button onclick="showSection('settings', this)">
-          <span class="icon i-gray">⚙️</span>
-          <span>الإعدادات</span>
-        </button>
+        <button class="active" onclick="showSection('dashboard', this)"><span class="icon">📊</span><span>لوحة التحكم</span></button>
+        <button onclick="showSection('employees', this)"><span class="icon">👥</span><span>الموظفون</span></button>
+        <button onclick="showSection('departments', this)"><span class="icon">🏢</span><span>الأقسام</span></button>
+        <button onclick="showSection('branches', this)"><span class="icon">📍</span><span>الفروع</span></button>
+        <button onclick="showSection('attendance', this)"><span class="icon">⏰</span><span>الحضور</span></button>
+        <button onclick="showSection('fingerprint', this)"><span class="icon">🖐</span><span>البصمة / Excel</span></button>
+        <button onclick="showSection('loans', this)"><span class="icon">💰</span><span>السلف والديون</span></button>
+        <button onclick="showSection('adjustments', this)"><span class="icon">➕</span><span>الإضافات والخصومات</span></button>
+        <button onclick="showSection('payroll', this)"><span class="icon">🧾</span><span>الرواتب</span></button>
+        <button onclick="showSection('users', this)"><span class="icon">🔐</span><span>المستخدمون</span></button>
+        <button onclick="showSection('reports', this)"><span class="icon">📑</span><span>التقارير</span></button>
+        <button onclick="showSection('settings', this)"><span class="icon">⚙️</span><span>الإعدادات</span></button>
       </div>
     </aside>
 
     <main class="content">
       <div class="topbar">
-        <div class="top-right">
+        <div>
           <h2 id="pageTitle">لوحة التحكم</h2>
-          <p>شركة عيون الغد - نظام إدارة الموارد والمرتبات</p>
+          <p>شركة عيون الغد - نسخة شاملة داخل ملف واحد</p>
         </div>
-
-        <div class="top-left">
+        <div class="top-actions">
           <div class="pill" id="dateBox"></div>
-          <div class="pill">المستخدم: مدير النظام</div>
-          <button class="logout" onclick="logout()">تسجيل الخروج</button>
+          <div class="pill">المستخدم الحالي: admin</div>
         </div>
       </div>
 
@@ -439,528 +292,1514 @@
         <div class="cards">
           <div class="card">
             <div class="stat-title">عدد الموظفين</div>
-            <div class="stat-value" id="stat-total-employees">0</div>
+            <div class="stat-value" id="statEmployees">0</div>
           </div>
           <div class="card">
-            <div class="stat-title">الحضور اليوم</div>
-            <div class="stat-value" id="stat-attendance-today" style="color:var(--green)">0</div>
+            <div class="stat-title">حضور اليوم</div>
+            <div class="stat-value" id="statPresent" style="color:var(--green)">0</div>
           </div>
           <div class="card">
-            <div class="stat-title">الغياب اليوم</div>
-            <div class="stat-value" id="stat-absent-today" style="color:var(--red)">0</div>
+            <div class="stat-title">غياب اليوم</div>
+            <div class="stat-value" id="statAbsent" style="color:var(--red)">0</div>
           </div>
           <div class="card">
-            <div class="stat-title">المتأخرون اليوم</div>
-            <div class="stat-value" id="stat-late-today" style="color:var(--orange)">0</div>
+            <div class="stat-title">تأخير اليوم</div>
+            <div class="stat-value" id="statLate" style="color:var(--orange)">0</div>
           </div>
         </div>
 
         <div class="grid-2">
           <div class="card">
             <h3>ملخص النظام</h3>
-            <div class="placeholder-chart" id="summaryBox">جارِ تحميل البيانات...</div>
+            <div class="summary-box" id="summaryBox">جارِ التحميل...</div>
           </div>
-
           <div class="card">
             <h3>تنبيهات النظام</h3>
-            <div class="alerts" id="alertsBox">
-              <div class="alert">جارِ تحميل التنبيهات...</div>
-            </div>
+            <div class="alerts" id="alertsBox"></div>
           </div>
         </div>
       </section>
 
       <section id="employees" class="section">
-        <div class="actions">
-          <button class="btn btn-primary" onclick="addEmployee()">إضافة موظف</button>
-          <button class="btn btn-green" onclick="loadEmployees()">تحديث</button>
+        <div class="form-card">
+          <h3 class="form-title">إضافة / تعديل موظف</h3>
+          <div class="form-grid">
+            <div class="field">
+              <label>الرقم الوظيفي</label>
+              <input id="emp_no" />
+            </div>
+            <div class="field">
+              <label>اسم الموظف</label>
+              <input id="emp_name" />
+            </div>
+            <div class="field">
+              <label>القسم</label>
+              <select id="emp_department"></select>
+            </div>
+            <div class="field">
+              <label>الفرع</label>
+              <select id="emp_branch"></select>
+            </div>
+            <div class="field">
+              <label>المسمى الوظيفي</label>
+              <input id="emp_job_title" />
+            </div>
+            <div class="field">
+              <label>الراتب الأساسي</label>
+              <input id="emp_salary" type="number" step="0.01" />
+            </div>
+            <div class="field">
+              <label>الحالة</label>
+              <select id="emp_status">
+                <option>نشط</option>
+                <option>موقوف</option>
+                <option>إجازة</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>ملاحظات</label>
+              <input id="emp_notes" />
+            </div>
+          </div>
+          <div class="actions">
+            <button class="btn btn-primary" onclick="saveEmployee()">حفظ الموظف</button>
+            <button class="btn btn-light" onclick="resetEmployeeForm()">جديد</button>
+          </div>
+          <input type="hidden" id="emp_id" />
         </div>
 
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>الرقم الوظيفي</th>
-                <th>اسم الموظف</th>
-                <th>القسم</th>
-                <th>التفرع</th>
-                <th>الراتب الأساسي</th>
-                <th>الحالة</th>
-              </tr>
-            </thead>
-            <tbody id="employees-tbody"></tbody>
-          </table>
+        <div class="table-card">
+          <div class="toolbar">
+            <div class="left">
+              <input class="search" id="employeeSearch" placeholder="بحث باسم الموظف أو الرقم الوظيفي..." oninput="renderEmployees()" />
+            </div>
+            <div class="right">
+              <button class="btn btn-green" onclick="loadEmployees()">تحديث</button>
+              <button class="btn btn-blue" onclick="exportTableToExcel('employeesTable','employees.xlsx')">تصدير Excel</button>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table id="employeesTable">
+              <thead>
+                <tr>
+                  <th>الرقم</th>
+                  <th>الاسم</th>
+                  <th>القسم</th>
+                  <th>الفرع</th>
+                  <th>المسمى</th>
+                  <th>الراتب</th>
+                  <th>الحالة</th>
+                  <th>الإجراءات</th>
+                </tr>
+              </thead>
+              <tbody id="employeesBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section id="departments" class="section">
+        <div class="form-card">
+          <h3 class="form-title">إدارة الأقسام</h3>
+          <div class="form-grid two">
+            <div class="field">
+              <label>اسم القسم</label>
+              <input id="department_name" />
+            </div>
+            <div class="field">
+              <label>&nbsp;</label>
+              <div class="actions" style="margin-top:0">
+                <button class="btn btn-primary" onclick="saveDepartment()">حفظ القسم</button>
+                <button class="btn btn-light" onclick="resetDepartmentForm()">جديد</button>
+              </div>
+            </div>
+          </div>
+          <input type="hidden" id="department_id" />
+        </div>
+
+        <div class="table-card">
+          <div class="toolbar">
+            <div class="left"></div>
+            <div class="right">
+              <button class="btn btn-green" onclick="loadDepartments()">تحديث</button>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>اسم القسم</th>
+                  <th>الإجراءات</th>
+                </tr>
+              </thead>
+              <tbody id="departmentsBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section id="branches" class="section">
+        <div class="form-card">
+          <h3 class="form-title">إدارة الفروع</h3>
+          <div class="form-grid two">
+            <div class="field">
+              <label>اسم الفرع</label>
+              <input id="branch_name" />
+            </div>
+            <div class="field">
+              <label>&nbsp;</label>
+              <div class="actions" style="margin-top:0">
+                <button class="btn btn-primary" onclick="saveBranch()">حفظ الفرع</button>
+                <button class="btn btn-light" onclick="resetBranchForm()">جديد</button>
+              </div>
+            </div>
+          </div>
+          <input type="hidden" id="branch_id" />
+        </div>
+
+        <div class="table-card">
+          <div class="toolbar">
+            <div class="left"></div>
+            <div class="right">
+              <button class="btn btn-green" onclick="loadBranches()">تحديث</button>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>اسم الفرع</th>
+                  <th>الإجراءات</th>
+                </tr>
+              </thead>
+              <tbody id="branchesBody"></tbody>
+            </table>
+          </div>
         </div>
       </section>
 
       <section id="attendance" class="section">
-        <div class="actions">
-          <button class="btn btn-primary" onclick="addAttendance()">إضافة حضور</button>
-          <button class="btn btn-light" onclick="loadAttendance()">تحديث</button>
+        <div class="form-card">
+          <h3 class="form-title">إضافة / تعديل حضور</h3>
+          <div class="form-grid">
+            <div class="field">
+              <label>الموظف</label>
+              <select id="att_employee"></select>
+            </div>
+            <div class="field">
+              <label>التاريخ</label>
+              <input id="att_date" type="date" />
+            </div>
+            <div class="field">
+              <label>الحالة</label>
+              <select id="att_status">
+                <option>حضور</option>
+                <option>غياب</option>
+                <option>تأخير</option>
+                <option>إجازة</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>وقت الدخول</label>
+              <input id="att_checkin" type="time" />
+            </div>
+            <div class="field">
+              <label>دقائق التأخير</label>
+              <input id="att_late" type="number" value="0" />
+            </div>
+            <div class="field">
+              <label>ملاحظات</label>
+              <input id="att_notes" />
+            </div>
+          </div>
+          <div class="actions">
+            <button class="btn btn-primary" onclick="saveAttendance()">حفظ السجل</button>
+            <button class="btn btn-light" onclick="resetAttendanceForm()">جديد</button>
+          </div>
+          <input type="hidden" id="att_id" />
         </div>
 
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>التاريخ</th>
-                <th>الرقم الوظيفي</th>
-                <th>الموظف</th>
-                <th>الحالة</th>
-                <th>وقت الدخول</th>
-                <th>التأخير</th>
-              </tr>
-            </thead>
-            <tbody id="attendance-tbody"></tbody>
-          </table>
+        <div class="table-card">
+          <div class="toolbar">
+            <div class="left">
+              <input class="search" id="attendanceSearch" placeholder="بحث باسم الموظف..." oninput="renderAttendance()" />
+            </div>
+            <div class="right">
+              <button class="btn btn-green" onclick="loadAttendance()">تحديث</button>
+              <button class="btn btn-blue" onclick="exportTableToExcel('attendanceTable','attendance.xlsx')">تصدير Excel</button>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table id="attendanceTable">
+              <thead>
+                <tr>
+                  <th>التاريخ</th>
+                  <th>الرقم</th>
+                  <th>الموظف</th>
+                  <th>الحالة</th>
+                  <th>الدخول</th>
+                  <th>التأخير</th>
+                  <th>الملاحظات</th>
+                  <th>الإجراءات</th>
+                </tr>
+              </thead>
+              <tbody id="attendanceBody"></tbody>
+            </table>
+          </div>
         </div>
       </section>
 
       <section id="fingerprint" class="section">
-        <div class="login-note">
-          هذه الصفحة ستكون لاحقًا خاصة باستيراد ملفات البصمة وربطها بالحضور.
+        <div class="form-card">
+          <h3 class="form-title">استيراد ملف بصمة Excel</h3>
+          <div class="note">
+            النسخة الحالية تقرأ أول ورقة في ملف Excel وتبحث عن أعمدة شائعة مثل:
+            <br>employee_no / الرقم / رقم وظيفي
+            <br>date / التاريخ
+            <br>status / الحالة
+            <br>check_in / وقت الدخول
+            <br>late_minutes / التأخير
+            <br>notes / ملاحظات
+            <br><br>
+            إذا كانت أسماء الأعمدة مختلفة جدًا يمكننا تعديلها لاحقًا بعد التجربة.
+          </div>
+          <div class="actions">
+            <input type="file" id="fingerprintFile" accept=".xlsx,.xls,.csv" />
+            <button class="btn btn-primary" onclick="importFingerprintFile()">استيراد الملف</button>
+          </div>
         </div>
       </section>
 
       <section id="loans" class="section">
-        <div class="actions">
-          <button class="btn btn-primary" onclick="addLoan()">إضافة سلفة أو دين</button>
-          <button class="btn btn-light" onclick="loadLoans()">تحديث</button>
+        <div class="form-card">
+          <h3 class="form-title">إضافة / تعديل سلفة أو دين</h3>
+          <div class="form-grid">
+            <div class="field">
+              <label>الموظف</label>
+              <select id="loan_employee"></select>
+            </div>
+            <div class="field">
+              <label>النوع</label>
+              <select id="loan_type">
+                <option>سلفة</option>
+                <option>مديونية</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>المبلغ</label>
+              <input id="loan_amount" type="number" step="0.01" />
+            </div>
+            <div class="field">
+              <label>عدد الشهور</label>
+              <input id="loan_months" type="number" value="1" />
+            </div>
+            <div class="field">
+              <label>القسط الشهري</label>
+              <input id="loan_installment" type="number" step="0.01" />
+            </div>
+            <div class="field">
+              <label>المتبقي</label>
+              <input id="loan_remaining" type="number" step="0.01" />
+            </div>
+            <div class="field">
+              <label>الحالة</label>
+              <select id="loan_status">
+                <option>جارية</option>
+                <option>مغلقة</option>
+              </select>
+            </div>
+          </div>
+          <div class="actions">
+            <button class="btn btn-primary" onclick="saveLoan()">حفظ</button>
+            <button class="btn btn-light" onclick="resetLoanForm()">جديد</button>
+          </div>
+          <input type="hidden" id="loan_id" />
         </div>
 
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>الموظف</th>
-                <th>النوع</th>
-                <th>المبلغ</th>
-                <th>عدد الشهور</th>
-                <th>القسط</th>
-                <th>المتبقي</th>
-                <th>الحالة</th>
-              </tr>
-            </thead>
-            <tbody id="loans-tbody"></tbody>
-          </table>
+        <div class="table-card">
+          <div class="toolbar">
+            <div class="left"></div>
+            <div class="right">
+              <button class="btn btn-green" onclick="loadLoans()">تحديث</button>
+              <button class="btn btn-blue" onclick="exportTableToExcel('loansTable','loans.xlsx')">تصدير Excel</button>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table id="loansTable">
+              <thead>
+                <tr>
+                  <th>الموظف</th>
+                  <th>النوع</th>
+                  <th>المبلغ</th>
+                  <th>عدد الشهور</th>
+                  <th>القسط</th>
+                  <th>المتبقي</th>
+                  <th>الحالة</th>
+                  <th>الإجراءات</th>
+                </tr>
+              </thead>
+              <tbody id="loansBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section id="adjustments" class="section">
+        <div class="form-card">
+          <h3 class="form-title">الإضافات والخصومات اليدوية</h3>
+          <div class="form-grid">
+            <div class="field">
+              <label>الموظف</label>
+              <select id="adj_employee"></select>
+            </div>
+            <div class="field">
+              <label>النوع</label>
+              <select id="adj_type">
+                <option value="إضافة">إضافة</option>
+                <option value="خصم">خصم</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>العنوان</label>
+              <input id="adj_title" />
+            </div>
+            <div class="field">
+              <label>المبلغ</label>
+              <input id="adj_amount" type="number" step="0.01" />
+            </div>
+            <div class="field">
+              <label>الشهر</label>
+              <input id="adj_month" type="month" />
+            </div>
+            <div class="field">
+              <label>ملاحظات</label>
+              <input id="adj_notes" />
+            </div>
+          </div>
+          <div class="actions">
+            <button class="btn btn-primary" onclick="saveAdjustment()">حفظ</button>
+            <button class="btn btn-light" onclick="resetAdjustmentForm()">جديد</button>
+          </div>
+          <input type="hidden" id="adj_id" />
+        </div>
+
+        <div class="table-card">
+          <div class="toolbar">
+            <div class="left"></div>
+            <div class="right">
+              <button class="btn btn-green" onclick="loadAdjustments()">تحديث</button>
+              <button class="btn btn-blue" onclick="exportTableToExcel('adjustmentsTable','adjustments.xlsx')">تصدير Excel</button>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table id="adjustmentsTable">
+              <thead>
+                <tr>
+                  <th>الموظف</th>
+                  <th>النوع</th>
+                  <th>العنوان</th>
+                  <th>المبلغ</th>
+                  <th>الشهر</th>
+                  <th>الملاحظات</th>
+                  <th>الإجراءات</th>
+                </tr>
+              </thead>
+              <tbody id="adjustmentsBody"></tbody>
+            </table>
+          </div>
         </div>
       </section>
 
       <section id="payroll" class="section">
-        <div class="actions">
-          <button class="btn btn-primary" onclick="generateMonthlyPayroll()">إنشاء رواتب الشهر</button>
-          <button class="btn btn-light" onclick="loadPayroll()">تحديث</button>
+        <div class="form-card">
+          <h3 class="form-title">رواتب الشهر</h3>
+          <div class="month-box">
+            <div class="field" style="min-width:220px">
+              <label>الشهر</label>
+              <input id="payroll_month" type="month" />
+            </div>
+            <button class="btn btn-primary" onclick="generatePayroll()">إنشاء / تحديث رواتب الشهر</button>
+            <button class="btn btn-green" onclick="loadPayroll()">تحميل الشهر</button>
+            <button class="btn btn-blue" onclick="approvePayroll()">اعتماد الرواتب المعروضة</button>
+            <button class="btn btn-orange" onclick="exportTableToExcel('payrollTable','payroll.xlsx')">تصدير Excel</button>
+          </div>
+          <div class="small">أيام العمل تُحسب تلقائيًا: كل أيام الشهر باستثناء الجمعة فقط.</div>
         </div>
 
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>الرقم</th>
-                <th>الموظف</th>
-                <th>أيام العمل</th>
-                <th>الحضور</th>
-                <th>الغياب</th>
-                <th>الراتب المستحق</th>
-                <th>الخصومات</th>
-                <th>الصافي</th>
-              </tr>
-            </thead>
-            <tbody id="payroll-tbody"></tbody>
-          </table>
+        <div class="table-card">
+          <div class="table-wrap">
+            <table id="payrollTable">
+              <thead>
+                <tr>
+                  <th>الرقم</th>
+                  <th>الموظف</th>
+                  <th>أيام العمل</th>
+                  <th>الحضور</th>
+                  <th>الغياب</th>
+                  <th>الراتب المستحق</th>
+                  <th>إضافات</th>
+                  <th>خصم سلف</th>
+                  <th>خصومات يدوية</th>
+                  <th>الصافي</th>
+                  <th>الحالة</th>
+                </tr>
+              </thead>
+              <tbody id="payrollBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section id="users" class="section">
+        <div class="form-card">
+          <h3 class="form-title">المستخدمون والصلاحيات</h3>
+          <div class="form-grid">
+            <div class="field">
+              <label>اسم المستخدم</label>
+              <input id="user_username" />
+            </div>
+            <div class="field">
+              <label>كلمة المرور</label>
+              <input id="user_password" />
+            </div>
+            <div class="field">
+              <label>الدور</label>
+              <select id="user_role">
+                <option>مدير النظام</option>
+                <option>HR</option>
+                <option>محاسب</option>
+                <option>إدارة</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>الحالة</label>
+              <select id="user_status">
+                <option value="active">active</option>
+                <option value="inactive">inactive</option>
+              </select>
+            </div>
+          </div>
+          <div class="actions">
+            <button class="btn btn-primary" onclick="saveUser()">حفظ</button>
+            <button class="btn btn-light" onclick="resetUserForm()">جديد</button>
+          </div>
+          <input type="hidden" id="user_id" />
+        </div>
+
+        <div class="table-card">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>اسم المستخدم</th>
+                  <th>الدور</th>
+                  <th>الحالة</th>
+                  <th>الإجراءات</th>
+                </tr>
+              </thead>
+              <tbody id="usersBody"></tbody>
+            </table>
+          </div>
         </div>
       </section>
 
       <section id="reports" class="section">
-        <div class="login-note">
-          سيتم لاحقًا إضافة تقارير الرواتب والحضور والسلف.
+        <div class="card">
+          <h3>التقارير الجاهزة حاليًا</h3>
+          <div class="actions">
+            <button class="btn btn-blue" onclick="exportTableToExcel('employeesTable','employees-report.xlsx')">تقرير الموظفين</button>
+            <button class="btn btn-blue" onclick="exportTableToExcel('attendanceTable','attendance-report.xlsx')">تقرير الحضور</button>
+            <button class="btn btn-blue" onclick="exportTableToExcel('loansTable','loans-report.xlsx')">تقرير السلف والديون</button>
+            <button class="btn btn-blue" onclick="exportTableToExcel('adjustmentsTable','adjustments-report.xlsx')">تقرير الإضافات والخصومات</button>
+            <button class="btn btn-blue" onclick="exportTableToExcel('payrollTable','payroll-report.xlsx')">مسير الرواتب</button>
+            <button class="btn btn-light" onclick="window.print()">طباعة الصفحة الحالية</button>
+          </div>
         </div>
       </section>
 
       <section id="settings" class="section">
         <div class="card">
-          <h3>الإعدادات</h3>
-          <div class="login-note">
-            اسم النظام: شركة عيون الغد - نظام إدارة الموارد والمرتبات
+          <h3>الإعدادات المعتمدة</h3>
+          <div class="note">
+            اسم النظام: شركة عيون الغد - نظام إدارة الموارد البشرية والمرتبات
             <br>العملة: الدينار الليبي
-            <br>العطلة الأسبوعية: الجمعة
+            <br>العطلة الأسبوعية: الجمعة فقط
+            <br>أيام العمل: الشهر كاملًا باستثناء الجمعة
+            <br>الاعتماد الأساسي للموظف: الرقم الوظيفي
+            <br>النظام متصل مباشرة بقاعدة بيانات Supabase
           </div>
         </div>
       </section>
     </main>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <div id="msg" class="message"></div>
+
   <script>
     const SUPABASE_URL = "https://okyujxqzzrxtmtuimndk.supabase.co";
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9reXVqeHF6enJ4dG10dWltbmRrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMxMDIyNjYsImV4cCI6MjA4ODY3ODI2Nn0.KAk2TEAm_QVBo15wK5AWk4RfT5I7CNWd7SoiACqs7Yw";
 
-    const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     const state = {
       employees: [],
+      departments: [],
+      branches: [],
       attendance: [],
       loans: [],
-      payroll: []
+      adjustments: [],
+      payroll: [],
+      users: []
     };
 
+    function showMessage(text, type = "success"){
+      const el = document.getElementById("msg");
+      el.className = `message show ${type}`;
+      el.textContent = text;
+      setTimeout(() => el.classList.remove("show"), 3000);
+    }
+
     function showSection(id, btn){
-      document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-      document.getElementById(id).classList.add('active');
-      document.querySelectorAll('.menu button').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
+      document.querySelectorAll(".section").forEach(s => s.classList.remove("active"));
+      document.getElementById(id).classList.add("active");
+      document.querySelectorAll(".menu button").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
 
       const titles = {
-        dashboard:'لوحة التحكم',
-        employees:'الموظفون',
-        attendance:'الحضور',
-        fingerprint:'البصمة',
-        loans:'السلف والديون',
-        payroll:'الرواتب',
-        reports:'التقارير',
-        settings:'الإعدادات'
+        dashboard:"لوحة التحكم",
+        employees:"الموظفون",
+        departments:"الأقسام",
+        branches:"الفروع",
+        attendance:"الحضور",
+        fingerprint:"البصمة / Excel",
+        loans:"السلف والديون",
+        adjustments:"الإضافات والخصومات",
+        payroll:"الرواتب",
+        users:"المستخدمون",
+        reports:"التقارير",
+        settings:"الإعدادات"
       };
-      document.getElementById('pageTitle').textContent = titles[id] || 'النظام';
+      document.getElementById("pageTitle").textContent = titles[id] || "النظام";
     }
 
-    function logout(){
-      alert('تم تسجيل الخروج');
-    }
+    function formatCurrency(v){ return `${Number(v || 0).toFixed(2)} د.ل`; }
+    function today(){ return new Date().toISOString().split("T")[0]; }
+    function currentMonth(){ return new Date().toISOString().slice(0,7); }
 
     function updateDateTime(){
       const now = new Date();
       const days = ['الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
       const months = ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
-      const text = `${days[now.getDay()]} ${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()} - ${now.toLocaleTimeString('ar-EG')}`;
-      document.getElementById('dateBox').textContent = text;
-    }
-
-    function formatCurrency(value){
-      return `${Number(value || 0).toFixed(2)} د.ل`;
+      document.getElementById("dateBox").textContent =
+        `${days[now.getDay()]} ${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()} - ${now.toLocaleTimeString('ar-EG')}`;
     }
 
     function badge(status){
-      if(status === 'نشط' || status === 'حضور') return `<span class="badge b-green">${status}</span>`;
-      if(status === 'غياب') return `<span class="badge b-red">${status}</span>`;
-      if(status === 'تأخير') return `<span class="badge b-orange">${status}</span>`;
-      return `<span class="badge b-blue">${status || '-'}</span>`;
+      if(status === "نشط" || status === "حضور" || status === "active") return `<span class="badge b-green">${status}</span>`;
+      if(status === "غياب" || status === "inactive") return `<span class="badge b-red">${status}</span>`;
+      if(status === "تأخير" || status === "موقوف") return `<span class="badge b-orange">${status}</span>`;
+      if(status === "إجازة" || status === "جارية" || status === "معتمد") return `<span class="badge b-blue">${status}</span>`;
+      if(status === "مسودة") return `<span class="badge b-purple">${status}</span>`;
+      return `<span class="badge b-gray">${status || "-"}</span>`;
+    }
+
+    function workingDaysExcludingFridays(monthStr){
+      const [y, m] = monthStr.split("-").map(Number);
+      const daysInMonth = new Date(y, m, 0).getDate();
+      let count = 0;
+      for(let d = 1; d <= daysInMonth; d++){
+        const day = new Date(y, m - 1, d).getDay();
+        if(day !== 5) count++;
+      }
+      return count;
+    }
+
+    function monthDateRange(monthStr){
+      const [y, m] = monthStr.split("-").map(Number);
+      const start = `${monthStr}-01`;
+      const last = new Date(y, m, 0).getDate();
+      const end = `${monthStr}-${String(last).padStart(2,"0")}`;
+      return { start, end };
+    }
+
+    function fillEmployeeSelects(){
+      const options = [`<option value="">اختر الموظف</option>`].concat(
+        state.employees.map(e => `<option value="${e.id}">${e.employee_no} - ${e.full_name}</option>`)
+      ).join("");
+      ["att_employee","loan_employee","adj_employee"].forEach(id => {
+        const el = document.getElementById(id);
+        if(el) el.innerHTML = options;
+      });
+    }
+
+    function fillDepartmentSelect(){
+      const select = document.getElementById("emp_department");
+      if(!select) return;
+      let opts = `<option value="">اختر القسم</option>`;
+      opts += state.departments.map(d => `<option value="${d.name}">${d.name}</option>`).join("");
+      select.innerHTML = opts;
+    }
+
+    function fillBranchSelect(){
+      const select = document.getElementById("emp_branch");
+      if(!select) return;
+      let opts = `<option value="">اختر الفرع</option>`;
+      opts += state.branches.map(b => `<option value="${b.name}">${b.name}</option>`).join("");
+      select.innerHTML = opts;
+    }
+
+    async function loadDepartments(){
+      const { data, error } = await sb.from("departments").select("*").order("name");
+      if(error) return showMessage("خطأ في تحميل الأقسام", "error");
+      state.departments = data || [];
+      renderDepartments();
+      fillDepartmentSelect();
+    }
+
+    function renderDepartments(){
+      const body = document.getElementById("departmentsBody");
+      if(!state.departments.length){
+        body.innerHTML = `<tr><td colspan="2">لا توجد أقسام</td></tr>`;
+        return;
+      }
+      body.innerHTML = state.departments.map(d => `
+        <tr>
+          <td>${d.name || ""}</td>
+          <td>
+            <button class="btn btn-light" onclick='editDepartment(${JSON.stringify(d)})'>تعديل</button>
+            <button class="btn btn-red" onclick="deleteDepartment('${d.id}')">حذف</button>
+          </td>
+        </tr>
+      `).join("");
+    }
+
+    function resetDepartmentForm(){
+      department_id.value = "";
+      department_name.value = "";
+    }
+
+    function editDepartment(d){
+      department_id.value = d.id || "";
+      department_name.value = d.name || "";
+      showSection("departments", document.querySelectorAll(".menu button")[2]);
+    }
+
+    async function saveDepartment(){
+      const id = department_id.value;
+      const name = department_name.value.trim();
+      if(!name) return showMessage("أدخل اسم القسم", "error");
+
+      let q = sb.from("departments");
+      const { error } = id
+        ? await q.update({ name }).eq("id", id)
+        : await q.insert([{ name }]);
+
+      if(error) return showMessage("فشل حفظ القسم", "error");
+      showMessage("تم حفظ القسم");
+      resetDepartmentForm();
+      await loadDepartments();
+    }
+
+    async function deleteDepartment(id){
+      if(!confirm("حذف القسم؟")) return;
+      const { error } = await sb.from("departments").delete().eq("id", id);
+      if(error) return showMessage("فشل حذف القسم", "error");
+      showMessage("تم حذف القسم");
+      await loadDepartments();
+    }
+
+    async function loadBranches(){
+      const { data, error } = await sb.from("branches").select("*").order("name");
+      if(error) return showMessage("خطأ في تحميل الفروع", "error");
+      state.branches = data || [];
+      renderBranches();
+      fillBranchSelect();
+    }
+
+    function renderBranches(){
+      const body = document.getElementById("branchesBody");
+      if(!state.branches.length){
+        body.innerHTML = `<tr><td colspan="2">لا توجد فروع</td></tr>`;
+        return;
+      }
+      body.innerHTML = state.branches.map(b => `
+        <tr>
+          <td>${b.name || ""}</td>
+          <td>
+            <button class="btn btn-light" onclick='editBranch(${JSON.stringify(b)})'>تعديل</button>
+            <button class="btn btn-red" onclick="deleteBranch('${b.id}')">حذف</button>
+          </td>
+        </tr>
+      `).join("");
+    }
+
+    function resetBranchForm(){
+      branch_id.value = "";
+      branch_name.value = "";
+    }
+
+    function editBranch(b){
+      branch_id.value = b.id || "";
+      branch_name.value = b.name || "";
+      showSection("branches", document.querySelectorAll(".menu button")[3]);
+    }
+
+    async function saveBranch(){
+      const id = branch_id.value;
+      const name = branch_name.value.trim();
+      if(!name) return showMessage("أدخل اسم الفرع", "error");
+
+      let q = sb.from("branches");
+      const { error } = id
+        ? await q.update({ name }).eq("id", id)
+        : await q.insert([{ name }]);
+
+      if(error) return showMessage("فشل حفظ الفرع", "error");
+      showMessage("تم حفظ الفرع");
+      resetBranchForm();
+      await loadBranches();
+    }
+
+    async function deleteBranch(id){
+      if(!confirm("حذف الفرع؟")) return;
+      const { error } = await sb.from("branches").delete().eq("id", id);
+      if(error) return showMessage("فشل حذف الفرع", "error");
+      showMessage("تم حذف الفرع");
+      await loadBranches();
     }
 
     async function loadEmployees(){
-      const { data, error } = await supabaseClient
-        .from('employees')
-        .select('*')
-        .order('employee_no', { ascending:true });
-
-      if(error){ alert('خطأ في تحميل الموظفين'); return; }
-
+      const { data, error } = await sb.from("employees").select("*").order("employee_no");
+      if(error) return showMessage("خطأ في تحميل الموظفين", "error");
       state.employees = data || [];
-      const tbody = document.getElementById('employees-tbody');
+      renderEmployees();
+      fillEmployeeSelects();
+      updateDashboard();
+    }
 
-      if(!state.employees.length){
-        tbody.innerHTML = `<tr><td colspan="6" class="empty">لا يوجد موظفون</td></tr>`;
-      } else {
-        tbody.innerHTML = state.employees.map(emp => `
-          <tr>
-            <td>${emp.employee_no || ''}</td>
-            <td>${emp.full_name || ''}</td>
-            <td>${emp.department || ''}</td>
-            <td>${emp.branch || ''}</td>
-            <td>${formatCurrency(emp.basic_salary)}</td>
-            <td>${badge(emp.status || 'نشط')}</td>
-          </tr>
-        `).join('');
+    function renderEmployees(){
+      const q = (employeeSearch.value || "").trim().toLowerCase();
+      const rows = state.employees.filter(e =>
+        !q ||
+        String(e.employee_no || "").toLowerCase().includes(q) ||
+        String(e.full_name || "").toLowerCase().includes(q) ||
+        String(e.department || "").toLowerCase().includes(q)
+      );
+
+      const body = document.getElementById("employeesBody");
+      if(!rows.length){
+        body.innerHTML = `<tr><td colspan="8">لا توجد بيانات</td></tr>`;
+        return;
+      }
+      body.innerHTML = rows.map(e => `
+        <tr>
+          <td>${e.employee_no || ""}</td>
+          <td>${e.full_name || ""}</td>
+          <td>${e.department || ""}</td>
+          <td>${e.branch || ""}</td>
+          <td>${e.job_title || ""}</td>
+          <td>${formatCurrency(e.basic_salary)}</td>
+          <td>${badge(e.status || "نشط")}</td>
+          <td>
+            <button class="btn btn-light" onclick='editEmployee(${JSON.stringify(e)})'>تعديل</button>
+            <button class="btn btn-red" onclick="deleteEmployee('${e.id}')">حذف</button>
+          </td>
+        </tr>
+      `).join("");
+    }
+
+    function resetEmployeeForm(){
+      emp_id.value = "";
+      emp_no.value = "";
+      emp_name.value = "";
+      emp_department.value = "";
+      emp_branch.value = "";
+      emp_job_title.value = "";
+      emp_salary.value = "";
+      emp_status.value = "نشط";
+      emp_notes.value = "";
+    }
+
+    function editEmployee(e){
+      emp_id.value = e.id || "";
+      emp_no.value = e.employee_no || "";
+      emp_name.value = e.full_name || "";
+      emp_department.value = e.department || "";
+      emp_branch.value = e.branch || "";
+      emp_job_title.value = e.job_title || "";
+      emp_salary.value = e.basic_salary || 0;
+      emp_status.value = e.status || "نشط";
+      emp_notes.value = e.notes || "";
+      showSection("employees", document.querySelectorAll(".menu button")[1]);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    async function saveEmployee(){
+      const payload = {
+        employee_no: emp_no.value.trim(),
+        full_name: emp_name.value.trim(),
+        department: emp_department.value || "",
+        branch: emp_branch.value || "",
+        job_title: emp_job_title.value.trim(),
+        basic_salary: Number(emp_salary.value || 0),
+        status: emp_status.value,
+        notes: emp_notes.value.trim()
+      };
+
+      if(!payload.employee_no || !payload.full_name){
+        return showMessage("أدخل الرقم الوظيفي واسم الموظف", "error");
       }
 
-      document.getElementById('stat-total-employees').textContent = state.employees.length;
-      updateSummary();
+      const id = emp_id.value;
+      const { error } = id
+        ? await sb.from("employees").update(payload).eq("id", id)
+        : await sb.from("employees").insert([payload]);
+
+      if(error) return showMessage("فشل حفظ الموظف، قد يكون الرقم الوظيفي مكررًا", "error");
+      showMessage("تم حفظ الموظف");
+      resetEmployeeForm();
+      await loadEmployees();
+    }
+
+    async function deleteEmployee(id){
+      if(!confirm("حذف الموظف؟")) return;
+      const { error } = await sb.from("employees").delete().eq("id", id);
+      if(error) return showMessage("فشل حذف الموظف", "error");
+      showMessage("تم حذف الموظف");
+      await loadEmployees();
     }
 
     async function loadAttendance(){
-      const today = new Date().toISOString().split('T')[0];
+      const { data, error } = await sb
+        .from("attendance")
+        .select("*, employees(employee_no, full_name)")
+        .order("attendance_date", { ascending:false })
+        .order("created_at", { ascending:false });
 
-      const { data, error } = await supabaseClient
-        .from('attendance')
-        .select('*, employees(employee_no, full_name)')
-        .eq('attendance_date', today)
-        .order('created_at', { ascending:false });
-
-      if(error){ alert('خطأ في تحميل الحضور'); return; }
-
+      if(error) return showMessage("خطأ في تحميل الحضور", "error");
       state.attendance = data || [];
-      const tbody = document.getElementById('attendance-tbody');
+      renderAttendance();
+      updateDashboard();
+    }
 
-      if(!state.attendance.length){
-        tbody.innerHTML = `<tr><td colspan="6" class="empty">لا يوجد حضور اليوم</td></tr>`;
-      } else {
-        tbody.innerHTML = state.attendance.map(row => `
-          <tr>
-            <td>${row.attendance_date || ''}</td>
-            <td>${row.employees?.employee_no || ''}</td>
-            <td>${row.employees?.full_name || ''}</td>
-            <td>${badge(row.status || '')}</td>
-            <td>${row.check_in || '-'}</td>
-            <td>${row.late_minutes || 0} دقيقة</td>
-          </tr>
-        `).join('');
+    function renderAttendance(){
+      const q = (attendanceSearch.value || "").trim().toLowerCase();
+      const rows = state.attendance.filter(r =>
+        !q || String(r.employees?.full_name || "").toLowerCase().includes(q)
+      );
+      const body = document.getElementById("attendanceBody");
+      if(!rows.length){
+        body.innerHTML = `<tr><td colspan="8">لا توجد سجلات حضور</td></tr>`;
+        return;
+      }
+      body.innerHTML = rows.map(r => `
+        <tr>
+          <td>${r.attendance_date || ""}</td>
+          <td>${r.employees?.employee_no || ""}</td>
+          <td>${r.employees?.full_name || ""}</td>
+          <td>${badge(r.status || "")}</td>
+          <td>${r.check_in || "-"}</td>
+          <td>${r.late_minutes || 0} دقيقة</td>
+          <td>${r.notes || "-"}</td>
+          <td>
+            <button class="btn btn-light" onclick='editAttendance(${JSON.stringify(r)})'>تعديل</button>
+            <button class="btn btn-red" onclick="deleteAttendance('${r.id}')">حذف</button>
+          </td>
+        </tr>
+      `).join("");
+    }
+
+    function resetAttendanceForm(){
+      att_id.value = "";
+      att_employee.value = "";
+      att_date.value = today();
+      att_status.value = "حضور";
+      att_checkin.value = "";
+      att_late.value = 0;
+      att_notes.value = "";
+    }
+
+    function editAttendance(r){
+      att_id.value = r.id || "";
+      att_employee.value = r.employee_id || "";
+      att_date.value = r.attendance_date || today();
+      att_status.value = r.status || "حضور";
+      att_checkin.value = r.check_in || "";
+      att_late.value = r.late_minutes || 0;
+      att_notes.value = r.notes || "";
+      showSection("attendance", document.querySelectorAll(".menu button")[4]);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    async function saveAttendance(){
+      const payload = {
+        employee_id: att_employee.value,
+        attendance_date: att_date.value,
+        status: att_status.value,
+        check_in: att_checkin.value || null,
+        late_minutes: Number(att_late.value || 0),
+        notes: att_notes.value.trim()
+      };
+      if(!payload.employee_id || !payload.attendance_date){
+        return showMessage("اختر الموظف والتاريخ", "error");
       }
 
-      const present = state.attendance.filter(x => x.status === 'حضور').length;
-      const absent = state.attendance.filter(x => x.status === 'غياب').length;
-      const late = state.attendance.filter(x => x.status === 'تأخير').length;
+      const id = att_id.value;
+      const { error } = id
+        ? await sb.from("attendance").update(payload).eq("id", id)
+        : await sb.from("attendance").upsert([payload], { onConflict:"employee_id,attendance_date" });
 
-      document.getElementById('stat-attendance-today').textContent = present;
-      document.getElementById('stat-absent-today').textContent = absent;
-      document.getElementById('stat-late-today').textContent = late;
+      if(error) return showMessage("فشل حفظ الحضور", "error");
+      showMessage("تم حفظ الحضور");
+      resetAttendanceForm();
+      await loadAttendance();
+    }
 
-      updateSummary();
-      updateAlerts();
+    async function deleteAttendance(id){
+      if(!confirm("حذف سجل الحضور؟")) return;
+      const { error } = await sb.from("attendance").delete().eq("id", id);
+      if(error) return showMessage("فشل حذف السجل", "error");
+      showMessage("تم حذف السجل");
+      await loadAttendance();
     }
 
     async function loadLoans(){
-      const { data, error } = await supabaseClient
-        .from('loans')
-        .select('*, employees(full_name)')
-        .order('created_at', { ascending:false });
+      const { data, error } = await sb
+        .from("loans")
+        .select("*, employees(full_name)")
+        .order("created_at", { ascending:false });
 
-      if(error){ alert('خطأ في تحميل السلف والديون'); return; }
-
+      if(error) return showMessage("خطأ في تحميل السلف والديون", "error");
       state.loans = data || [];
-      const tbody = document.getElementById('loans-tbody');
+      renderLoans();
+      updateDashboard();
+    }
 
+    function renderLoans(){
+      const body = document.getElementById("loansBody");
       if(!state.loans.length){
-        tbody.innerHTML = `<tr><td colspan="7" class="empty">لا توجد سلف أو ديون</td></tr>`;
-      } else {
-        tbody.innerHTML = state.loans.map(row => `
-          <tr>
-            <td>${row.employees?.full_name || ''}</td>
-            <td>${row.type || ''}</td>
-            <td>${formatCurrency(row.amount)}</td>
-            <td>${row.months_count || 0}</td>
-            <td>${formatCurrency(row.monthly_installment)}</td>
-            <td>${formatCurrency(row.remaining_amount)}</td>
-            <td>${badge(row.status || 'جارية')}</td>
-          </tr>
-        `).join('');
+        body.innerHTML = `<tr><td colspan="8">لا توجد بيانات</td></tr>`;
+        return;
+      }
+      body.innerHTML = state.loans.map(r => `
+        <tr>
+          <td>${r.employees?.full_name || ""}</td>
+          <td>${r.type || ""}</td>
+          <td>${formatCurrency(r.amount)}</td>
+          <td>${r.months_count || 0}</td>
+          <td>${formatCurrency(r.monthly_installment)}</td>
+          <td>${formatCurrency(r.remaining_amount)}</td>
+          <td>${badge(r.status || "جارية")}</td>
+          <td>
+            <button class="btn btn-light" onclick='editLoan(${JSON.stringify(r)})'>تعديل</button>
+            <button class="btn btn-red" onclick="deleteLoan('${r.id}')">حذف</button>
+          </td>
+        </tr>
+      `).join("");
+    }
+
+    function resetLoanForm(){
+      loan_id.value = "";
+      loan_employee.value = "";
+      loan_type.value = "سلفة";
+      loan_amount.value = "";
+      loan_months.value = 1;
+      loan_installment.value = "";
+      loan_remaining.value = "";
+      loan_status.value = "جارية";
+    }
+
+    function editLoan(r){
+      loan_id.value = r.id || "";
+      loan_employee.value = r.employee_id || "";
+      loan_type.value = r.type || "سلفة";
+      loan_amount.value = r.amount || 0;
+      loan_months.value = r.months_count || 1;
+      loan_installment.value = r.monthly_installment || 0;
+      loan_remaining.value = r.remaining_amount || 0;
+      loan_status.value = r.status || "جارية";
+      showSection("loans", document.querySelectorAll(".menu button")[6]);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    async function saveLoan(){
+      const amount = Number(loan_amount.value || 0);
+      const months = Number(loan_months.value || 1);
+      const installment = Number(loan_installment.value || (amount / (months || 1)));
+      const remaining = Number(loan_remaining.value || amount);
+
+      const payload = {
+        employee_id: loan_employee.value,
+        type: loan_type.value,
+        amount,
+        months_count: months,
+        monthly_installment: installment,
+        remaining_amount: remaining,
+        status: loan_status.value
+      };
+
+      if(!payload.employee_id || !amount){
+        return showMessage("اختر الموظف وأدخل المبلغ", "error");
       }
 
-      updateAlerts();
+      const id = loan_id.value;
+      const { error } = id
+        ? await sb.from("loans").update(payload).eq("id", id)
+        : await sb.from("loans").insert([payload]);
+
+      if(error) return showMessage("فشل حفظ السلفة/الدين", "error");
+      showMessage("تم حفظ السلفة/الدين");
+      resetLoanForm();
+      await loadLoans();
+    }
+
+    async function deleteLoan(id){
+      if(!confirm("حذف السلفة/الدين؟")) return;
+      const { error } = await sb.from("loans").delete().eq("id", id);
+      if(error) return showMessage("فشل الحذف", "error");
+      showMessage("تم الحذف");
+      await loadLoans();
+    }
+
+    async function loadAdjustments(){
+      const { data, error } = await sb
+        .from("adjustments")
+        .select("*, employees(full_name)")
+        .order("pay_month", { ascending:false })
+        .order("created_at", { ascending:false });
+
+      if(error) return showMessage("خطأ في تحميل الإضافات والخصومات", "error");
+      state.adjustments = data || [];
+      renderAdjustments();
+    }
+
+    function renderAdjustments(){
+      const body = document.getElementById("adjustmentsBody");
+      if(!state.adjustments.length){
+        body.innerHTML = `<tr><td colspan="7">لا توجد بيانات</td></tr>`;
+        return;
+      }
+      body.innerHTML = state.adjustments.map(r => `
+        <tr>
+          <td>${r.employees?.full_name || ""}</td>
+          <td>${badge(r.type || "")}</td>
+          <td>${r.title || ""}</td>
+          <td>${formatCurrency(r.amount)}</td>
+          <td>${r.pay_month || ""}</td>
+          <td>${r.notes || "-"}</td>
+          <td>
+            <button class="btn btn-light" onclick='editAdjustment(${JSON.stringify(r)})'>تعديل</button>
+            <button class="btn btn-red" onclick="deleteAdjustment('${r.id}')">حذف</button>
+          </td>
+        </tr>
+      `).join("");
+    }
+
+    function resetAdjustmentForm(){
+      adj_id.value = "";
+      adj_employee.value = "";
+      adj_type.value = "إضافة";
+      adj_title.value = "";
+      adj_amount.value = "";
+      adj_month.value = currentMonth();
+      adj_notes.value = "";
+    }
+
+    function editAdjustment(r){
+      adj_id.value = r.id || "";
+      adj_employee.value = r.employee_id || "";
+      adj_type.value = r.type || "إضافة";
+      adj_title.value = r.title || "";
+      adj_amount.value = r.amount || 0;
+      adj_month.value = r.pay_month || currentMonth();
+      adj_notes.value = r.notes || "";
+      showSection("adjustments", document.querySelectorAll(".menu button")[7]);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    async function saveAdjustment(){
+      const payload = {
+        employee_id: adj_employee.value,
+        type: adj_type.value,
+        title: adj_title.value.trim(),
+        amount: Number(adj_amount.value || 0),
+        pay_month: adj_month.value,
+        notes: adj_notes.value.trim()
+      };
+
+      if(!payload.employee_id || !payload.title || !payload.pay_month){
+        return showMessage("أكمل بيانات الإضافة/الخصم", "error");
+      }
+
+      const id = adj_id.value;
+      const { error } = id
+        ? await sb.from("adjustments").update(payload).eq("id", id)
+        : await sb.from("adjustments").insert([payload]);
+
+      if(error) return showMessage("فشل الحفظ", "error");
+      showMessage("تم حفظ الإضافة/الخصم");
+      resetAdjustmentForm();
+      await loadAdjustments();
+    }
+
+    async function deleteAdjustment(id){
+      if(!confirm("حذف السجل؟")) return;
+      const { error } = await sb.from("adjustments").delete().eq("id", id);
+      if(error) return showMessage("فشل الحذف", "error");
+      showMessage("تم الحذف");
+      await loadAdjustments();
     }
 
     async function loadPayroll(){
-      const month = new Date().toISOString().slice(0,7);
+      const month = payroll_month.value || currentMonth();
+      payroll_month.value = month;
 
-      const { data, error } = await supabaseClient
-        .from('payroll')
-        .select('*, employees(employee_no, full_name)')
-        .eq('pay_month', month)
-        .order('created_at', { ascending:false });
+      const { data, error } = await sb
+        .from("payroll")
+        .select("*, employees(employee_no, full_name)")
+        .eq("pay_month", month)
+        .order("created_at", { ascending:false });
 
-      if(error){ alert('خطأ في تحميل الرواتب'); return; }
-
+      if(error) return showMessage("خطأ في تحميل الرواتب", "error");
       state.payroll = data || [];
-      const tbody = document.getElementById('payroll-tbody');
+      renderPayroll();
+    }
 
+    function renderPayroll(){
+      const body = document.getElementById("payrollBody");
       if(!state.payroll.length){
-        tbody.innerHTML = `<tr><td colspan="8" class="empty">لا توجد رواتب لهذا الشهر</td></tr>`;
-      } else {
-        tbody.innerHTML = state.payroll.map(row => `
-          <tr>
-            <td>${row.employees?.employee_no || ''}</td>
-            <td>${row.employees?.full_name || ''}</td>
-            <td>${row.working_days || 0}</td>
-            <td>${row.present_days || 0}</td>
-            <td>${row.absent_days || 0}</td>
-            <td>${formatCurrency(row.deserved_salary)}</td>
-            <td>${formatCurrency(row.deductions)}</td>
-            <td>${formatCurrency(row.net_salary)}</td>
-          </tr>
-        `).join('');
+        body.innerHTML = `<tr><td colspan="11">لا توجد رواتب لهذا الشهر</td></tr>`;
+        return;
       }
+      body.innerHTML = state.payroll.map(r => `
+        <tr>
+          <td>${r.employees?.employee_no || ""}</td>
+          <td>${r.employees?.full_name || ""}</td>
+          <td>${r.working_days || 0}</td>
+          <td>${r.present_days || 0}</td>
+          <td>${r.absent_days || 0}</td>
+          <td>${formatCurrency(r.deserved_salary)}</td>
+          <td>${formatCurrency(r.additions)}</td>
+          <td>${formatCurrency(r.loan_deductions)}</td>
+          <td>${formatCurrency(r.manual_deductions)}</td>
+          <td>${formatCurrency(r.net_salary)}</td>
+          <td>${badge(r.status || "مسودة")}</td>
+        </tr>
+      `).join("");
     }
 
-    function updateSummary(){
-      document.getElementById('summaryBox').innerHTML = `
-        عدد الموظفين: <strong>${state.employees.length}</strong><br><br>
-        حضور اليوم: <strong>${state.attendance.filter(x => x.status === 'حضور').length}</strong><br><br>
-        غياب اليوم: <strong>${state.attendance.filter(x => x.status === 'غياب').length}</strong><br><br>
-        عدد السلف والديون: <strong>${state.loans.length}</strong>
-      `;
-    }
+    async function generatePayroll(){
+      const month = payroll_month.value || currentMonth();
+      payroll_month.value = month;
 
-    function updateAlerts(){
-      const alerts = [];
-
-      state.attendance.filter(x => x.status === 'غياب').slice(0,2).forEach(row => {
-        alerts.push(`⚠ غياب اليوم: ${row.employees?.full_name || ''}`);
-      });
-
-      state.attendance.filter(x => x.status === 'تأخير').slice(0,2).forEach(row => {
-        alerts.push(`⚠ تأخير: ${row.employees?.full_name || ''} - ${row.late_minutes || 0} دقيقة`);
-      });
-
-      if(state.loans.length){
-        alerts.push(`ℹ يوجد ${state.loans.length} سلفة/دين في النظام`);
-      }
-
-      if(!alerts.length){
-        alerts.push('✅ لا توجد تنبيهات حالياً');
-      }
-
-      document.getElementById('alertsBox').innerHTML = alerts.map(a => `<div class="alert">${a}</div>`).join('');
-    }
-
-    async function addEmployee(){
-      const employee_no = prompt('الرقم الوظيفي');
-      if(!employee_no) return;
-
-      const full_name = prompt('اسم الموظف');
-      if(!full_name) return;
-
-      const department = prompt('القسم') || '';
-      const branch = prompt('التفرع / الوظيفة') || '';
-      const basic_salary = prompt('الراتب الأساسي', '0') || '0';
-      const status = prompt('الحالة', 'نشط') || 'نشط';
-
-      const { error } = await supabaseClient.from('employees').insert([{
-        employee_no, full_name, department, branch,
-        basic_salary:Number(basic_salary), status
-      }]);
-
-      if(error){ alert('فشل إضافة الموظف'); return; }
-
-      alert('تمت إضافة الموظف');
-      await loadEmployees();
-    }
-
-    async function addAttendance(){
       if(!state.employees.length){
-        alert('أضف موظفاً أولاً');
-        return;
+        return showMessage("لا يوجد موظفون", "error");
       }
 
-      const employee_no = prompt('الرقم الوظيفي');
-      if(!employee_no) return;
-
-      const emp = state.employees.find(x => String(x.employee_no) === String(employee_no));
-      if(!emp){
-        alert('الموظف غير موجود');
-        return;
-      }
-
-      const attendance_date = prompt('التاريخ YYYY-MM-DD', new Date().toISOString().split('T')[0]);
-      if(!attendance_date) return;
-
-      const status = prompt('الحالة: حضور / غياب / تأخير', 'حضور');
-      if(!status) return;
-
-      const check_in = (status === 'حضور' || status === 'تأخير') ? (prompt('وقت الدخول HH:MM', '08:00') || null) : null;
-      const late_minutes = status === 'تأخير' ? Number(prompt('دقائق التأخير', '0') || 0) : 0;
-
-      const { error } = await supabaseClient.from('attendance').insert([{
-        employee_id: emp.id,
-        attendance_date,
-        status,
-        check_in,
-        late_minutes
-      }]);
-
-      if(error){ alert('فشل إضافة الحضور'); return; }
-
-      alert('تم حفظ الحضور');
-      await loadAttendance();
-    }
-
-    async function addLoan(){
-      if(!state.employees.length){
-        alert('أضف موظفاً أولاً');
-        return;
-      }
-
-      const employee_no = prompt('الرقم الوظيفي');
-      if(!employee_no) return;
-
-      const emp = state.employees.find(x => String(x.employee_no) === String(employee_no));
-      if(!emp){
-        alert('الموظف غير موجود');
-        return;
-      }
-
-      const type = prompt('النوع: سلفة أو مديونية', 'سلفة');
-      const amount = Number(prompt('المبلغ', '0') || 0);
-      const months_count = Number(prompt('عدد الشهور', '1') || 1);
-      const monthly_installment = Number(prompt('القسط الشهري', String(amount / months_count)) || 0);
-      const remaining_amount = Number(prompt('المتبقي', String(amount)) || amount);
-      const status = prompt('الحالة', 'جارية') || 'جارية';
-
-      const { error } = await supabaseClient.from('loans').insert([{
-        employee_id: emp.id,
-        type,
-        amount,
-        months_count,
-        monthly_installment,
-        remaining_amount,
-        status
-      }]);
-
-      if(error){ alert('فشل إضافة السلفة أو الدين'); return; }
-
-      alert('تمت إضافة السلفة / الدين');
-      await loadLoans();
-    }
-
-    async function generateMonthlyPayroll(){
-      const month = prompt('أدخل الشهر بصيغة YYYY-MM', new Date().toISOString().slice(0,7));
-      if(!month) return;
+      const workDays = workingDaysExcludingFridays(month);
+      const { start, end } = monthDateRange(month);
 
       for(const emp of state.employees){
-        const { data: attendanceRows } = await supabaseClient
-          .from('attendance')
-          .select('*')
-          .eq('employee_id', emp.id)
-          .gte('attendance_date', `${month}-01`)
-          .lte('attendance_date', `${month}-31`);
+        const { data: attRows } = await sb
+          .from("attendance")
+          .select("*")
+          .eq("employee_id", emp.id)
+          .gte("attendance_date", start)
+          .lte("attendance_date", end);
 
-        const working_days = 26;
-        const present_days = (attendanceRows || []).filter(r => r.status === 'حضور' || r.status === 'تأخير').length;
-        const absent_days = Math.max(working_days - present_days, 0);
-        const deserved_salary = (Number(emp.basic_salary || 0) / working_days) * present_days;
+        const presentDays = (attRows || []).filter(r =>
+          ["حضور","تأخير","إجازة"].includes(r.status)
+        ).length;
 
-        const { data: loanRows } = await supabaseClient
-          .from('loans')
-          .select('*')
-          .eq('employee_id', emp.id)
-          .eq('status', 'جارية');
+        const absentDays = Math.max(workDays - presentDays, 0);
+        const deservedSalary = workDays > 0
+          ? (Number(emp.basic_salary || 0) / workDays) * presentDays
+          : 0;
 
-        const deductions = (loanRows || []).reduce((sum, item) => sum + Number(item.monthly_installment || 0), 0);
-        const net_salary = Math.max(deserved_salary - deductions, 0);
+        const { data: loanRows } = await sb
+          .from("loans")
+          .select("*")
+          .eq("employee_id", emp.id)
+          .eq("status", "جارية");
 
-        await supabaseClient.from('payroll').insert([{
+        const loanDeductions = (loanRows || []).reduce((s, x) => s + Number(x.monthly_installment || 0), 0);
+
+        const { data: adjRows } = await sb
+          .from("adjustments")
+          .select("*")
+          .eq("employee_id", emp.id)
+          .eq("pay_month", month);
+
+        const additions = (adjRows || [])
+          .filter(x => x.type === "إضافة")
+          .reduce((s, x) => s + Number(x.amount || 0), 0);
+
+        const manualDeductions = (adjRows || [])
+          .filter(x => x.type === "خصم")
+          .reduce((s, x) => s + Number(x.amount || 0), 0);
+
+        const netSalary = Math.max(deservedSalary + additions - loanDeductions - manualDeductions, 0);
+
+        const { error } = await sb.from("payroll").upsert([{
           employee_id: emp.id,
           pay_month: month,
-          working_days,
-          present_days,
-          absent_days,
-          deserved_salary,
-          deductions,
-          net_salary
-        }]);
+          working_days: workDays,
+          present_days: presentDays,
+          absent_days: absentDays,
+          deserved_salary: Number(deservedSalary.toFixed(2)),
+          additions: Number(additions.toFixed(2)),
+          loan_deductions: Number(loanDeductions.toFixed(2)),
+          manual_deductions: Number(manualDeductions.toFixed(2)),
+          deductions: Number((loanDeductions + manualDeductions).toFixed(2)),
+          net_salary: Number(netSalary.toFixed(2)),
+          status: "مسودة",
+          notes: ""
+        }], { onConflict:"employee_id,pay_month" });
+
+        if(error){
+          console.error(error);
+        }
       }
 
-      alert('تم إنشاء رواتب الشهر');
+      showMessage(`تم إنشاء / تحديث رواتب شهر ${month}`);
       await loadPayroll();
     }
 
-    async function initApp(){
+    async function approvePayroll(){
+      const month = payroll_month.value || currentMonth();
+      const { error } = await sb
+        .from("payroll")
+        .update({ status:"معتمد" })
+        .eq("pay_month", month);
+
+      if(error) return showMessage("فشل اعتماد الرواتب", "error");
+      showMessage("تم اعتماد الرواتب");
+      await loadPayroll();
+    }
+
+    async function loadUsers(){
+      const { data, error } = await sb.from("users").select("*").order("created_at", { ascending:false });
+      if(error) return showMessage("خطأ في تحميل المستخدمين", "error");
+      state.users = data || [];
+      renderUsers();
+    }
+
+    function renderUsers(){
+      const body = document.getElementById("usersBody");
+      if(!state.users.length){
+        body.innerHTML = `<tr><td colspan="4">لا يوجد مستخدمون</td></tr>`;
+        return;
+      }
+      body.innerHTML = state.users.map(u => `
+        <tr>
+          <td>${u.username || ""}</td>
+          <td>${u.role || ""}</td>
+          <td>${badge(u.status || "active")}</td>
+          <td>
+            <button class="btn btn-light" onclick='editUser(${JSON.stringify(u)})'>تعديل</button>
+            <button class="btn btn-red" onclick="deleteUser('${u.id}')">حذف</button>
+          </td>
+        </tr>
+      `).join("");
+    }
+
+    function resetUserForm(){
+      user_id.value = "";
+      user_username.value = "";
+      user_password.value = "";
+      user_role.value = "مدير النظام";
+      user_status.value = "active";
+    }
+
+    function editUser(u){
+      user_id.value = u.id || "";
+      user_username.value = u.username || "";
+      user_password.value = u.password || "";
+      user_role.value = u.role || "مدير النظام";
+      user_status.value = u.status || "active";
+      showSection("users", document.querySelectorAll(".menu button")[9]);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    async function saveUser(){
+      const payload = {
+        username: user_username.value.trim(),
+        password: user_password.value.trim(),
+        role: user_role.value,
+        status: user_status.value
+      };
+      if(!payload.username || !payload.password){
+        return showMessage("أدخل اسم المستخدم وكلمة المرور", "error");
+      }
+
+      const id = user_id.value;
+      const { error } = id
+        ? await sb.from("users").update(payload).eq("id", id)
+        : await sb.from("users").insert([payload]);
+
+      if(error) return showMessage("فشل حفظ المستخدم", "error");
+      showMessage("تم حفظ المستخدم");
+      resetUserForm();
+      await loadUsers();
+    }
+
+    async function deleteUser(id){
+      if(!confirm("حذف المستخدم؟")) return;
+      const { error } = await sb.from("users").delete().eq("id", id);
+      if(error) return showMessage("فشل الحذف", "error");
+      showMessage("تم الحذف");
+      await loadUsers();
+    }
+
+    function updateDashboard(){
+      const todayDate = today();
+      const todayRows = state.attendance.filter(x => x.attendance_date === todayDate);
+      const present = todayRows.filter(x => x.status === "حضور").length;
+      const absent = todayRows.filter(x => x.status === "غياب").length;
+      const late = todayRows.filter(x => x.status === "تأخير").length;
+
+      statEmployees.textContent = state.employees.length;
+      statPresent.textContent = present;
+      statAbsent.textContent = absent;
+      statLate.textContent = late;
+
+      summaryBox.innerHTML = `
+        عدد الموظفين: <strong>${state.employees.length}</strong><br>
+        عدد الأقسام: <strong>${state.departments.length}</strong><br>
+        عدد الفروع: <strong>${state.branches.length}</strong><br>
+        عدد السلف والديون الجارية: <strong>${state.loans.filter(x => x.status === "جارية").length}</strong><br>
+        عدد الإضافات والخصومات لهذا الشهر: <strong>${state.adjustments.filter(x => x.pay_month === currentMonth()).length}</strong><br>
+        أيام العمل في ${currentMonth()}: <strong>${workingDaysExcludingFridays(currentMonth())}</strong>
+      `;
+
+      const alerts = [];
+      todayRows.filter(x => x.status === "غياب").slice(0,3).forEach(r => {
+        alerts.push(`⚠ غياب اليوم: ${r.employees?.full_name || "موظف"}`);
+      });
+      todayRows.filter(x => x.status === "تأخير").slice(0,3).forEach(r => {
+        alerts.push(`⚠ تأخير: ${r.employees?.full_name || "موظف"} - ${r.late_minutes || 0} دقيقة`);
+      });
+      if(state.loans.filter(x => x.status === "جارية").length){
+        alerts.push(`ℹ توجد سلف/ديون جارية بعدد ${state.loans.filter(x => x.status === "جارية").length}`);
+      }
+      if(!alerts.length) alerts.push("✅ لا توجد تنبيهات حالياً");
+
+      alertsBox.innerHTML = alerts.map(a => `<div class="alert">${a}</div>`).join("");
+    }
+
+    function exportTableToExcel(tableId, fileName){
+      const table = document.getElementById(tableId);
+      if(!table) return showMessage("الجدول غير موجود", "error");
+      const wb = XLSX.utils.table_to_book(table, { sheet: "Sheet1" });
+      XLSX.writeFile(wb, fileName);
+      showMessage("تم تصدير الملف");
+    }
+
+    function normalizeHeader(v){
+      return String(v || "").trim().toLowerCase();
+    }
+
+    function pickValue(row, names){
+      for(const k of Object.keys(row)){
+        const nk = normalizeHeader(k);
+        if(names.includes(nk)) return row[k];
+      }
+      return null;
+    }
+
+    async function importFingerprintFile(){
+      const file = document.getElementById("fingerprintFile").files[0];
+      if(!file) return showMessage("اختر ملفًا أولًا", "error");
+
+      try{
+        const data = await file.arrayBuffer();
+        const wb = XLSX.read(data);
+        const sheet = wb.Sheets[wb.SheetNames[0]];
+        const rows = XLSX.utils.sheet_to_json(sheet, { defval:"" });
+
+        if(!rows.length) return showMessage("الملف فارغ", "error");
+
+        let successCount = 0;
+
+        for(const row of rows){
+          const employeeNo = pickValue(row, ["employee_no","رقم","الرقم","رقم وظيفي","employee id","id"]);
+          const dateValue = pickValue(row, ["date","التاريخ","attendance_date"]);
+          const statusValue = pickValue(row, ["status","الحالة"]);
+          const checkInValue = pickValue(row, ["check_in","وقت الدخول","وقت","in"]);
+          const lateValue = pickValue(row, ["late_minutes","التأخير","late"]);
+          const notesValue = pickValue(row, ["notes","ملاحظات"]);
+
+          if(!employeeNo || !dateValue) continue;
+
+          const emp = state.employees.find(e => String(e.employee_no).trim() === String(employeeNo).trim());
+          if(!emp) continue;
+
+          const dateStr = String(dateValue).includes("T")
+            ? String(dateValue).split("T")[0]
+            : String(dateValue).trim();
+
+          let status = String(statusValue || "حضور").trim();
+          if(!["حضور","غياب","تأخير","إجازة"].includes(status)){
+            status = "حضور";
+          }
+
+          const payload = {
+            employee_id: emp.id,
+            attendance_date: dateStr,
+            status,
+            check_in: checkInValue ? String(checkInValue).slice(0,5) : null,
+            late_minutes: Number(lateValue || 0),
+            notes: notesValue ? String(notesValue) : ""
+          };
+
+          const { error } = await sb.from("attendance").upsert([payload], { onConflict:"employee_id,attendance_date" });
+          if(!error) successCount++;
+        }
+
+        showMessage(`تم استيراد ${successCount} سجل حضور`);
+        await loadAttendance();
+      }catch(err){
+        console.error(err);
+        showMessage("فشل استيراد الملف", "error");
+      }
+    }
+
+    async function init(){
       updateDateTime();
       setInterval(updateDateTime, 1000);
+
+      payroll_month.value = currentMonth();
+      adj_month.value = currentMonth();
+      att_date.value = today();
+
+      await loadDepartments();
+      await loadBranches();
       await loadEmployees();
       await loadAttendance();
       await loadLoans();
+      await loadAdjustments();
       await loadPayroll();
+      await loadUsers();
+
+      if(!state.departments.length){
+        await sb.from("departments").insert([{ name:"الإدارة" },{ name:"الموارد البشرية" },{ name:"الحسابات" }]);
+        await loadDepartments();
+      }
+      if(!state.branches.length){
+        await sb.from("branches").insert([{ name:"الرئيسي" }]);
+        await loadBranches();
+      }
+
+      resetEmployeeForm();
+      resetAttendanceForm();
+      resetLoanForm();
+      resetAdjustmentForm();
+      resetUserForm();
+      fillEmployeeSelects();
+      updateDashboard();
     }
 
-    initApp();
+    init();
   </script>
 </body>
 </html>
