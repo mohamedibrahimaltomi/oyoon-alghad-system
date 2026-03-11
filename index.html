@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>شركة عيون الغد - HR v2</title>
+  <title>شركة عيون الغد - HR v3</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
   <style>
@@ -22,34 +22,55 @@
       --purple:#7c3aed;
       --shadow:0 10px 28px rgba(15,76,129,.08);
       --radius:18px;
+      --warn:#fff7ed;
+      --warn-border:#fdba74;
+      --input-error:#fef2f2;
+      --input-error-border:#dc2626;
     }
     *{box-sizing:border-box}
     body{margin:0;font-family:Tahoma,Arial,sans-serif;background:var(--bg);color:var(--text)}
     .hidden{display:none!important}
-    .login-screen{
-      min-height:100vh;display:flex;align-items:center;justify-content:center;
-      padding:20px;background:linear-gradient(135deg,#edf5fc,#f8fbff);
-    }
-    .login-card{
-      width:100%;max-width:460px;background:#fff;border:1px solid var(--border);
-      border-radius:24px;box-shadow:var(--shadow);padding:28px;
-    }
+    .login-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;background:linear-gradient(135deg,#edf5fc,#f8fbff)}
+    .login-card{width:100%;max-width:460px;background:#fff;border:1px solid var(--border);border-radius:24px;box-shadow:var(--shadow);padding:28px}
     .login-card h1{margin:0 0 6px;font-size:24px;color:var(--primary)}
     .login-card p{margin:0 0 18px;color:var(--muted)}
+    .app{display:flex;min-height:100vh}
+    .sidebar{width:280px;background:#fff;border-left:1px solid var(--border);box-shadow:var(--shadow);padding:18px 14px;position:fixed;top:0;right:0;bottom:0;overflow:auto;z-index:10}
+    .brand{display:flex;align-items:center;gap:12px;padding-bottom:14px;margin-bottom:16px;border-bottom:1px solid var(--border)}
+    .brand-logo{width:46px;height:46px;border-radius:14px;background:var(--primary-soft);color:var(--primary);display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:24px}
+    .brand h1{margin:0;font-size:18px}
+    .brand p{margin:4px 0 0;color:var(--muted);font-size:12px}
+    .menu{display:flex;flex-direction:column;gap:8px}
+    .menu button{border:none;background:transparent;width:100%;cursor:pointer;display:flex;align-items:center;gap:12px;text-align:right;padding:12px 14px;border-radius:14px;font-size:15px;color:var(--text)}
+    .menu button:hover{background:#f3f6fa}
+    .menu button.active{background:var(--primary);color:#fff}
+    .icon{width:34px;height:34px;border-radius:10px;display:flex;align-items:center;justify-content:center;background:#eff6ff;color:#2563eb;flex-shrink:0}
+    .content{flex:1;margin-right:280px;padding:20px}
+    .topbar{background:#fff;border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:16px 18px;margin-bottom:18px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+    .topbar h2{margin:0;font-size:24px}
+    .topbar p{margin:6px 0 0;font-size:13px;color:var(--muted)}
+    .top-actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+    .pill{background:var(--primary-soft);color:var(--primary);padding:10px 12px;border-radius:12px;font-size:13px;font-weight:bold}
+    .section{display:none}
+    .section.active{display:block}
+    .cards{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:16px}
+    .card,.table-card,.form-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow)}
+    .card{padding:18px}
+    .table-card{padding:14px}
+    .form-card{padding:16px;margin-bottom:14px}
+    .stat-title{font-size:13px;color:var(--muted);margin-bottom:8px}
+    .stat-value{font-size:30px;font-weight:bold}
+    .grid-2{display:grid;grid-template-columns:1.2fr .8fr;gap:14px}
     .field{display:flex;flex-direction:column;gap:6px}
     .field label{font-size:13px;font-weight:bold}
-    .field input,.field select,.field textarea{
-      width:100%;padding:11px 12px;border:1px solid var(--border);
-      border-radius:12px;font-family:inherit;background:#fff;
-    }
-    .field textarea{min-height:90px;resize:vertical}
+    .field input,.field select,.field textarea{width:100%;padding:11px 12px;border:1px solid var(--border);border-radius:12px;font-family:inherit;background:#fff}
+    .field textarea{min-height:88px;resize:vertical}
+    .field input.error,.field select.error,.field textarea.error{background:var(--input-error);border-color:var(--input-error-border)}
     .form-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
     .form-grid.two{grid-template-columns:repeat(2,1fr)}
     .form-grid.three{grid-template-columns:repeat(3,1fr)}
     .actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
-    .btn{
-      border:none;border-radius:12px;padding:10px 14px;cursor:pointer;font-size:14px
-    }
+    .btn{border:none;border-radius:12px;padding:10px 14px;cursor:pointer;font-size:14px}
     .btn-primary{background:var(--primary);color:#fff}
     .btn-light{background:#fff;border:1px solid var(--border)}
     .btn-green{background:var(--green);color:#fff}
@@ -57,123 +78,33 @@
     .btn-red{background:var(--red);color:#fff}
     .btn-blue{background:var(--blue);color:#fff}
     .btn-purple{background:var(--purple);color:#fff}
-    .app{display:flex;min-height:100vh}
-    .sidebar{
-      width:280px;background:#fff;border-left:1px solid var(--border);
-      box-shadow:var(--shadow);padding:18px 14px;position:fixed;
-      top:0;right:0;bottom:0;overflow:auto;z-index:10;
-    }
-    .brand{
-      display:flex;align-items:center;gap:12px;padding-bottom:14px;margin-bottom:16px;
-      border-bottom:1px solid var(--border);
-    }
-    .brand-logo{
-      width:46px;height:46px;border-radius:14px;background:var(--primary-soft);
-      color:var(--primary);display:flex;align-items:center;justify-content:center;
-      font-weight:bold;font-size:24px;
-    }
-    .brand h1{margin:0;font-size:18px}
-    .brand p{margin:4px 0 0;color:var(--muted);font-size:12px}
-    .menu{display:flex;flex-direction:column;gap:8px}
-    .menu button{
-      border:none;background:transparent;width:100%;cursor:pointer;display:flex;
-      align-items:center;gap:12px;text-align:right;padding:12px 14px;border-radius:14px;
-      font-size:15px;color:var(--text)
-    }
-    .menu button:hover{background:#f3f6fa}
-    .menu button.active{background:var(--primary);color:#fff}
-    .icon{
-      width:34px;height:34px;border-radius:10px;display:flex;align-items:center;
-      justify-content:center;background:#eff6ff;color:#2563eb;flex-shrink:0
-    }
-    .content{flex:1;margin-right:280px;padding:20px}
-    .topbar{
-      background:#fff;border:1px solid var(--border);border-radius:var(--radius);
-      box-shadow:var(--shadow);padding:16px 18px;margin-bottom:18px;display:flex;
-      justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap
-    }
-    .topbar h2{margin:0;font-size:24px}
-    .topbar p{margin:6px 0 0;font-size:13px;color:var(--muted)}
-    .top-actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-    .pill{
-      background:var(--primary-soft);color:var(--primary);padding:10px 12px;
-      border-radius:12px;font-size:13px;font-weight:bold
-    }
-    .section{display:none}
-    .section.active{display:block}
-    .cards{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:16px}
-    .card,.table-card,.form-card{
-      background:#fff;border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow)
-    }
-    .card{padding:18px}
-    .table-card{padding:14px}
-    .form-card{padding:16px;margin-bottom:14px}
-    .stat-title{font-size:13px;color:var(--muted);margin-bottom:8px}
-    .stat-value{font-size:30px;font-weight:bold}
-    .grid-2{display:grid;grid-template-columns:1.2fr .8fr;gap:14px}
-    .toolbar{
-      display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;
-      margin-bottom:12px;align-items:center
-    }
-    .toolbar .left,.toolbar .right{
-      display:flex;gap:8px;flex-wrap:wrap;align-items:center
-    }
-    .search{
-      border:1px solid var(--border);border-radius:12px;padding:10px 14px;min-width:260px
-    }
+    .toolbar{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:12px;align-items:center}
+    .toolbar .left,.toolbar .right{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+    .search{border:1px solid var(--border);border-radius:12px;padding:10px 14px;min-width:260px}
     .table-wrap{overflow:auto}
-    table{width:100%;border-collapse:collapse;min-width:900px}
+    table{width:100%;border-collapse:collapse;min-width:960px}
     th,td{padding:12px;border-bottom:1px solid var(--border);text-align:right;font-size:14px}
     th{background:#f8fafc;color:#374151}
-    .badge{
-      display:inline-block;padding:6px 10px;border-radius:999px;font-size:12px;font-weight:bold
-    }
+    .badge{display:inline-block;padding:6px 10px;border-radius:999px;font-size:12px;font-weight:bold}
     .b-green{background:#ecfdf3;color:#15803d}
     .b-red{background:#fef2f2;color:#b91c1c}
     .b-orange{background:#fff7ed;color:#c2410c}
     .b-blue{background:#eff6ff;color:#1d4ed8}
     .b-purple{background:#f3e8ff;color:#7c3aed}
     .b-gray{background:#f3f4f6;color:#374151}
-    .summary-box{
-      min-height:240px;border:1px dashed #bfd5eb;border-radius:16px;
-      background:linear-gradient(180deg,#eef6ff,#fff);padding:18px;line-height:2
-    }
+    .summary-box{min-height:240px;border:1px dashed #bfd5eb;border-radius:16px;background:linear-gradient(180deg,#eef6ff,#fff);padding:18px;line-height:2}
     .alerts{display:flex;flex-direction:column;gap:10px}
     .alert{background:#fff;border:1px solid var(--border);border-radius:14px;padding:12px 14px}
-    .note{
-      background:#fff;border:1px dashed #bfd5eb;border-radius:16px;padding:16px;line-height:1.9
-    }
-    .message{
-      position:fixed;left:20px;bottom:20px;z-index:999;min-width:280px;max-width:420px;
-      padding:14px 16px;border-radius:14px;color:#fff;box-shadow:var(--shadow);display:none
-    }
+    .note{background:#fff;border:1px dashed #bfd5eb;border-radius:16px;padding:16px;line-height:1.9}
+    .warn{background:var(--warn);border:1px solid var(--warn-border);padding:12px 14px;border-radius:12px}
+    .message{position:fixed;left:20px;bottom:20px;z-index:999;min-width:280px;max-width:420px;padding:14px 16px;border-radius:14px;color:#fff;box-shadow:var(--shadow);display:none}
     .message.show{display:block}
     .message.success{background:var(--green)}
     .message.error{background:var(--red)}
     .message.info{background:var(--primary)}
     .small{font-size:12px;color:var(--muted)}
-    .month-box{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
-    @media (max-width:1200px){
-      .cards{grid-template-columns:repeat(2,1fr)}
-      .grid-2{grid-template-columns:1fr}
-      .form-grid{grid-template-columns:repeat(2,1fr)}
-    }
-    @media (max-width:860px){
-      .app{flex-direction:column}
-      .sidebar{position:static;width:100%;border-left:none;border-bottom:1px solid var(--border);box-shadow:none}
-      .content{margin-right:0}
-      .cards,.form-grid,.form-grid.two,.form-grid.three{grid-template-columns:1fr}
-      .topbar{flex-direction:column;align-items:flex-start}
-      .search{min-width:100%}
-    }
-    @media print{
-      .sidebar,.topbar .top-actions,.actions,.toolbar,.message,#loginScreen{display:none!important}
-      .content{margin-right:0;padding:0}
-      body{background:#fff}
-      .section{display:none!important}
-      .section.active{display:block!important}
-      .card,.table-card,.form-card{box-shadow:none;border:1px solid #ddd}
-    }
+    @media (max-width:1200px){.cards{grid-template-columns:repeat(2,1fr)}.grid-2{grid-template-columns:1fr}.form-grid{grid-template-columns:repeat(2,1fr)}}
+    @media (max-width:860px){.app{flex-direction:column}.sidebar{position:static;width:100%;border-left:none;border-bottom:1px solid var(--border);box-shadow:none}.content{margin-right:0}.cards,.form-grid,.form-grid.two,.form-grid.three{grid-template-columns:1fr}.topbar{flex-direction:column;align-items:flex-start}.search{min-width:100%}}
   </style>
 </head>
 <body>
@@ -181,19 +112,18 @@
   <div id="loginScreen" class="login-screen">
     <div class="login-card">
       <h1>تسجيل الدخول</h1>
-      <p>نسخة v2 - شركة عيون الغد</p>
+      <p>شركة عيون الغد - v3</p>
       <div class="field">
         <label>اسم المستخدم</label>
         <input id="login_username" value="admin" />
       </div>
       <div class="field" style="margin-top:12px">
         <label>كلمة المرور</label>
-        <input id="login_password" type="password" value="123456" />
+        <input id="login_password" type="password" value="admin123" />
       </div>
       <div class="actions">
         <button class="btn btn-primary" onclick="login()">دخول</button>
       </div>
-      <div class="small" style="margin-top:10px">الحساب الافتراضي: admin / 123456</div>
     </div>
   </div>
 
@@ -211,12 +141,16 @@
         <button data-section="dashboard" class="active" onclick="showSection('dashboard', this)"><span class="icon">📊</span><span>لوحة التحكم</span></button>
         <button data-section="employees" onclick="showSection('employees', this)"><span class="icon">👥</span><span>الموظفون</span></button>
         <button data-section="departments" onclick="showSection('departments', this)"><span class="icon">🏢</span><span>الأقسام</span></button>
-        <button data-section="branches" onclick="showSection('branches', this)"><span class="icon">📍</span><span>الفروع</span></button>
+        <button data-section="jobTitles" onclick="showSection('jobTitles', this)"><span class="icon">💼</span><span>الوظائف</span></button>
+        <button data-section="lines" onclick="showSection('lines', this)"><span class="icon">🛣️</span><span>خطوط التوزيع</span></button>
+        <button data-section="vehicles" onclick="showSection('vehicles', this)"><span class="icon">🚚</span><span>أنواع السيارات</span></button>
+        <button data-section="rates" onclick="showSection('rates', this)"><span class="icon">💵</span><span>تسعير الخطوط</span></button>
         <button data-section="attendance" onclick="showSection('attendance', this)"><span class="icon">⏰</span><span>الحضور</span></button>
         <button data-section="fingerprint" onclick="showSection('fingerprint', this)"><span class="icon">🖐</span><span>البصمة / Excel</span></button>
         <button data-section="loans" onclick="showSection('loans', this)"><span class="icon">💰</span><span>السلف والديون</span></button>
         <button data-section="adjustments" onclick="showSection('adjustments', this)"><span class="icon">➕</span><span>الإضافات والخصومات</span></button>
         <button data-section="payroll" onclick="showSection('payroll', this)"><span class="icon">🧾</span><span>الرواتب</span></button>
+        <button data-section="deleteRequests" onclick="showSection('deleteRequests', this)"><span class="icon">🗑️</span><span>طلبات الحذف</span></button>
         <button data-section="users" onclick="showSection('users', this)"><span class="icon">🔐</span><span>المستخدمون</span></button>
         <button data-section="reports" onclick="showSection('reports', this)"><span class="icon">📑</span><span>التقارير</span></button>
         <button data-section="settings" onclick="showSection('settings', this)"><span class="icon">⚙️</span><span>الإعدادات</span></button>
@@ -227,7 +161,7 @@
       <div class="topbar">
         <div>
           <h2 id="pageTitle">لوحة التحكم</h2>
-          <p id="companyNameTop">شركة عيون الغد - نسخة v2</p>
+          <p id="companyNameTop">شركة عيون الغد - v3</p>
         </div>
         <div class="top-actions">
           <div class="pill" id="dateBox"></div>
@@ -246,11 +180,11 @@
         <div class="grid-2">
           <div class="card">
             <h3>ملخص النظام</h3>
-            <div class="summary-box" id="summaryBox">جارِ التحميل...</div>
+            <div id="summaryBox" class="summary-box">جار التحميل...</div>
           </div>
           <div class="card">
             <h3>تنبيهات النظام</h3>
-            <div class="alerts" id="alertsBox"></div>
+            <div id="alertsBox" class="alerts"></div>
           </div>
         </div>
       </section>
@@ -259,33 +193,51 @@
         <div class="form-card">
           <h3>إضافة / تعديل موظف</h3>
           <div class="form-grid">
-            <div class="field"><label>الرقم الوظيفي</label><input id="emp_no" /></div>
-            <div class="field"><label>اسم الموظف</label><input id="emp_name" /></div>
-            <div class="field"><label>القسم</label><select id="emp_department"></select></div>
+            <div class="field"><label>الرقم الوظيفي *</label><input id="emp_no"></div>
+            <div class="field"><label>اسم الموظف *</label><input id="emp_name"></div>
+            <div class="field"><label>القسم *</label><select id="emp_department" onchange="handleDepartmentChange()"></select></div>
+            <div class="field"><label>الوظيفة *</label><select id="emp_job_title" onchange="handleJobChange()"></select></div>
             <div class="field"><label>الفرع</label><select id="emp_branch"></select></div>
-            <div class="field"><label>المسمى الوظيفي</label><input id="emp_job_title" /></div>
-            <div class="field"><label>الراتب الأساسي</label><input id="emp_salary" type="number" step="0.01" /></div>
+            <div class="field"><label>نوع الموظف *</label>
+              <select id="emp_type" onchange="toggleDriverFields()">
+                <option value="عادي">عادي</option>
+                <option value="سائق">سائق</option>
+                <option value="سائق احتياط">سائق احتياط</option>
+              </select>
+            </div>
+            <div class="field"><label>الراتب الأساسي</label><input id="emp_salary" type="number" step="0.01"></div>
             <div class="field"><label>الحالة</label><select id="emp_status"><option>نشط</option><option>موقوف</option><option>إجازة</option></select></div>
-            <div class="field"><label>ملاحظات</label><input id="emp_notes" /></div>
           </div>
+
+          <div id="driverFields" class="form-grid" style="margin-top:12px">
+            <div class="field"><label>خط التوزيع</label><select id="emp_line"></select></div>
+            <div class="field"><label>نوع السيارة</label><select id="emp_vehicle"></select></div>
+            <div class="field"><label>مرتب الاحتياط الثابت</label><input id="emp_reserve_salary" type="number" step="0.01"></div>
+            <div class="field"><label>ملاحظات</label><input id="emp_notes"></div>
+          </div>
+
           <div class="actions">
             <button class="btn btn-primary" onclick="saveEmployee()">حفظ الموظف</button>
             <button class="btn btn-light" onclick="resetEmployeeForm()">جديد</button>
           </div>
-          <input type="hidden" id="emp_id" />
+          <input type="hidden" id="emp_id">
         </div>
 
         <div class="table-card">
           <div class="toolbar">
-            <div class="left"><input class="search" id="employeeSearch" placeholder="بحث..." oninput="renderEmployees()" /></div>
+            <div class="left"><input id="employeeSearch" class="search" placeholder="بحث..." oninput="renderEmployees()"></div>
             <div class="right">
               <button class="btn btn-green" onclick="loadEmployees()">تحديث</button>
-              <button class="btn btn-blue" onclick="exportTableToExcel('employeesTable','employees.xlsx')">تصدير Excel</button>
+              <button class="btn btn-blue" onclick="exportTableToExcel('employeesTable','employees.xlsx')">Excel</button>
             </div>
           </div>
           <div class="table-wrap">
             <table id="employeesTable">
-              <thead><tr><th>الرقم</th><th>الاسم</th><th>القسم</th><th>الفرع</th><th>المسمى</th><th>الراتب</th><th>الحالة</th><th>الإجراءات</th></tr></thead>
+              <thead>
+                <tr>
+                  <th>الرقم</th><th>الاسم</th><th>القسم</th><th>الوظيفة</th><th>النوع</th><th>الخط</th><th>السيارة</th><th>الراتب</th><th>الحالة</th><th>الإجراءات</th>
+                </tr>
+              </thead>
               <tbody id="employeesBody"></tbody>
             </table>
           </div>
@@ -294,76 +246,153 @@
 
       <section id="departments" class="section">
         <div class="form-card">
-          <h3>إدارة الأقسام</h3>
+          <h3>الأقسام الرئيسية</h3>
           <div class="form-grid two">
-            <div class="field"><label>اسم القسم</label><input id="department_name" /></div>
-            <div class="field">
-              <label>&nbsp;</label>
-              <div class="actions" style="margin-top:0">
-                <button class="btn btn-primary" onclick="saveDepartment()">حفظ</button>
-                <button class="btn btn-light" onclick="resetDepartmentForm()">جديد</button>
-              </div>
+            <div class="field"><label>اسم القسم *</label><input id="department_name"></div>
+            <div class="actions" style="align-items:end">
+              <button class="btn btn-primary" onclick="saveDepartment()">حفظ</button>
+              <button class="btn btn-light" onclick="resetDepartmentForm()">جديد</button>
             </div>
           </div>
-          <input type="hidden" id="department_id" />
+          <input type="hidden" id="department_id">
         </div>
         <div class="table-card">
           <div class="table-wrap">
-            <table><thead><tr><th>اسم القسم</th><th>الإجراءات</th></tr></thead><tbody id="departmentsBody"></tbody></table>
+            <table>
+              <thead><tr><th>القسم</th><th>الإجراءات</th></tr></thead>
+              <tbody id="departmentsBody"></tbody>
+            </table>
           </div>
         </div>
       </section>
 
-      <section id="branches" class="section">
+      <section id="jobTitles" class="section">
         <div class="form-card">
-          <h3>إدارة الفروع</h3>
+          <h3>الوظائف</h3>
           <div class="form-grid two">
-            <div class="field"><label>اسم الفرع</label><input id="branch_name" /></div>
-            <div class="field">
-              <label>&nbsp;</label>
-              <div class="actions" style="margin-top:0">
-                <button class="btn btn-primary" onclick="saveBranch()">حفظ</button>
-                <button class="btn btn-light" onclick="resetBranchForm()">جديد</button>
-              </div>
-            </div>
+            <div class="field"><label>القسم *</label><select id="job_department"></select></div>
+            <div class="field"><label>اسم الوظيفة *</label><input id="job_name"></div>
           </div>
-          <input type="hidden" id="branch_id" />
+          <div class="actions">
+            <button class="btn btn-primary" onclick="saveJobTitle()">حفظ</button>
+            <button class="btn btn-light" onclick="resetJobForm()">جديد</button>
+          </div>
+          <input type="hidden" id="job_id">
         </div>
         <div class="table-card">
           <div class="table-wrap">
-            <table><thead><tr><th>اسم الفرع</th><th>الإجراءات</th></tr></thead><tbody id="branchesBody"></tbody></table>
+            <table>
+              <thead><tr><th>القسم</th><th>الوظيفة</th><th>الإجراءات</th></tr></thead>
+              <tbody id="jobTitlesBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section id="lines" class="section">
+        <div class="form-card">
+          <h3>خطوط التوزيع</h3>
+          <div class="form-grid two">
+            <div class="field"><label>اسم الخط *</label><input id="line_name"></div>
+            <div class="actions" style="align-items:end">
+              <button class="btn btn-primary" onclick="saveLine()">حفظ</button>
+              <button class="btn btn-light" onclick="resetLineForm()">جديد</button>
+            </div>
+          </div>
+          <input type="hidden" id="line_id">
+        </div>
+        <div class="table-card">
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>الخط</th><th>الإجراءات</th></tr></thead>
+              <tbody id="linesBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section id="vehicles" class="section">
+        <div class="form-card">
+          <h3>أنواع السيارات</h3>
+          <div class="form-grid two">
+            <div class="field"><label>اسم النوع *</label><input id="vehicle_name"></div>
+            <div class="actions" style="align-items:end">
+              <button class="btn btn-primary" onclick="saveVehicleType()">حفظ</button>
+              <button class="btn btn-light" onclick="resetVehicleForm()">جديد</button>
+            </div>
+          </div>
+          <input type="hidden" id="vehicle_id">
+        </div>
+        <div class="table-card">
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>النوع</th><th>الإجراءات</th></tr></thead>
+              <tbody id="vehiclesBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section id="rates" class="section">
+        <div class="form-card">
+          <h3>تسعير الخطوط حسب السيارة</h3>
+          <div class="form-grid three">
+            <div class="field"><label>الخط *</label><select id="rate_line"></select></div>
+            <div class="field"><label>نوع السيارة *</label><select id="rate_vehicle"></select></div>
+            <div class="field"><label>القيمة الشهرية *</label><input id="rate_value" type="number" step="0.01"></div>
+          </div>
+          <div class="actions">
+            <button class="btn btn-primary" onclick="saveRate()">حفظ</button>
+            <button class="btn btn-light" onclick="resetRateForm()">جديد</button>
+          </div>
+          <input type="hidden" id="rate_id">
+        </div>
+        <div class="table-card">
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>الخط</th><th>السيارة</th><th>القيمة</th><th>الإجراءات</th></tr></thead>
+              <tbody id="ratesBody"></tbody>
+            </table>
           </div>
         </div>
       </section>
 
       <section id="attendance" class="section">
         <div class="form-card">
-          <h3>إضافة / تعديل حضور</h3>
+          <h3>الحضور</h3>
           <div class="form-grid">
-            <div class="field"><label>الموظف</label><select id="att_employee"></select></div>
-            <div class="field"><label>التاريخ</label><input id="att_date" type="date" /></div>
-            <div class="field"><label>الحالة</label><select id="att_status"><option>حضور</option><option>غياب</option><option>تأخير</option><option>إجازة</option></select></div>
-            <div class="field"><label>وقت الدخول</label><input id="att_checkin" type="time" /></div>
-            <div class="field"><label>دقائق التأخير</label><input id="att_late" type="number" value="0" /></div>
-            <div class="field"><label>ملاحظات</label><input id="att_notes" /></div>
+            <div class="field"><label>الموظف *</label><select id="att_employee" onchange="handleAttendanceEmployee()"></select></div>
+            <div class="field"><label>التاريخ *</label><input id="att_date" type="date"></div>
+            <div class="field"><label>الحالة *</label><select id="att_status"><option>حضور</option><option>غياب</option><option>تأخير</option><option>إجازة</option></select></div>
+            <div class="field"><label>وقت الدخول</label><input id="att_checkin" type="time"></div>
+            <div class="field"><label>دقائق التأخير</label><input id="att_late" type="number" value="0"></div>
+            <div class="field"><label>ملاحظات</label><input id="att_notes"></div>
           </div>
+
+          <div id="reserveFields" class="form-grid" style="margin-top:12px">
+            <div class="field"><label>خروج بدل سائق؟</label><select id="att_reserve_replacement" onchange="toggleReserveFields()"><option value="false">لا</option><option value="true">نعم</option></select></div>
+            <div class="field"><label>الخط الفعلي</label><select id="att_actual_line"></select></div>
+            <div class="field"><label>السيارة الفعلية</label><select id="att_actual_vehicle"></select></div>
+          </div>
+
           <div class="actions">
-            <button class="btn btn-primary" onclick="saveAttendance()">حفظ السجل</button>
+            <button class="btn btn-primary" onclick="saveAttendance()">حفظ</button>
             <button class="btn btn-light" onclick="resetAttendanceForm()">جديد</button>
           </div>
-          <input type="hidden" id="att_id" />
+          <input type="hidden" id="att_id">
         </div>
+
         <div class="table-card">
           <div class="toolbar">
-            <div class="left"><input class="search" id="attendanceSearch" placeholder="بحث..." oninput="renderAttendance()" /></div>
+            <div class="left"><input id="attendanceSearch" class="search" placeholder="بحث..." oninput="renderAttendance()"></div>
             <div class="right">
               <button class="btn btn-green" onclick="loadAttendance()">تحديث</button>
-              <button class="btn btn-blue" onclick="exportTableToExcel('attendanceTable','attendance.xlsx')">تصدير Excel</button>
+              <button class="btn btn-blue" onclick="exportTableToExcel('attendanceTable','attendance.xlsx')">Excel</button>
             </div>
           </div>
           <div class="table-wrap">
             <table id="attendanceTable">
-              <thead><tr><th>التاريخ</th><th>الرقم</th><th>الموظف</th><th>الحالة</th><th>الدخول</th><th>التأخير</th><th>الملاحظات</th><th>الإجراءات</th></tr></thead>
+              <thead><tr><th>التاريخ</th><th>الموظف</th><th>الحالة</th><th>الدخول</th><th>التأخير</th><th>خروج بديل</th><th>الخط الفعلي</th><th>السيارة الفعلية</th><th>الإجراءات</th></tr></thead>
               <tbody id="attendanceBody"></tbody>
             </table>
           </div>
@@ -372,12 +401,10 @@
 
       <section id="fingerprint" class="section">
         <div class="form-card">
-          <h3>استيراد ملف بصمة Excel</h3>
-          <div class="note">
-            يدعم أعمدة شائعة مثل الرقم الوظيفي والتاريخ والحالة ووقت الدخول والتأخير.
-          </div>
+          <h3>استيراد البصمة / Excel</h3>
+          <div class="note">يدعم الأعمدة: الرقم الوظيفي، التاريخ، الحالة، وقت الدخول، التأخير، ملاحظات.</div>
           <div class="actions">
-            <input type="file" id="fingerprintFile" accept=".xlsx,.xls,.csv" />
+            <input id="fingerprintFile" type="file" accept=".xlsx,.xls,.csv">
             <button class="btn btn-primary" onclick="importFingerprintFile()">استيراد الملف</button>
           </div>
         </div>
@@ -385,33 +412,34 @@
 
       <section id="loans" class="section">
         <div class="form-card">
-          <h3>إضافة / تعديل سلفة أو دين</h3>
+          <h3>السلف والديون</h3>
           <div class="form-grid">
-            <div class="field"><label>الموظف</label><select id="loan_employee"></select></div>
-            <div class="field"><label>النوع</label><select id="loan_type"><option>سلفة</option><option>مديونية</option></select></div>
-            <div class="field"><label>المبلغ</label><input id="loan_amount" type="number" step="0.01" /></div>
-            <div class="field"><label>عدد الشهور</label><input id="loan_months" type="number" value="1" /></div>
-            <div class="field"><label>القسط الشهري</label><input id="loan_installment" type="number" step="0.01" /></div>
-            <div class="field"><label>المتبقي</label><input id="loan_remaining" type="number" step="0.01" /></div>
-            <div class="field"><label>الحالة</label><select id="loan_status"><option>جارية</option><option>مغلقة</option></select></div>
+            <div class="field"><label>الموظف *</label><select id="loan_employee"></select></div>
+            <div class="field"><label>النوع *</label><select id="loan_type"><option>سلفة</option><option>مديونية</option></select></div>
+            <div class="field"><label>المبلغ *</label><input id="loan_amount" type="number"></div>
+            <div class="field"><label>عدد الشهور *</label><input id="loan_months" type="number" value="1" oninput="calculateInstallmentPreview()"></div>
+            <div class="field"><label>القسط الشهري</label><input id="loan_installment" type="number" readonly></div>
+            <div class="field"><label>المتبقي</label><input id="loan_remaining" type="number" readonly></div>
           </div>
+          <div id="loanPlanPreview" class="warn" style="margin-top:12px">سيظهر تقسيم الأقساط هنا.</div>
           <div class="actions">
             <button class="btn btn-primary" onclick="saveLoan()">حفظ</button>
             <button class="btn btn-light" onclick="resetLoanForm()">جديد</button>
           </div>
-          <input type="hidden" id="loan_id" />
+          <input type="hidden" id="loan_id">
         </div>
+
         <div class="table-card">
           <div class="toolbar">
             <div class="left"></div>
             <div class="right">
               <button class="btn btn-green" onclick="loadLoans()">تحديث</button>
-              <button class="btn btn-blue" onclick="exportTableToExcel('loansTable','loans.xlsx')">تصدير Excel</button>
+              <button class="btn btn-blue" onclick="exportTableToExcel('loansTable','loans.xlsx')">Excel</button>
             </div>
           </div>
           <div class="table-wrap">
             <table id="loansTable">
-              <thead><tr><th>الموظف</th><th>النوع</th><th>المبلغ</th><th>عدد الشهور</th><th>القسط</th><th>المتبقي</th><th>الحالة</th><th>الإجراءات</th></tr></thead>
+              <thead><tr><th>الموظف</th><th>النوع</th><th>المبلغ</th><th>الشهور</th><th>القسط</th><th>المتبقي</th><th>الخطة</th><th>الإجراءات</th></tr></thead>
               <tbody id="loansBody"></tbody>
             </table>
           </div>
@@ -420,32 +448,32 @@
 
       <section id="adjustments" class="section">
         <div class="form-card">
-          <h3>الإضافات والخصومات اليدوية</h3>
+          <h3>الإضافات والخصومات</h3>
           <div class="form-grid">
-            <div class="field"><label>الموظف</label><select id="adj_employee"></select></div>
-            <div class="field"><label>النوع</label><select id="adj_type"><option value="إضافة">إضافة</option><option value="خصم">خصم</option></select></div>
-            <div class="field"><label>العنوان</label><input id="adj_title" /></div>
-            <div class="field"><label>المبلغ</label><input id="adj_amount" type="number" step="0.01" /></div>
-            <div class="field"><label>الشهر</label><input id="adj_month" type="month" /></div>
-            <div class="field"><label>ملاحظات</label><input id="adj_notes" /></div>
+            <div class="field"><label>الموظف *</label><select id="adj_employee"></select></div>
+            <div class="field"><label>النوع *</label><select id="adj_type"><option value="إضافة">إضافة</option><option value="خصم">خصم</option></select></div>
+            <div class="field"><label>المبلغ *</label><input id="adj_amount" type="number" step="0.01"></div>
+            <div class="field"><label>الشهر *</label><input id="adj_month" type="month"></div>
+            <div class="field"><label>ملاحظات</label><input id="adj_notes"></div>
           </div>
           <div class="actions">
             <button class="btn btn-primary" onclick="saveAdjustment()">حفظ</button>
             <button class="btn btn-light" onclick="resetAdjustmentForm()">جديد</button>
           </div>
-          <input type="hidden" id="adj_id" />
+          <input type="hidden" id="adj_id">
         </div>
+
         <div class="table-card">
           <div class="toolbar">
             <div class="left"></div>
             <div class="right">
               <button class="btn btn-green" onclick="loadAdjustments()">تحديث</button>
-              <button class="btn btn-blue" onclick="exportTableToExcel('adjustmentsTable','adjustments.xlsx')">تصدير Excel</button>
+              <button class="btn btn-blue" onclick="exportTableToExcel('adjustmentsTable','adjustments.xlsx')">Excel</button>
             </div>
           </div>
           <div class="table-wrap">
             <table id="adjustmentsTable">
-              <thead><tr><th>الموظف</th><th>النوع</th><th>العنوان</th><th>المبلغ</th><th>الشهر</th><th>الملاحظات</th><th>الإجراءات</th></tr></thead>
+              <thead><tr><th>الموظف</th><th>النوع</th><th>المبلغ</th><th>الشهر</th><th>الملاحظات</th><th>الإجراءات</th></tr></thead>
               <tbody id="adjustmentsBody"></tbody>
             </table>
           </div>
@@ -454,21 +482,37 @@
 
       <section id="payroll" class="section">
         <div class="form-card">
-          <h3>رواتب الشهر</h3>
-          <div class="month-box">
-            <div class="field" style="min-width:220px"><label>الشهر</label><input id="payroll_month" type="month" /></div>
-            <button class="btn btn-primary" onclick="generatePayroll()">إنشاء / تحديث رواتب الشهر</button>
+          <h3>الرواتب</h3>
+          <div class="actions">
+            <div class="field" style="min-width:220px"><label>الشهر</label><input id="payroll_month" type="month"></div>
+            <button class="btn btn-primary" onclick="generatePayroll()">إنشاء / تحديث الرواتب</button>
             <button class="btn btn-green" onclick="loadPayroll()">تحميل الشهر</button>
             <button class="btn btn-blue" onclick="approvePayroll()">اعتماد الرواتب</button>
-            <button class="btn btn-orange" onclick="exportTableToExcel('payrollTable','payroll.xlsx')">تصدير Excel</button>
+            <button class="btn btn-orange" onclick="exportTableToExcel('payrollTable','payroll.xlsx')">Excel</button>
           </div>
-          <div class="small">أيام العمل = الشهر كاملًا باستثناء الجمعة فقط.</div>
+          <div class="small">الخيار الثالث مفعل: الصافي لا ينزل تحت الصفر، والمبلغ الزائد يرحّل.</div>
         </div>
+
         <div class="table-card">
           <div class="table-wrap">
             <table id="payrollTable">
-              <thead><tr><th>الرقم</th><th>الموظف</th><th>أيام العمل</th><th>الحضور</th><th>الغياب</th><th>المستحق</th><th>إضافات</th><th>خصم سلف</th><th>خصومات</th><th>الصافي</th><th>الحالة</th></tr></thead>
+              <thead><tr><th>الرقم</th><th>الموظف</th><th>نوع الراتب</th><th>أيام العمل</th><th>الحضور</th><th>الغياب</th><th>المستحق</th><th>إضافات</th><th>خصم سلف</th><th>خصومات</th><th>مرحل</th><th>الصافي</th><th>الحالة</th><th>ملاحظات</th></tr></thead>
               <tbody id="payrollBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section id="deleteRequests" class="section">
+        <div class="card">
+          <h3>طلبات الحذف</h3>
+          <div class="note">الحذف لا يتم مباشرة، بل يتحول إلى طلب معلق حتى يوافق مسؤول النظام.</div>
+        </div>
+        <div class="table-card" style="margin-top:14px">
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>الجدول</th><th>العنصر</th><th>الطالب</th><th>الحالة</th><th>التاريخ</th><th>الإجراءات</th></tr></thead>
+              <tbody id="deleteRequestsBody"></tbody>
             </table>
           </div>
         </div>
@@ -476,11 +520,11 @@
 
       <section id="users" class="section">
         <div class="form-card">
-          <h3>المستخدمون والصلاحيات</h3>
+          <h3>المستخدمون</h3>
           <div class="form-grid">
-            <div class="field"><label>اسم المستخدم</label><input id="user_username" /></div>
-            <div class="field"><label>الاسم الكامل</label><input id="user_full_name" /></div>
-            <div class="field"><label>كلمة المرور</label><input id="user_password" /></div>
+            <div class="field"><label>اسم المستخدم *</label><input id="user_username"></div>
+            <div class="field"><label>الاسم الكامل</label><input id="user_full_name"></div>
+            <div class="field"><label>كلمة المرور *</label><input id="user_password"></div>
             <div class="field"><label>الدور</label><select id="user_role"><option>مدير النظام</option><option>HR</option><option>محاسب</option><option>إدارة</option></select></div>
             <div class="field"><label>الحالة</label><select id="user_status"><option value="active">active</option><option value="inactive">inactive</option></select></div>
           </div>
@@ -488,8 +532,9 @@
             <button class="btn btn-primary" onclick="saveUser()">حفظ</button>
             <button class="btn btn-light" onclick="resetUserForm()">جديد</button>
           </div>
-          <input type="hidden" id="user_id" />
+          <input type="hidden" id="user_id">
         </div>
+
         <div class="table-card">
           <div class="table-wrap">
             <table>
@@ -506,8 +551,8 @@
           <div class="actions">
             <button class="btn btn-blue" onclick="exportTableToExcel('employeesTable','employees-report.xlsx')">الموظفون</button>
             <button class="btn btn-blue" onclick="exportTableToExcel('attendanceTable','attendance-report.xlsx')">الحضور</button>
-            <button class="btn btn-blue" onclick="exportTableToExcel('loansTable','loans-report.xlsx')">السلف والديون</button>
-            <button class="btn btn-blue" onclick="exportTableToExcel('adjustmentsTable','adjustments-report.xlsx')">الإضافات والخصومات</button>
+            <button class="btn btn-blue" onclick="exportTableToExcel('loansTable','loans-report.xlsx')">السلف</button>
+            <button class="btn btn-blue" onclick="exportTableToExcel('adjustmentsTable','adjustments-report.xlsx')">الإضافات/الخصومات</button>
             <button class="btn btn-blue" onclick="exportTableToExcel('payrollTable','payroll-report.xlsx')">الرواتب</button>
             <button class="btn btn-light" onclick="window.print()">طباعة</button>
           </div>
@@ -515,20 +560,17 @@
       </section>
 
       <section id="settings" class="section">
-        <div class="form-card">
-          <h3>إعدادات النظام</h3>
-          <div class="form-grid three">
-            <div class="field"><label>اسم الشركة</label><input id="setting_company_name" /></div>
-            <div class="field"><label>العطلة الأسبوعية</label><input id="setting_weekly_off_day" value="الجمعة" /></div>
-            <div class="field"><label>العملة</label><input id="setting_currency" value="د.ل" /></div>
-          </div>
-          <div class="actions">
-            <button class="btn btn-primary" onclick="saveSettings()">حفظ الإعدادات</button>
-          </div>
-        </div>
         <div class="card">
+          <h3>الإعدادات</h3>
           <div class="note">
-            هذه النسخة تحفظ بياناتك في Supabase، لذلك تعديل الكود مستقبلًا لا يحذف البيانات.
+            هذه النسخة تدعم:
+            <br>1- الأقسام والوظائف المرنة
+            <br>2- خطوط التوزيع وأنواع السيارات
+            <br>3- سائق الخط وسائق الاحتياط
+            <br>4- السلف بدون كسور
+            <br>5- الحذف بالموافقة
+            <br>6- تمييز الحقول الناقصة
+            <br>7- الخيار الثالث في الرواتب
           </div>
         </div>
       </section>
@@ -544,98 +586,111 @@
 
     const state = {
       currentUser: null,
-      settings: null,
-      employees: [],
       departments: [],
+      jobTitles: [],
       branches: [],
+      lines: [],
+      vehicles: [],
+      rates: [],
+      employees: [],
       attendance: [],
       loans: [],
       adjustments: [],
       payroll: [],
-      users: []
+      users: [],
+      deleteRequests: [],
+      appSettings: { company_name: "شركة عيون الغد", currency: "د.ل" }
     };
 
-    function qs(id){ return document.getElementById(id); }
-    function showMessage(text, type="success"){
-      const el = qs("msg");
+    function $(id){ return document.getElementById(id); }
+    function msg(text, type="success"){
+      const el = $("msg");
       el.className = `message show ${type}`;
       el.textContent = text;
-      setTimeout(() => el.classList.remove("show"), 3000);
+      setTimeout(()=>el.classList.remove("show"), 3000);
     }
-    function formatCurrency(v){ return `${Number(v || 0).toFixed(2)} ${state.settings?.currency || 'د.ل'}`; }
+
     function today(){ return new Date().toISOString().split("T")[0]; }
     function currentMonth(){ return new Date().toISOString().slice(0,7); }
+    function formatCurrency(v){ return `${Number(v || 0).toFixed(2)} ${state.appSettings.currency || 'د.ل'}`; }
+
+    function badge(status){
+      if(status === "نشط" || status === "حضور" || status === "active") return `<span class="badge b-green">${status}</span>`;
+      if(status === "غياب" || status === "inactive" || status === "rejected") return `<span class="badge b-red">${status}</span>`;
+      if(status === "تأخير" || status === "موقوف" || status === "pending") return `<span class="badge b-orange">${status}</span>`;
+      if(status === "إجازة" || status === "جارية" || status === "معتمد" || status === "approved") return `<span class="badge b-blue">${status}</span>`;
+      if(status === "مسودة") return `<span class="badge b-purple">${status}</span>`;
+      return `<span class="badge b-gray">${status || "-"}</span>`;
+    }
 
     function updateDateTime(){
       const now = new Date();
       const days = ['الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
       const months = ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
-      qs("dateBox").textContent = `${days[now.getDay()]} ${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()} - ${now.toLocaleTimeString('ar-EG')}`;
-    }
-
-    function badge(status){
-      if(status === "نشط" || status === "حضور" || status === "active") return `<span class="badge b-green">${status}</span>`;
-      if(status === "غياب" || status === "inactive") return `<span class="badge b-red">${status}</span>`;
-      if(status === "تأخير" || status === "موقوف") return `<span class="badge b-orange">${status}</span>`;
-      if(status === "إجازة" || status === "جارية" || status === "معتمد") return `<span class="badge b-blue">${status}</span>`;
-      if(status === "مسودة") return `<span class="badge b-purple">${status}</span>`;
-      return `<span class="badge b-gray">${status || "-"}</span>`;
-    }
-
-    function showSection(id, btn){
-      document.querySelectorAll(".section").forEach(s => s.classList.remove("active"));
-      qs(id).classList.add("active");
-      document.querySelectorAll(".menu button").forEach(b => b.classList.remove("active"));
-      btn.classList.add("active");
-      const titles = {
-        dashboard:"لوحة التحكم", employees:"الموظفون", departments:"الأقسام", branches:"الفروع",
-        attendance:"الحضور", fingerprint:"البصمة / Excel", loans:"السلف والديون",
-        adjustments:"الإضافات والخصومات", payroll:"الرواتب", users:"المستخدمون",
-        reports:"التقارير", settings:"الإعدادات"
-      };
-      qs("pageTitle").textContent = titles[id] || "النظام";
+      $("dateBox").textContent = `${days[now.getDay()]} ${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()} - ${now.toLocaleTimeString('ar-EG')}`;
     }
 
     function workingDaysExcludingFridays(monthStr){
-      const [y, m] = monthStr.split("-").map(Number);
+      const [y,m] = monthStr.split("-").map(Number);
       const daysInMonth = new Date(y, m, 0).getDate();
       let count = 0;
-      for(let d = 1; d <= daysInMonth; d++){
-        const day = new Date(y, m - 1, d).getDay();
+      for(let d=1; d<=daysInMonth; d++){
+        const day = new Date(y, m-1, d).getDay();
         if(day !== 5) count++;
       }
       return count;
     }
 
     function monthDateRange(monthStr){
-      const [y, m] = monthStr.split("-").map(Number);
-      const start = `${monthStr}-01`;
+      const [y,m] = monthStr.split("-").map(Number);
       const last = new Date(y, m, 0).getDate();
-      const end = `${monthStr}-${String(last).padStart(2,"0")}`;
-      return { start, end };
+      return { start: `${monthStr}-01`, end: `${monthStr}-${String(last).padStart(2,'0')}` };
+    }
+
+    function clearErrors(){
+      document.querySelectorAll(".error").forEach(el => el.classList.remove("error"));
+    }
+
+    function validateRequired(ids){
+      clearErrors();
+      const missing = [];
+      ids.forEach(id => {
+        const el = $(id);
+        if(!el) return;
+        const val = String(el.value || "").trim();
+        if(!val){
+          el.classList.add("error");
+          missing.push(id);
+        }
+      });
+      return missing;
+    }
+
+    function roleIsAdmin(){
+      return state.currentUser?.role === "مدير النظام";
     }
 
     async function login(){
-      const username = qs("login_username").value.trim();
-      const password = qs("login_password").value.trim();
+      const username = $("login_username").value.trim();
+      const password = $("login_password").value.trim();
       const { data, error } = await sb.from("users").select("*").eq("username", username).eq("password", password).eq("status", "active").maybeSingle();
-      if(error || !data) return showMessage("بيانات الدخول غير صحيحة", "error");
+      if(error || !data) return msg("بيانات الدخول غير صحيحة", "error");
 
       state.currentUser = data;
-      localStorage.setItem("oyoon_current_user", JSON.stringify(data));
-      qs("loginScreen").classList.add("hidden");
-      qs("appRoot").classList.remove("hidden");
-      qs("currentUserPill").textContent = `${data.full_name || data.username} - ${data.role}`;
+      localStorage.setItem("oyoon_current_user_v3", JSON.stringify(data));
+      $("loginScreen").classList.add("hidden");
+      $("appRoot").classList.remove("hidden");
+      $("currentUserPill").textContent = `${data.full_name || data.username} - ${data.role}`;
       applyPermissions();
       await initAfterLogin();
-      showMessage("تم تسجيل الدخول");
+      msg("تم تسجيل الدخول");
     }
 
     function logout(){
-      localStorage.removeItem("oyoon_current_user");
+      localStorage.removeItem("oyoon_current_user_v3");
       state.currentUser = null;
-      qs("appRoot").classList.add("hidden");
-      qs("loginScreen").classList.remove("hidden");
+      $("appRoot").classList.add("hidden");
+      $("loginScreen").classList.remove("hidden");
     }
 
     function applyPermissions(){
@@ -644,416 +699,823 @@
       if(role === "مدير النظام") return buttons.forEach(b => b.classList.remove("hidden"));
 
       const allowMap = {
-        "HR": ["dashboard","employees","departments","branches","attendance","fingerprint","reports","settings"],
-        "محاسب": ["dashboard","loans","adjustments","payroll","reports","settings"],
-        "إدارة": ["dashboard","reports","settings","employees","payroll"]
+        "HR": ["dashboard","employees","departments","jobTitles","attendance","fingerprint","reports"],
+        "محاسب": ["dashboard","loans","adjustments","payroll","reports"],
+        "إدارة": ["dashboard","reports","employees","payroll"]
       };
       const allowed = allowMap[role] || ["dashboard"];
-      buttons.forEach(btn => {
-        const sec = btn.dataset.section;
-        btn.classList.toggle("hidden", !allowed.includes(sec));
-      });
+      buttons.forEach(btn => btn.classList.toggle("hidden", !allowed.includes(btn.dataset.section)));
     }
 
-    async function loadSettings(){
-      const { data } = await sb.from("app_settings").select("*").limit(1).maybeSingle();
-      state.settings = data || { company_name:"شركة عيون الغد", weekly_off_day:"الجمعة", currency:"د.ل" };
-      qs("setting_company_name").value = state.settings.company_name || "";
-      qs("setting_weekly_off_day").value = state.settings.weekly_off_day || "الجمعة";
-      qs("setting_currency").value = state.settings.currency || "د.ل";
-      qs("companyNameSide").textContent = state.settings.company_name || "شركة عيون الغد";
-      qs("companyNameTop").textContent = `${state.settings.company_name || "شركة عيون الغد"} - نسخة v2`;
-    }
-
-    async function saveSettings(){
-      if(!state.settings?.id) return showMessage("تعذر تحميل الإعدادات", "error");
-      const payload = {
-        company_name: qs("setting_company_name").value.trim(),
-        weekly_off_day: qs("setting_weekly_off_day").value.trim(),
-        currency: qs("setting_currency").value.trim()
+    function showSection(id, btn){
+      document.querySelectorAll(".section").forEach(s => s.classList.remove("active"));
+      $(id).classList.add("active");
+      document.querySelectorAll(".menu button").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      const titles = {
+        dashboard:"لوحة التحكم", employees:"الموظفون", departments:"الأقسام", jobTitles:"الوظائف",
+        lines:"خطوط التوزيع", vehicles:"أنواع السيارات", rates:"تسعير الخطوط",
+        attendance:"الحضور", fingerprint:"البصمة / Excel", loans:"السلف والديون",
+        adjustments:"الإضافات والخصومات", payroll:"الرواتب", deleteRequests:"طلبات الحذف",
+        users:"المستخدمون", reports:"التقارير", settings:"الإعدادات"
       };
-      const { error } = await sb.from("app_settings").update(payload).eq("id", state.settings.id);
-      if(error) return showMessage("فشل حفظ الإعدادات", "error");
-      showMessage("تم حفظ الإعدادات");
-      await loadSettings();
-      updateDashboard();
+      $("pageTitle").textContent = titles[id] || "النظام";
+    }
+
+    async function requestDelete(table_name, record_id, record_label){
+      const ok = confirm(`هل أنت متأكد من طلب حذف: ${record_label} ؟`);
+      if(!ok) return;
+
+      const payload = {
+        table_name,
+        record_id: String(record_id),
+        record_label,
+        requested_by: state.currentUser?.username || "unknown",
+        status: "pending"
+      };
+      const { error } = await sb.from("delete_requests").insert([payload]);
+      if(error) return msg("فشل إنشاء طلب الحذف", "error");
+      msg("تم إرسال طلب الحذف إلى مسؤول النظام");
+      await loadDeleteRequests();
+    }
+
+    async function approveDeleteRequest(req){
+      if(!roleIsAdmin()) return msg("هذه العملية لمسؤول النظام فقط", "error");
+      let error = null;
+
+      if(req.table_name === "departments"){
+        await sb.from("employees").update({ department: "", job_title_id: null }).eq("department", req.record_label);
+        ({ error } = await sb.from("job_titles").update({ department_id: null }).eq("department_id", req.record_id));
+        if(!error) ({ error } = await sb.from("departments").delete().eq("id", req.record_id));
+      }
+
+      if(req.table_name === "job_titles"){
+        await sb.from("employees").update({ job_title_id: null }).eq("job_title_id", req.record_id);
+        ({ error } = await sb.from("job_titles").delete().eq("id", req.record_id));
+      }
+
+      if(req.table_name === "distribution_lines"){
+        await sb.from("employees").update({ distribution_line_id: null }).eq("distribution_line_id", req.record_id);
+        await sb.from("attendance").update({ actual_line_id: null }).eq("actual_line_id", req.record_id);
+        await sb.from("line_vehicle_rates").delete().eq("line_id", req.record_id);
+        ({ error } = await sb.from("distribution_lines").delete().eq("id", req.record_id));
+      }
+
+      if(req.table_name === "vehicle_types"){
+        await sb.from("employees").update({ vehicle_type_id: null }).eq("vehicle_type_id", req.record_id);
+        await sb.from("attendance").update({ actual_vehicle_type_id: null }).eq("actual_vehicle_type_id", req.record_id);
+        await sb.from("line_vehicle_rates").delete().eq("vehicle_type_id", req.record_id);
+        ({ error } = await sb.from("vehicle_types").delete().eq("id", req.record_id));
+      }
+
+      if(req.table_name === "branches"){
+        await sb.from("employees").update({ branch: "" }).eq("branch", req.record_label);
+        ({ error } = await sb.from("branches").delete().eq("id", req.record_id));
+      }
+
+      if(req.table_name === "loans"){
+        ({ error } = await sb.from("loans").delete().eq("id", req.record_id));
+      }
+
+      if(req.table_name === "adjustments"){
+        ({ error } = await sb.from("adjustments").delete().eq("id", req.record_id));
+      }
+
+      if(req.table_name === "attendance"){
+        ({ error } = await sb.from("attendance").delete().eq("id", req.record_id));
+      }
+
+      if(req.table_name === "users"){
+        ({ error } = await sb.from("users").delete().eq("id", req.record_id));
+      }
+
+      if(req.table_name === "line_vehicle_rates"){
+        ({ error } = await sb.from("line_vehicle_rates").delete().eq("id", req.record_id));
+      }
+
+      if(error) return msg("فشل تنفيذ الحذف", "error");
+
+      await sb.from("delete_requests").update({
+        status: "approved",
+        approved_by: state.currentUser.username,
+        approved_at: new Date().toISOString()
+      }).eq("id", req.id);
+
+      msg("تمت الموافقة وتنفيذ الحذف");
+      await reloadAllLists();
+    }
+
+    async function rejectDeleteRequest(id){
+      if(!roleIsAdmin()) return msg("هذه العملية لمسؤول النظام فقط", "error");
+      const { error } = await sb.from("delete_requests").update({
+        status: "rejected",
+        approved_by: state.currentUser.username,
+        approved_at: new Date().toISOString()
+      }).eq("id", id);
+      if(error) return msg("فشل الرفض", "error");
+      msg("تم رفض طلب الحذف");
+      await loadDeleteRequests();
+    }
+
+    async function loadDeleteRequests(){
+      const { data, error } = await sb.from("delete_requests").select("*").order("created_at", { ascending:false });
+      if(error) return;
+      state.deleteRequests = data || [];
+      $("deleteRequestsBody").innerHTML = state.deleteRequests.length ? state.deleteRequests.map(r => `
+        <tr>
+          <td>${r.table_name || ""}</td>
+          <td>${r.record_label || ""}</td>
+          <td>${r.requested_by || ""}</td>
+          <td>${badge(r.status || "pending")}</td>
+          <td>${new Date(r.created_at).toLocaleString('ar-EG')}</td>
+          <td>
+            ${roleIsAdmin() && r.status === 'pending' ? `
+              <button class="btn btn-green" onclick='approveDeleteRequest(${JSON.stringify(r)})'>موافقة</button>
+              <button class="btn btn-red" onclick="rejectDeleteRequest('${r.id}')">رفض</button>
+            ` : '-'}
+          </td>
+        </tr>
+      `).join("") : `<tr><td colspan="6">لا توجد طلبات</td></tr>`;
     }
 
     async function loadDepartments(){
-      const { data, error } = await sb.from("departments").select("*").order("name");
-      if(error) return showMessage("خطأ في تحميل الأقسام", "error");
+      const { data } = await sb.from("departments").select("*").order("name");
       state.departments = data || [];
-      const body = qs("departmentsBody");
-      body.innerHTML = state.departments.length ? state.departments.map(d => `
+      $("departmentsBody").innerHTML = state.departments.length ? state.departments.map(d => `
         <tr>
-          <td>${d.name || ""}</td>
+          <td>${d.name}</td>
           <td>
             <button class="btn btn-light" onclick='editDepartment(${JSON.stringify(d)})'>تعديل</button>
-            <button class="btn btn-red" onclick="deleteDepartment('${d.id}')">حذف</button>
+            <button class="btn btn-red" onclick="requestDelete('departments','${d.id}','${d.name}')">طلب حذف</button>
           </td>
         </tr>`).join("") : `<tr><td colspan="2">لا توجد أقسام</td></tr>`;
-      qs("emp_department").innerHTML = `<option value="">اختر القسم</option>` + state.departments.map(d => `<option value="${d.name}">${d.name}</option>`).join("");
+      const options = `<option value="">اختر القسم</option>` + state.departments.map(d => `<option value="${d.id}">${d.name}</option>`).join("");
+      $("emp_department").innerHTML = options;
+      $("job_department").innerHTML = options;
     }
-    function resetDepartmentForm(){ qs("department_id").value=""; qs("department_name").value=""; }
-    function editDepartment(d){ qs("department_id").value=d.id||""; qs("department_name").value=d.name||""; }
+
+    function resetDepartmentForm(){ $("department_id").value=""; $("department_name").value=""; }
+    function editDepartment(d){ $("department_id").value=d.id; $("department_name").value=d.name; }
     async function saveDepartment(){
-      const id = qs("department_id").value, name = qs("department_name").value.trim();
-      if(!name) return showMessage("أدخل اسم القسم", "error");
+      const miss = validateRequired(["department_name"]);
+      if(miss.length) return msg("أكمل الحقول المطلوبة", "error");
+      const id = $("department_id").value;
+      const name = $("department_name").value.trim();
       const { error } = id ? await sb.from("departments").update({name}).eq("id", id) : await sb.from("departments").insert([{name}]);
-      if(error) return showMessage("فشل حفظ القسم", "error");
-      showMessage("تم حفظ القسم"); resetDepartmentForm(); await loadDepartments();
+      if(error) return msg("فشل حفظ القسم", "error");
+      msg("تم حفظ القسم");
+      resetDepartmentForm();
+      await loadDepartments();
     }
-    async function deleteDepartment(id){
-      if(!confirm("حذف القسم؟")) return;
-      const { error } = await sb.from("departments").delete().eq("id", id);
-      if(error) return showMessage("فشل حذف القسم", "error");
-      showMessage("تم حذف القسم"); await loadDepartments();
+
+    async function loadJobTitles(){
+      const { data } = await sb.from("job_titles").select("*, departments(name)").order("created_at", { ascending:false });
+      state.jobTitles = data || [];
+      $("jobTitlesBody").innerHTML = state.jobTitles.length ? state.jobTitles.map(j => `
+        <tr>
+          <td>${j.departments?.name || "-"}</td>
+          <td>${j.name}</td>
+          <td>
+            <button class="btn btn-light" onclick='editJobTitle(${JSON.stringify(j)})'>تعديل</button>
+            <button class="btn btn-red" onclick="requestDelete('job_titles','${j.id}','${j.name}')">طلب حذف</button>
+          </td>
+        </tr>`).join("") : `<tr><td colspan="3">لا توجد وظائف</td></tr>`;
+      handleDepartmentChange();
+    }
+
+    function resetJobForm(){ $("job_id").value=""; $("job_department").value=""; $("job_name").value=""; }
+    function editJobTitle(j){
+      $("job_id").value = j.id;
+      $("job_department").value = j.department_id || "";
+      $("job_name").value = j.name || "";
+    }
+    async function saveJobTitle(){
+      const miss = validateRequired(["job_department","job_name"]);
+      if(miss.length) return msg("أكمل الحقول المطلوبة", "error");
+      const id = $("job_id").value;
+      const payload = { department_id: $("job_department").value, name: $("job_name").value.trim() };
+      const { error } = id ? await sb.from("job_titles").update(payload).eq("id", id) : await sb.from("job_titles").insert([payload]);
+      if(error) return msg("فشل حفظ الوظيفة", "error");
+      msg("تم حفظ الوظيفة");
+      resetJobForm();
+      await loadJobTitles();
+    }
+
+    function handleDepartmentChange(){
+      const depId = $("emp_department").value;
+      const jobs = state.jobTitles.filter(j => (j.department_id || "") === depId);
+      $("emp_job_title").innerHTML = `<option value="">اختر الوظيفة</option>` + jobs.map(j => `<option value="${j.id}">${j.name}</option>`).join("");
+    }
+
+    function handleJobChange(){
+      const job = state.jobTitles.find(j => j.id === $("emp_job_title").value);
+      if(!job) return;
+      const lower = (job.name || "").toLowerCase();
+      if(lower.includes("سائق احتياط")){
+        $("emp_type").value = "سائق احتياط";
+      }else if(lower.includes("سائق")){
+        $("emp_type").value = "سائق";
+      }
+      toggleDriverFields();
     }
 
     async function loadBranches(){
-      const { data, error } = await sb.from("branches").select("*").order("name");
-      if(error) return showMessage("خطأ في تحميل الفروع", "error");
+      const { data } = await sb.from("branches").select("*").order("name");
       state.branches = data || [];
-      const body = qs("branchesBody");
-      body.innerHTML = state.branches.length ? state.branches.map(b => `
+      $("branchesBody").innerHTML = state.branches.length ? state.branches.map(b => `
         <tr>
-          <td>${b.name || ""}</td>
+          <td>${b.name}</td>
           <td>
             <button class="btn btn-light" onclick='editBranch(${JSON.stringify(b)})'>تعديل</button>
-            <button class="btn btn-red" onclick="deleteBranch('${b.id}')">حذف</button>
+            <button class="btn btn-red" onclick="requestDelete('branches','${b.id}','${b.name}')">طلب حذف</button>
           </td>
         </tr>`).join("") : `<tr><td colspan="2">لا توجد فروع</td></tr>`;
-      qs("emp_branch").innerHTML = `<option value="">اختر الفرع</option>` + state.branches.map(b => `<option value="${b.name}">${b.name}</option>`).join("");
-    }
-    function resetBranchForm(){ qs("branch_id").value=""; qs("branch_name").value=""; }
-    function editBranch(b){ qs("branch_id").value=b.id||""; qs("branch_name").value=b.name||""; }
-    async function saveBranch(){
-      const id = qs("branch_id").value, name = qs("branch_name").value.trim();
-      if(!name) return showMessage("أدخل اسم الفرع", "error");
-      const { error } = id ? await sb.from("branches").update({name}).eq("id", id) : await sb.from("branches").insert([{name}]);
-      if(error) return showMessage("فشل حفظ الفرع", "error");
-      showMessage("تم حفظ الفرع"); resetBranchForm(); await loadBranches();
-    }
-    async function deleteBranch(id){
-      if(!confirm("حذف الفرع؟")) return;
-      const { error } = await sb.from("branches").delete().eq("id", id);
-      if(error) return showMessage("فشل حذف الفرع", "error");
-      showMessage("تم حذف الفرع"); await loadBranches();
+      $("emp_branch").innerHTML = `<option value="">اختر الفرع</option>` + state.branches.map(b => `<option value="${b.name}">${b.name}</option>`).join("");
     }
 
-    function fillEmployeeSelects(){
-      const options = `<option value="">اختر الموظف</option>` + state.employees.map(e => `<option value="${e.id}">${e.employee_no} - ${e.full_name}</option>`).join("");
-      ["att_employee","loan_employee","adj_employee"].forEach(id => qs(id).innerHTML = options);
+    function resetBranchForm(){ $("branch_id").value=""; $("branch_name").value=""; }
+    function editBranch(b){ $("branch_id").value=b.id; $("branch_name").value=b.name; }
+    async function saveBranch(){
+      const miss = validateRequired(["branch_name"]);
+      if(miss.length) return msg("أكمل الحقول المطلوبة", "error");
+      const id = $("branch_id").value;
+      const name = $("branch_name").value.trim();
+      const { error } = id ? await sb.from("branches").update({name}).eq("id", id) : await sb.from("branches").insert([{name}]);
+      if(error) return msg("فشل حفظ الفرع", "error");
+      msg("تم حفظ الفرع");
+      resetBranchForm();
+      await loadBranches();
     }
+
+    async function loadLines(){
+      const { data } = await sb.from("distribution_lines").select("*").order("name");
+      state.lines = data || [];
+      $("linesBody").innerHTML = state.lines.length ? state.lines.map(l => `
+        <tr>
+          <td>${l.name}</td>
+          <td>
+            <button class="btn btn-light" onclick='editLine(${JSON.stringify(l)})'>تعديل</button>
+            <button class="btn btn-red" onclick="requestDelete('distribution_lines','${l.id}','${l.name}')">طلب حذف</button>
+          </td>
+        </tr>`).join("") : `<tr><td colspan="2">لا توجد خطوط</td></tr>`;
+      const options = `<option value="">اختر الخط</option>` + state.lines.map(l => `<option value="${l.id}">${l.name}</option>`).join("");
+      $("emp_line").innerHTML = options;
+      $("att_actual_line").innerHTML = options;
+      $("rate_line").innerHTML = options;
+    }
+
+    function resetLineForm(){ $("line_id").value=""; $("line_name").value=""; }
+    function editLine(l){ $("line_id").value=l.id; $("line_name").value=l.name; }
+    async function saveLine(){
+      const miss = validateRequired(["line_name"]);
+      if(miss.length) return msg("أكمل الحقول المطلوبة", "error");
+      const id = $("line_id").value;
+      const name = $("line_name").value.trim();
+      const { error } = id ? await sb.from("distribution_lines").update({name}).eq("id", id) : await sb.from("distribution_lines").insert([{name}]);
+      if(error) return msg("فشل حفظ الخط", "error");
+      msg("تم حفظ الخط");
+      resetLineForm();
+      await loadLines();
+    }
+
+    async function loadVehicles(){
+      const { data } = await sb.from("vehicle_types").select("*").order("name");
+      state.vehicles = data || [];
+      $("vehiclesBody").innerHTML = state.vehicles.length ? state.vehicles.map(v => `
+        <tr>
+          <td>${v.name}</td>
+          <td>
+            <button class="btn btn-light" onclick='editVehicle(${JSON.stringify(v)})'>تعديل</button>
+            <button class="btn btn-red" onclick="requestDelete('vehicle_types','${v.id}','${v.name}')">طلب حذف</button>
+          </td>
+        </tr>`).join("") : `<tr><td colspan="2">لا توجد سيارات</td></tr>`;
+      const options = `<option value="">اختر النوع</option>` + state.vehicles.map(v => `<option value="${v.id}">${v.name}</option>`).join("");
+      $("emp_vehicle").innerHTML = options;
+      $("att_actual_vehicle").innerHTML = options;
+      $("rate_vehicle").innerHTML = options;
+    }
+
+    function resetVehicleForm(){ $("vehicle_id").value=""; $("vehicle_name").value=""; }
+    function editVehicle(v){ $("vehicle_id").value=v.id; $("vehicle_name").value=v.name; }
+    async function saveVehicleType(){
+      const miss = validateRequired(["vehicle_name"]);
+      if(miss.length) return msg("أكمل الحقول المطلوبة", "error");
+      const id = $("vehicle_id").value;
+      const name = $("vehicle_name").value.trim();
+      const { error } = id ? await sb.from("vehicle_types").update({name}).eq("id", id) : await sb.from("vehicle_types").insert([{name}]);
+      if(error) return msg("فشل حفظ نوع السيارة", "error");
+      msg("تم حفظ نوع السيارة");
+      resetVehicleForm();
+      await loadVehicles();
+    }
+
+    async function loadRates(){
+      const { data } = await sb.from("line_vehicle_rates").select("*, distribution_lines(name), vehicle_types(name)").order("created_at",{ascending:false});
+      state.rates = data || [];
+      $("ratesBody").innerHTML = state.rates.length ? state.rates.map(r => `
+        <tr>
+          <td>${r.distribution_lines?.name || "-"}</td>
+          <td>${r.vehicle_types?.name || "-"}</td>
+          <td>${formatCurrency(r.monthly_rate)}</td>
+          <td>
+            <button class="btn btn-light" onclick='editRate(${JSON.stringify(r)})'>تعديل</button>
+            <button class="btn btn-red" onclick="requestDelete('line_vehicle_rates','${r.id}','${r.distribution_lines?.name || ''} - ${r.vehicle_types?.name || ''}')">طلب حذف</button>
+          </td>
+        </tr>`).join("") : `<tr><td colspan="4">لا توجد أسعار</td></tr>`;
+    }
+
+    function resetRateForm(){ $("rate_id").value=""; $("rate_line").value=""; $("rate_vehicle").value=""; $("rate_value").value=""; }
+    function editRate(r){ $("rate_id").value=r.id; $("rate_line").value=r.line_id||""; $("rate_vehicle").value=r.vehicle_type_id||""; $("rate_value").value=r.monthly_rate||0; }
+    async function saveRate(){
+      const miss = validateRequired(["rate_line","rate_vehicle","rate_value"]);
+      if(miss.length) return msg("أكمل الحقول المطلوبة", "error");
+      const payload = {
+        line_id: $("rate_line").value,
+        vehicle_type_id: $("rate_vehicle").value,
+        monthly_rate: Number($("rate_value").value || 0)
+      };
+      const id = $("rate_id").value;
+      const { error } = id ? await sb.from("line_vehicle_rates").update(payload).eq("id", id) : await sb.from("line_vehicle_rates").upsert([payload], { onConflict: "line_id,vehicle_type_id" });
+      if(error) return msg("فشل حفظ التسعيرة", "error");
+      msg("تم حفظ التسعيرة");
+      resetRateForm();
+      await loadRates();
+    }
+
+    function toggleDriverFields(){
+      const type = $("emp_type").value;
+      const isDriver = type === "سائق" || type === "سائق احتياط";
+      $("driverFields").style.display = isDriver ? "grid" : "none";
+      $("emp_reserve_salary").parentElement.style.display = type === "سائق احتياط" ? "flex" : "none";
+    }
+
+    function employeeById(id){ return state.employees.find(e => e.id === id); }
+    function lineName(id){ return state.lines.find(x => x.id === id)?.name || "-"; }
+    function vehicleName(id){ return state.vehicles.find(x => x.id === id)?.name || "-"; }
+    function jobName(id){ return state.jobTitles.find(x => x.id === id)?.name || "-"; }
+    function depName(id){ return state.departments.find(x => x.id === id)?.name || "-"; }
 
     async function loadEmployees(){
-      const { data, error } = await sb.from("employees").select("*").order("employee_no");
-      if(error) return showMessage("خطأ في تحميل الموظفين", "error");
+      const { data } = await sb.from("employees").select("*").order("employee_no");
       state.employees = data || [];
-      fillEmployeeSelects();
+      $("att_employee").innerHTML = `<option value="">اختر الموظف</option>` + state.employees.map(e => `<option value="${e.id}">${e.employee_no} - ${e.full_name}</option>`).join("");
+      $("loan_employee").innerHTML = `<option value="">اختر الموظف</option>` + state.employees.map(e => `<option value="${e.id}">${e.employee_no} - ${e.full_name}</option>`).join("");
+      $("adj_employee").innerHTML = `<option value="">اختر الموظف</option>` + state.employees.map(e => `<option value="${e.id}">${e.employee_no} - ${e.full_name}</option>`).join("");
       renderEmployees();
       updateDashboard();
     }
 
     function renderEmployees(){
-      const q = qs("employeeSearch").value.trim().toLowerCase();
-      const rows = state.employees.filter(e =>
-        !q ||
-        String(e.employee_no||"").toLowerCase().includes(q) ||
-        String(e.full_name||"").toLowerCase().includes(q) ||
-        String(e.department||"").toLowerCase().includes(q)
-      );
-      qs("employeesBody").innerHTML = rows.length ? rows.map(e => `
+      const q = $("employeeSearch").value.trim().toLowerCase();
+      const rows = state.employees.filter(e => !q || String(e.employee_no||"").toLowerCase().includes(q) || String(e.full_name||"").toLowerCase().includes(q));
+      $("employeesBody").innerHTML = rows.length ? rows.map(e => `
         <tr>
-          <td>${e.employee_no||""}</td>
-          <td>${e.full_name||""}</td>
-          <td>${e.department||""}</td>
-          <td>${e.branch||""}</td>
-          <td>${e.job_title||""}</td>
+          <td>${e.employee_no || ""}</td>
+          <td>${e.full_name || ""}</td>
+          <td>${depName(e.department_id) || "-"}</td>
+          <td>${jobName(e.job_title_id) || "-"}</td>
+          <td>${e.employee_type || "عادي"}</td>
+          <td>${lineName(e.distribution_line_id)}</td>
+          <td>${vehicleName(e.vehicle_type_id)}</td>
           <td>${formatCurrency(e.basic_salary)}</td>
-          <td>${badge(e.status||"نشط")}</td>
+          <td>${badge(e.status || "نشط")}</td>
           <td>
             <button class="btn btn-light" onclick='editEmployee(${JSON.stringify(e)})'>تعديل</button>
-            <button class="btn btn-red" onclick="deleteEmployee('${e.id}')">حذف</button>
           </td>
-        </tr>`).join("") : `<tr><td colspan="8">لا توجد بيانات</td></tr>`;
+        </tr>`).join("") : `<tr><td colspan="10">لا توجد بيانات</td></tr>`;
     }
 
     function resetEmployeeForm(){
-      ["emp_id","emp_no","emp_name","emp_department","emp_branch","emp_job_title","emp_salary","emp_notes"].forEach(id => qs(id).value = "");
-      qs("emp_status").value = "نشط";
+      ["emp_id","emp_no","emp_name","emp_salary","emp_notes","emp_reserve_salary"].forEach(id => $(id).value = "");
+      $("emp_department").value = "";
+      $("emp_job_title").innerHTML = `<option value="">اختر الوظيفة</option>`;
+      $("emp_branch").value = "";
+      $("emp_type").value = "عادي";
+      $("emp_line").value = "";
+      $("emp_vehicle").value = "";
+      $("emp_status").value = "نشط";
+      toggleDriverFields();
+      clearErrors();
     }
+
     function editEmployee(e){
-      qs("emp_id").value = e.id || "";
-      qs("emp_no").value = e.employee_no || "";
-      qs("emp_name").value = e.full_name || "";
-      qs("emp_department").value = e.department || "";
-      qs("emp_branch").value = e.branch || "";
-      qs("emp_job_title").value = e.job_title || "";
-      qs("emp_salary").value = e.basic_salary || 0;
-      qs("emp_status").value = e.status || "نشط";
-      qs("emp_notes").value = e.notes || "";
+      $("emp_id").value = e.id || "";
+      $("emp_no").value = e.employee_no || "";
+      $("emp_name").value = e.full_name || "";
+      $("emp_department").value = e.department_id || "";
+      handleDepartmentChange();
+      $("emp_job_title").value = e.job_title_id || "";
+      $("emp_branch").value = e.branch || "";
+      $("emp_type").value = e.employee_type || "عادي";
+      $("emp_salary").value = e.basic_salary || 0;
+      $("emp_status").value = e.status || "نشط";
+      $("emp_line").value = e.distribution_line_id || "";
+      $("emp_vehicle").value = e.vehicle_type_id || "";
+      $("emp_reserve_salary").value = e.reserve_driver_salary || 0;
+      $("emp_notes").value = e.notes || "";
+      toggleDriverFields();
     }
+
     async function saveEmployee(){
+      const type = $("emp_type").value;
+      const required = ["emp_no","emp_name","emp_department","emp_job_title"];
+      if(type === "سائق") required.push("emp_line","emp_vehicle");
+      if(type === "سائق احتياط") required.push("emp_reserve_salary");
+      const miss = validateRequired(required);
+      if(miss.length) return msg("أكمل الحقول المطلوبة المميزة باللون", "error");
+
       const payload = {
-        employee_no: qs("emp_no").value.trim(),
-        full_name: qs("emp_name").value.trim(),
-        department: qs("emp_department").value || "",
-        branch: qs("emp_branch").value || "",
-        job_title: qs("emp_job_title").value.trim(),
-        basic_salary: Number(qs("emp_salary").value || 0),
-        status: qs("emp_status").value,
-        notes: qs("emp_notes").value.trim()
+        employee_no: $("emp_no").value.trim(),
+        full_name: $("emp_name").value.trim(),
+        department_id: $("emp_department").value || null,
+        job_title_id: $("emp_job_title").value || null,
+        branch: $("emp_branch").value || "",
+        employee_type: type,
+        basic_salary: Number($("emp_salary").value || 0),
+        status: $("emp_status").value,
+        distribution_line_id: $("emp_line").value || null,
+        vehicle_type_id: $("emp_vehicle").value || null,
+        reserve_driver_salary: Number($("emp_reserve_salary").value || 0),
+        notes: $("emp_notes").value.trim()
       };
-      if(!payload.employee_no || !payload.full_name) return showMessage("أدخل الرقم الوظيفي واسم الموظف", "error");
-      const id = qs("emp_id").value;
+
+      const id = $("emp_id").value;
       const { error } = id ? await sb.from("employees").update(payload).eq("id", id) : await sb.from("employees").insert([payload]);
-      if(error) return showMessage("فشل حفظ الموظف", "error");
-      showMessage("تم حفظ الموظف"); resetEmployeeForm(); await loadEmployees();
+      if(error) return msg("فشل حفظ الموظف", "error");
+      msg("تم حفظ الموظف");
+      resetEmployeeForm();
+      await loadEmployees();
     }
-    async function deleteEmployee(id){
-      if(!confirm("حذف الموظف؟")) return;
-      const { error } = await sb.from("employees").delete().eq("id", id);
-      if(error) return showMessage("فشل حذف الموظف", "error");
-      showMessage("تم حذف الموظف"); await loadEmployees();
+
+    function handleAttendanceEmployee(){
+      const emp = employeeById($("att_employee").value);
+      if(!emp) return;
+      const isReserve = emp.employee_type === "سائق احتياط";
+      $("reserveFields").style.display = isReserve ? "grid" : "none";
+      $("att_actual_line").value = "";
+      $("att_actual_vehicle").value = "";
+      $("att_reserve_replacement").value = "false";
+    }
+
+    function toggleReserveFields(){
+      const yes = $("att_reserve_replacement").value === "true";
+      $("att_actual_line").parentElement.style.display = yes ? "flex" : "none";
+      $("att_actual_vehicle").parentElement.style.display = yes ? "flex" : "none";
     }
 
     async function loadAttendance(){
-      const { data, error } = await sb.from("attendance").select("*, employees(employee_no, full_name)").order("attendance_date",{ascending:false}).order("created_at",{ascending:false});
-      if(error) return showMessage("خطأ في تحميل الحضور", "error");
+      const { data } = await sb.from("attendance").select("*").order("attendance_date",{ascending:false}).order("created_at",{ascending:false});
       state.attendance = data || [];
       renderAttendance();
       updateDashboard();
     }
+
     function renderAttendance(){
-      const q = qs("attendanceSearch").value.trim().toLowerCase();
-      const rows = state.attendance.filter(r => !q || String(r.employees?.full_name||"").toLowerCase().includes(q));
-      qs("attendanceBody").innerHTML = rows.length ? rows.map(r => `
-        <tr>
-          <td>${r.attendance_date||""}</td>
-          <td>${r.employees?.employee_no||""}</td>
-          <td>${r.employees?.full_name||""}</td>
-          <td>${badge(r.status||"")}</td>
-          <td>${r.check_in||"-"}</td>
-          <td>${r.late_minutes||0} دقيقة</td>
-          <td>${r.notes||"-"}</td>
-          <td>
-            <button class="btn btn-light" onclick='editAttendance(${JSON.stringify(r)})'>تعديل</button>
-            <button class="btn btn-red" onclick="deleteAttendance('${r.id}')">حذف</button>
-          </td>
-        </tr>`).join("") : `<tr><td colspan="8">لا توجد سجلات حضور</td></tr>`;
+      const q = $("attendanceSearch").value.trim().toLowerCase();
+      const rows = state.attendance.filter(r => {
+        const emp = employeeById(r.employee_id);
+        return !q || String(emp?.full_name || "").toLowerCase().includes(q);
+      });
+      $("attendanceBody").innerHTML = rows.length ? rows.map(r => {
+        const emp = employeeById(r.employee_id);
+        return `
+          <tr>
+            <td>${r.attendance_date || ""}</td>
+            <td>${emp?.full_name || "-"}</td>
+            <td>${badge(r.status || "")}</td>
+            <td>${r.check_in || "-"}</td>
+            <td>${r.late_minutes || 0} دقيقة</td>
+            <td>${r.reserve_replacement ? "نعم" : "لا"}</td>
+            <td>${lineName(r.actual_line_id)}</td>
+            <td>${vehicleName(r.actual_vehicle_type_id)}</td>
+            <td>
+              <button class="btn btn-light" onclick='editAttendance(${JSON.stringify(r)})'>تعديل</button>
+              <button class="btn btn-red" onclick="requestDelete('attendance','${r.id}','${emp?.full_name || 'سجل حضور'}')">طلب حذف</button>
+            </td>
+          </tr>`;
+      }).join("") : `<tr><td colspan="9">لا توجد سجلات</td></tr>`;
     }
+
     function resetAttendanceForm(){
-      qs("att_id").value = "";
-      qs("att_employee").value = "";
-      qs("att_date").value = today();
-      qs("att_status").value = "حضور";
-      qs("att_checkin").value = "";
-      qs("att_late").value = 0;
-      qs("att_notes").value = "";
+      $("att_id").value = "";
+      $("att_employee").value = "";
+      $("att_date").value = today();
+      $("att_status").value = "حضور";
+      $("att_checkin").value = "";
+      $("att_late").value = 0;
+      $("att_notes").value = "";
+      $("att_reserve_replacement").value = "false";
+      $("att_actual_line").value = "";
+      $("att_actual_vehicle").value = "";
+      $("reserveFields").style.display = "none";
+      toggleReserveFields();
+      clearErrors();
     }
+
     function editAttendance(r){
-      qs("att_id").value = r.id || "";
-      qs("att_employee").value = r.employee_id || "";
-      qs("att_date").value = r.attendance_date || today();
-      qs("att_status").value = r.status || "حضور";
-      qs("att_checkin").value = r.check_in || "";
-      qs("att_late").value = r.late_minutes || 0;
-      qs("att_notes").value = r.notes || "";
+      $("att_id").value = r.id || "";
+      $("att_employee").value = r.employee_id || "";
+      handleAttendanceEmployee();
+      $("att_date").value = r.attendance_date || today();
+      $("att_status").value = r.status || "حضور";
+      $("att_checkin").value = r.check_in || "";
+      $("att_late").value = r.late_minutes || 0;
+      $("att_notes").value = r.notes || "";
+      $("att_reserve_replacement").value = r.reserve_replacement ? "true" : "false";
+      toggleReserveFields();
+      $("att_actual_line").value = r.actual_line_id || "";
+      $("att_actual_vehicle").value = r.actual_vehicle_type_id || "";
     }
+
     async function saveAttendance(){
+      const emp = employeeById($("att_employee").value);
+      const required = ["att_employee","att_date","att_status"];
+      if(emp?.employee_type === "سائق احتياط" && $("att_reserve_replacement").value === "true"){
+        required.push("att_actual_line","att_actual_vehicle");
+      }
+      const miss = validateRequired(required);
+      if(miss.length) return msg("أكمل الحقول المطلوبة المميزة باللون", "error");
+
       const payload = {
-        employee_id: qs("att_employee").value,
-        attendance_date: qs("att_date").value,
-        status: qs("att_status").value,
-        check_in: qs("att_checkin").value || null,
-        late_minutes: Number(qs("att_late").value || 0),
-        notes: qs("att_notes").value.trim()
+        employee_id: $("att_employee").value,
+        attendance_date: $("att_date").value,
+        status: $("att_status").value,
+        check_in: $("att_checkin").value || null,
+        late_minutes: Number($("att_late").value || 0),
+        notes: $("att_notes").value.trim(),
+        reserve_replacement: $("att_reserve_replacement").value === "true",
+        actual_line_id: $("att_reserve_replacement").value === "true" ? ($("att_actual_line").value || null) : null,
+        actual_vehicle_type_id: $("att_reserve_replacement").value === "true" ? ($("att_actual_vehicle").value || null) : null
       };
-      if(!payload.employee_id || !payload.attendance_date) return showMessage("اختر الموظف والتاريخ", "error");
-      const id = qs("att_id").value;
-      const { error } = id
-        ? await sb.from("attendance").update(payload).eq("id", id)
-        : await sb.from("attendance").upsert([payload], { onConflict:"employee_id,attendance_date" });
-      if(error) return showMessage("فشل حفظ الحضور", "error");
-      showMessage("تم حفظ الحضور"); resetAttendanceForm(); await loadAttendance();
+
+      const id = $("att_id").value;
+      const { error } = id ? await sb.from("attendance").update(payload).eq("id", id) : await sb.from("attendance").upsert([payload], { onConflict:"employee_id,attendance_date" });
+      if(error) return msg("فشل حفظ الحضور", "error");
+      msg("تم حفظ الحضور");
+      resetAttendanceForm();
+      await loadAttendance();
     }
-    async function deleteAttendance(id){
-      if(!confirm("حذف السجل؟")) return;
-      const { error } = await sb.from("attendance").delete().eq("id", id);
-      if(error) return showMessage("فشل حذف السجل", "error");
-      showMessage("تم حذف السجل"); await loadAttendance();
+
+    function calculateInstallmentPlan(amount, months){
+      amount = Math.floor(Number(amount || 0));
+      months = Math.max(1, Math.floor(Number(months || 1)));
+      const base = Math.floor(amount / months);
+      const remainder = amount - (base * months);
+      const plan = [];
+      for(let i=0; i<months; i++){
+        plan.push(i === 0 ? base + remainder : base);
+      }
+      return plan;
+    }
+
+    function calculateInstallmentPreview(){
+      const amount = Number($("loan_amount").value || 0);
+      const months = Number($("loan_months").value || 1);
+      const plan = calculateInstallmentPlan(amount, months);
+      $("loan_installment").value = plan[0] || 0;
+      $("loan_remaining").value = amount || 0;
+      $("loanPlanPreview").textContent = plan.length ? `خطة الأقساط: ${plan.join(" / ")}` : "سيظهر تقسيم الأقساط هنا.";
     }
 
     async function loadLoans(){
-      const { data, error } = await sb.from("loans").select("*, employees(full_name)").order("created_at",{ascending:false});
-      if(error) return showMessage("خطأ في تحميل السلف والديون", "error");
+      const { data } = await sb.from("loans").select("*").order("created_at",{ascending:false});
       state.loans = data || [];
-      qs("loansBody").innerHTML = state.loans.length ? state.loans.map(r => `
-        <tr>
-          <td>${r.employees?.full_name||""}</td>
-          <td>${r.type||""}</td>
-          <td>${formatCurrency(r.amount)}</td>
-          <td>${r.months_count||0}</td>
-          <td>${formatCurrency(r.monthly_installment)}</td>
-          <td>${formatCurrency(r.remaining_amount)}</td>
-          <td>${badge(r.status||"جارية")}</td>
-          <td>
-            <button class="btn btn-light" onclick='editLoan(${JSON.stringify(r)})'>تعديل</button>
-            <button class="btn btn-red" onclick="deleteLoan('${r.id}')">حذف</button>
-          </td>
-        </tr>`).join("") : `<tr><td colspan="8">لا توجد بيانات</td></tr>`;
+      $("loansBody").innerHTML = state.loans.length ? state.loans.map(r => {
+        const emp = employeeById(r.employee_id);
+        const plan = Array.isArray(r.installment_plan) ? r.installment_plan.join(" / ") : "-";
+        return `
+          <tr>
+            <td>${emp?.full_name || "-"}</td>
+            <td>${r.type || ""}</td>
+            <td>${formatCurrency(r.amount)}</td>
+            <td>${r.months_count || 0}</td>
+            <td>${formatCurrency(r.monthly_installment)}</td>
+            <td>${formatCurrency(r.remaining_amount)}</td>
+            <td>${plan}</td>
+            <td>
+              <button class="btn btn-light" onclick='editLoan(${JSON.stringify(r)})'>تعديل</button>
+              <button class="btn btn-red" onclick="requestDelete('loans','${r.id}','${emp?.full_name || 'سلفة'}')">طلب حذف</button>
+            </td>
+          </tr>`;
+      }).join("") : `<tr><td colspan="8">لا توجد بيانات</td></tr>`;
       updateDashboard();
     }
+
     function resetLoanForm(){
-      qs("loan_id").value = "";
-      qs("loan_employee").value = "";
-      qs("loan_type").value = "سلفة";
-      qs("loan_amount").value = "";
-      qs("loan_months").value = 1;
-      qs("loan_installment").value = "";
-      qs("loan_remaining").value = "";
-      qs("loan_status").value = "جارية";
+      $("loan_id").value = "";
+      $("loan_employee").value = "";
+      $("loan_type").value = "سلفة";
+      $("loan_amount").value = "";
+      $("loan_months").value = 1;
+      $("loan_installment").value = "";
+      $("loan_remaining").value = "";
+      $("loanPlanPreview").textContent = "سيظهر تقسيم الأقساط هنا.";
+      clearErrors();
     }
+
     function editLoan(r){
-      qs("loan_id").value = r.id || "";
-      qs("loan_employee").value = r.employee_id || "";
-      qs("loan_type").value = r.type || "سلفة";
-      qs("loan_amount").value = r.amount || 0;
-      qs("loan_months").value = r.months_count || 1;
-      qs("loan_installment").value = r.monthly_installment || 0;
-      qs("loan_remaining").value = r.remaining_amount || 0;
-      qs("loan_status").value = r.status || "جارية";
+      $("loan_id").value = r.id || "";
+      $("loan_employee").value = r.employee_id || "";
+      $("loan_type").value = r.type || "سلفة";
+      $("loan_amount").value = r.amount || 0;
+      $("loan_months").value = r.months_count || 1;
+      $("loan_installment").value = r.monthly_installment || 0;
+      $("loan_remaining").value = r.remaining_amount || 0;
+      $("loanPlanPreview").textContent = Array.isArray(r.installment_plan) ? `خطة الأقساط: ${r.installment_plan.join(" / ")}` : "";
     }
+
     async function saveLoan(){
-      const amount = Number(qs("loan_amount").value || 0);
-      const months = Number(qs("loan_months").value || 1);
-      const installment = Number(qs("loan_installment").value || (amount / (months || 1)));
-      const remaining = Number(qs("loan_remaining").value || amount);
+      const miss = validateRequired(["loan_employee","loan_type","loan_amount","loan_months"]);
+      if(miss.length) return msg("أكمل الحقول المطلوبة المميزة باللون", "error");
+
+      const amount = Math.floor(Number($("loan_amount").value || 0));
+      const months = Math.max(1, Math.floor(Number($("loan_months").value || 1)));
+      const plan = calculateInstallmentPlan(amount, months);
+
       const payload = {
-        employee_id: qs("loan_employee").value,
-        type: qs("loan_type").value,
-        amount, months_count: months, monthly_installment: installment, remaining_amount: remaining,
-        status: qs("loan_status").value
+        employee_id: $("loan_employee").value,
+        type: $("loan_type").value,
+        amount,
+        months_count: months,
+        monthly_installment: plan[0] || 0,
+        remaining_amount: amount,
+        status: "جارية",
+        installment_plan: plan
       };
-      if(!payload.employee_id || !amount) return showMessage("اختر الموظف وأدخل المبلغ", "error");
-      const id = qs("loan_id").value;
+
+      const id = $("loan_id").value;
       const { error } = id ? await sb.from("loans").update(payload).eq("id", id) : await sb.from("loans").insert([payload]);
-      if(error) return showMessage("فشل حفظ السلفة/الدين", "error");
-      showMessage("تم حفظ السلفة/الدين"); resetLoanForm(); await loadLoans();
-    }
-    async function deleteLoan(id){
-      if(!confirm("حذف السلفة/الدين؟")) return;
-      const { error } = await sb.from("loans").delete().eq("id", id);
-      if(error) return showMessage("فشل الحذف", "error");
-      showMessage("تم الحذف"); await loadLoans();
+      if(error) return msg("فشل حفظ السلفة/الدين", "error");
+      msg("تم حفظ السلفة/الدين");
+      resetLoanForm();
+      await loadLoans();
     }
 
     async function loadAdjustments(){
-      const { data, error } = await sb.from("adjustments").select("*, employees(full_name)").order("pay_month",{ascending:false}).order("created_at",{ascending:false});
-      if(error) return showMessage("خطأ في تحميل الإضافات والخصومات", "error");
+      const { data } = await sb.from("adjustments").select("*").order("pay_month",{ascending:false}).order("created_at",{ascending:false});
       state.adjustments = data || [];
-      qs("adjustmentsBody").innerHTML = state.adjustments.length ? state.adjustments.map(r => `
-        <tr>
-          <td>${r.employees?.full_name||""}</td>
-          <td>${badge(r.type||"")}</td>
-          <td>${r.title||""}</td>
-          <td>${formatCurrency(r.amount)}</td>
-          <td>${r.pay_month||""}</td>
-          <td>${r.notes||"-"}</td>
-          <td>
-            <button class="btn btn-light" onclick='editAdjustment(${JSON.stringify(r)})'>تعديل</button>
-            <button class="btn btn-red" onclick="deleteAdjustment('${r.id}')">حذف</button>
-          </td>
-        </tr>`).join("") : `<tr><td colspan="7">لا توجد بيانات</td></tr>`;
+      $("adjustmentsBody").innerHTML = state.adjustments.length ? state.adjustments.map(r => {
+        const emp = employeeById(r.employee_id);
+        return `
+          <tr>
+            <td>${emp?.full_name || "-"}</td>
+            <td>${badge(r.type || "")}</td>
+            <td>${formatCurrency(r.amount)}</td>
+            <td>${r.pay_month || ""}</td>
+            <td>${r.notes || "-"}</td>
+            <td>
+              <button class="btn btn-light" onclick='editAdjustment(${JSON.stringify(r)})'>تعديل</button>
+              <button class="btn btn-red" onclick="requestDelete('adjustments','${r.id}','${emp?.full_name || 'إضافة/خصم'}')">طلب حذف</button>
+            </td>
+          </tr>`;
+      }).join("") : `<tr><td colspan="6">لا توجد بيانات</td></tr>`;
       updateDashboard();
     }
+
     function resetAdjustmentForm(){
-      qs("adj_id").value = "";
-      qs("adj_employee").value = "";
-      qs("adj_type").value = "إضافة";
-      qs("adj_title").value = "";
-      qs("adj_amount").value = "";
-      qs("adj_month").value = currentMonth();
-      qs("adj_notes").value = "";
+      $("adj_id").value = "";
+      $("adj_employee").value = "";
+      $("adj_type").value = "إضافة";
+      $("adj_amount").value = "";
+      $("adj_month").value = currentMonth();
+      $("adj_notes").value = "";
+      clearErrors();
     }
+
     function editAdjustment(r){
-      qs("adj_id").value = r.id || "";
-      qs("adj_employee").value = r.employee_id || "";
-      qs("adj_type").value = r.type || "إضافة";
-      qs("adj_title").value = r.title || "";
-      qs("adj_amount").value = r.amount || 0;
-      qs("adj_month").value = r.pay_month || currentMonth();
-      qs("adj_notes").value = r.notes || "";
+      $("adj_id").value = r.id || "";
+      $("adj_employee").value = r.employee_id || "";
+      $("adj_type").value = r.type || "إضافة";
+      $("adj_amount").value = r.amount || 0;
+      $("adj_month").value = r.pay_month || currentMonth();
+      $("adj_notes").value = r.notes || "";
     }
+
     async function saveAdjustment(){
+      const miss = validateRequired(["adj_employee","adj_type","adj_amount","adj_month"]);
+      if(miss.length) return msg("أكمل الحقول المطلوبة المميزة باللون", "error");
+
       const payload = {
-        employee_id: qs("adj_employee").value,
-        type: qs("adj_type").value,
-        title: qs("adj_title").value.trim(),
-        amount: Number(qs("adj_amount").value || 0),
-        pay_month: qs("adj_month").value,
-        notes: qs("adj_notes").value.trim()
+        employee_id: $("adj_employee").value,
+        type: $("adj_type").value,
+        amount: Number($("adj_amount").value || 0),
+        pay_month: $("adj_month").value,
+        notes: $("adj_notes").value.trim()
       };
-      if(!payload.employee_id || !payload.title || !payload.pay_month) return showMessage("أكمل بيانات الإضافة/الخصم", "error");
-      const id = qs("adj_id").value;
+
+      const id = $("adj_id").value;
       const { error } = id ? await sb.from("adjustments").update(payload).eq("id", id) : await sb.from("adjustments").insert([payload]);
-      if(error) return showMessage("فشل الحفظ", "error");
-      showMessage("تم الحفظ"); resetAdjustmentForm(); await loadAdjustments();
+      if(error) return msg("فشل حفظ السجل", "error");
+      msg("تم حفظ السجل");
+      resetAdjustmentForm();
+      await loadAdjustments();
     }
-    async function deleteAdjustment(id){
-      if(!confirm("حذف السجل؟")) return;
-      const { error } = await sb.from("adjustments").delete().eq("id", id);
-      if(error) return showMessage("فشل الحذف", "error");
-      showMessage("تم الحذف"); await loadAdjustments();
+
+    function getRate(lineId, vehicleId){
+      return state.rates.find(r => r.line_id === lineId && r.vehicle_type_id === vehicleId);
     }
 
     async function loadPayroll(){
-      const month = qs("payroll_month").value || currentMonth();
-      qs("payroll_month").value = month;
-      const { data, error } = await sb.from("payroll").select("*, employees(employee_no, full_name)").eq("pay_month", month).order("created_at",{ascending:false});
-      if(error) return showMessage("خطأ في تحميل الرواتب", "error");
+      const month = $("payroll_month").value || currentMonth();
+      $("payroll_month").value = month;
+      const { data } = await sb.from("payroll").select("*").eq("pay_month", month).order("created_at",{ascending:false});
       state.payroll = data || [];
-      qs("payrollBody").innerHTML = state.payroll.length ? state.payroll.map(r => `
-        <tr>
-          <td>${r.employees?.employee_no||""}</td>
-          <td>${r.employees?.full_name||""}</td>
-          <td>${r.working_days||0}</td>
-          <td>${r.present_days||0}</td>
-          <td>${r.absent_days||0}</td>
-          <td>${formatCurrency(r.deserved_salary)}</td>
-          <td>${formatCurrency(r.additions)}</td>
-          <td>${formatCurrency(r.loan_deductions)}</td>
-          <td>${formatCurrency(r.manual_deductions)}</td>
-          <td>${formatCurrency(r.net_salary)}</td>
-          <td>${badge(r.status||"مسودة")}</td>
-        </tr>`).join("") : `<tr><td colspan="11">لا توجد رواتب لهذا الشهر</td></tr>`;
+      $("payrollBody").innerHTML = state.payroll.length ? state.payroll.map(r => {
+        const emp = employeeById(r.employee_id);
+        return `
+          <tr>
+            <td>${emp?.employee_no || ""}</td>
+            <td>${emp?.full_name || ""}</td>
+            <td>${r.payroll_type || "standard"}</td>
+            <td>${r.working_days || 0}</td>
+            <td>${r.present_days || 0}</td>
+            <td>${r.absent_days || 0}</td>
+            <td>${formatCurrency(r.deserved_salary)}</td>
+            <td>${formatCurrency(r.additions)}</td>
+            <td>${formatCurrency(r.loan_deductions)}</td>
+            <td>${formatCurrency(r.manual_deductions)}</td>
+            <td>${formatCurrency(r.transported_deductions)}</td>
+            <td>${formatCurrency(r.net_salary)}</td>
+            <td>${badge(r.status || "مسودة")}</td>
+            <td>${r.notes || "-"}</td>
+          </tr>`;
+      }).join("") : `<tr><td colspan="14">لا توجد رواتب لهذا الشهر</td></tr>`;
     }
 
     async function generatePayroll(){
-      const month = qs("payroll_month").value || currentMonth();
-      qs("payroll_month").value = month;
-      if(!state.employees.length) return showMessage("لا يوجد موظفون", "error");
+      const month = $("payroll_month").value || currentMonth();
+      $("payroll_month").value = month;
+      if(!state.employees.length) return msg("لا يوجد موظفون", "error");
 
       const workDays = workingDaysExcludingFridays(month);
       const { start, end } = monthDateRange(month);
 
       for(const emp of state.employees){
         const { data: attRows } = await sb.from("attendance").select("*").eq("employee_id", emp.id).gte("attendance_date", start).lte("attendance_date", end);
-        const presentDays = (attRows || []).filter(r => ["حضور","تأخير","إجازة"].includes(r.status)).length;
+        const presentRows = (attRows || []).filter(r => ["حضور","تأخير","إجازة"].includes(r.status));
+        const presentDays = presentRows.length;
         const absentDays = Math.max(workDays - presentDays, 0);
-        const deservedSalary = workDays > 0 ? (Number(emp.basic_salary || 0) / workDays) * presentDays : 0;
+
+        let deservedSalary = 0;
+        let payrollType = "standard";
+        let notes = "";
+
+        if(emp.employee_type === "سائق"){
+          payrollType = "driver";
+          const rate = getRate(emp.distribution_line_id, emp.vehicle_type_id);
+          const monthlyRate = Number(rate?.monthly_rate || 0);
+          deservedSalary = workDays > 0 ? (monthlyRate / workDays) * presentDays : 0;
+        } else if(emp.employee_type === "سائق احتياط"){
+          payrollType = "reserve_driver";
+          const reserveDaily = workDays > 0 ? Number(emp.reserve_driver_salary || 0) / workDays : 0;
+
+          let totalDaysAmount = 0;
+          for(const row of presentRows){
+            if(row.reserve_replacement && row.actual_line_id && row.actual_vehicle_type_id){
+              const actualRate = getRate(row.actual_line_id, row.actual_vehicle_type_id);
+              const actualMonthly = Number(actualRate?.monthly_rate || 0);
+              const actualDaily = workDays > 0 ? actualMonthly / workDays : 0;
+              totalDaysAmount += actualDaily;
+            }else{
+              totalDaysAmount += reserveDaily;
+            }
+          }
+          deservedSalary = totalDaysAmount;
+        } else {
+          payrollType = "standard";
+          deservedSalary = workDays > 0 ? (Number(emp.basic_salary || 0) / workDays) * presentDays : 0;
+        }
 
         const { data: loanRows } = await sb.from("loans").select("*").eq("employee_id", emp.id).eq("status", "جارية");
-        const loanDeductions = (loanRows || []).reduce((s, x) => s + Number(x.monthly_installment || 0), 0);
+        let loanDeductions = 0;
+        for(const loan of (loanRows || [])){
+          let plan = Array.isArray(loan.installment_plan) ? [...loan.installment_plan] : [];
+          if(!plan.length && loan.monthly_installment){
+            plan = [Number(loan.monthly_installment)];
+          }
+          const thisMonth = Number(plan[0] || 0);
+          loanDeductions += thisMonth;
+        }
 
         const { data: adjRows } = await sb.from("adjustments").select("*").eq("employee_id", emp.id).eq("pay_month", month);
         const additions = (adjRows || []).filter(x => x.type === "إضافة").reduce((s, x) => s + Number(x.amount || 0), 0);
         const manualDeductions = (adjRows || []).filter(x => x.type === "خصم").reduce((s, x) => s + Number(x.amount || 0), 0);
 
-        const netSalary = Math.max(deservedSalary + additions - loanDeductions - manualDeductions, 0);
+        const total = Number(deservedSalary) + Number(additions);
+        const deductions = Number(loanDeductions) + Number(manualDeductions);
 
-        await sb.from("payroll").upsert([{
+        let netSalary = 0;
+        let transportedDeductions = 0;
+
+        if(deductions <= total){
+          netSalary = total - deductions;
+        }else{
+          netSalary = 0;
+          transportedDeductions = deductions - total;
+          notes = `تم ترحيل خصومات بقيمة ${transportedDeductions.toFixed(2)}`;
+        }
+
+        const { error } = await sb.from("payroll").upsert([{
           employee_id: emp.id,
           pay_month: month,
           working_days: workDays,
@@ -1064,71 +1526,77 @@
           loan_deductions: Number(loanDeductions.toFixed(2)),
           manual_deductions: Number(manualDeductions.toFixed(2)),
           deductions: Number((loanDeductions + manualDeductions).toFixed(2)),
+          transported_deductions: Number(transportedDeductions.toFixed(2)),
           net_salary: Number(netSalary.toFixed(2)),
+          payroll_type: payrollType,
           status: "مسودة",
-          notes: ""
+          notes
         }], { onConflict:"employee_id,pay_month" });
+
+        if(error) console.error(error);
       }
-      showMessage(`تم إنشاء / تحديث رواتب شهر ${month}`);
+
+      msg(`تم إنشاء / تحديث رواتب شهر ${month}`);
       await loadPayroll();
     }
 
     async function approvePayroll(){
-      const month = qs("payroll_month").value || currentMonth();
+      const month = $("payroll_month").value || currentMonth();
       const { error } = await sb.from("payroll").update({ status:"معتمد" }).eq("pay_month", month);
-      if(error) return showMessage("فشل اعتماد الرواتب", "error");
-      showMessage("تم اعتماد الرواتب");
+      if(error) return msg("فشل اعتماد الرواتب", "error");
+      msg("تم اعتماد الرواتب");
       await loadPayroll();
     }
 
     async function loadUsers(){
-      const { data, error } = await sb.from("users").select("*").order("created_at",{ascending:false});
-      if(error) return showMessage("خطأ في تحميل المستخدمين", "error");
+      const { data } = await sb.from("users").select("*").order("created_at",{ascending:false});
       state.users = data || [];
-      qs("usersBody").innerHTML = state.users.length ? state.users.map(u => `
+      $("usersBody").innerHTML = state.users.length ? state.users.map(u => `
         <tr>
-          <td>${u.username||""}</td>
-          <td>${u.full_name||""}</td>
-          <td>${u.role||""}</td>
-          <td>${badge(u.status||"active")}</td>
+          <td>${u.username || ""}</td>
+          <td>${u.full_name || ""}</td>
+          <td>${u.role || ""}</td>
+          <td>${badge(u.status || "active")}</td>
           <td>
             <button class="btn btn-light" onclick='editUser(${JSON.stringify(u)})'>تعديل</button>
-            <button class="btn btn-red" onclick="deleteUser('${u.id}')">حذف</button>
+            <button class="btn btn-red" onclick="requestDelete('users','${u.id}','${u.username}')">طلب حذف</button>
           </td>
-        </tr>`).join("") : `<tr><td colspan="5">لا يوجد مستخدمون</td></tr>`;
+        </tr>
+      `).join("") : `<tr><td colspan="5">لا يوجد مستخدمون</td></tr>`;
     }
+
     function resetUserForm(){
-      ["user_id","user_username","user_full_name","user_password"].forEach(id => qs(id).value = "");
-      qs("user_role").value = "مدير النظام";
-      qs("user_status").value = "active";
+      ["user_id","user_username","user_full_name","user_password"].forEach(id => $(id).value = "");
+      $("user_role").value = "مدير النظام";
+      $("user_status").value = "active";
+      clearErrors();
     }
+
     function editUser(u){
-      qs("user_id").value = u.id || "";
-      qs("user_username").value = u.username || "";
-      qs("user_full_name").value = u.full_name || "";
-      qs("user_password").value = u.password || "";
-      qs("user_role").value = u.role || "مدير النظام";
-      qs("user_status").value = u.status || "active";
+      $("user_id").value = u.id || "";
+      $("user_username").value = u.username || "";
+      $("user_full_name").value = u.full_name || "";
+      $("user_password").value = u.password || "";
+      $("user_role").value = u.role || "مدير النظام";
+      $("user_status").value = u.status || "active";
     }
+
     async function saveUser(){
+      const miss = validateRequired(["user_username","user_password"]);
+      if(miss.length) return msg("أكمل الحقول المطلوبة المميزة باللون", "error");
       const payload = {
-        username: qs("user_username").value.trim(),
-        full_name: qs("user_full_name").value.trim(),
-        password: qs("user_password").value.trim(),
-        role: qs("user_role").value,
-        status: qs("user_status").value
+        username: $("user_username").value.trim(),
+        full_name: $("user_full_name").value.trim(),
+        password: $("user_password").value.trim(),
+        role: $("user_role").value,
+        status: $("user_status").value
       };
-      if(!payload.username || !payload.password) return showMessage("أدخل اسم المستخدم وكلمة المرور", "error");
-      const id = qs("user_id").value;
+      const id = $("user_id").value;
       const { error } = id ? await sb.from("users").update(payload).eq("id", id) : await sb.from("users").insert([payload]);
-      if(error) return showMessage("فشل حفظ المستخدم", "error");
-      showMessage("تم حفظ المستخدم"); resetUserForm(); await loadUsers();
-    }
-    async function deleteUser(id){
-      if(!confirm("حذف المستخدم؟")) return;
-      const { error } = await sb.from("users").delete().eq("id", id);
-      if(error) return showMessage("فشل الحذف", "error");
-      showMessage("تم الحذف"); await loadUsers();
+      if(error) return msg("فشل حفظ المستخدم", "error");
+      msg("تم حفظ المستخدم");
+      resetUserForm();
+      await loadUsers();
     }
 
     function updateDashboard(){
@@ -1138,56 +1606,62 @@
       const absent = todayRows.filter(x => x.status === "غياب").length;
       const late = todayRows.filter(x => x.status === "تأخير").length;
 
-      qs("statEmployees").textContent = state.employees.length;
-      qs("statPresent").textContent = present;
-      qs("statAbsent").textContent = absent;
-      qs("statLate").textContent = late;
+      $("statEmployees").textContent = state.employees.length;
+      $("statPresent").textContent = present;
+      $("statAbsent").textContent = absent;
+      $("statLate").textContent = late;
 
-      qs("summaryBox").innerHTML = `
+      $("summaryBox").innerHTML = `
         عدد الموظفين: <strong>${state.employees.length}</strong><br>
         عدد الأقسام: <strong>${state.departments.length}</strong><br>
-        عدد الفروع: <strong>${state.branches.length}</strong><br>
-        السلف والديون الجارية: <strong>${state.loans.filter(x => x.status === "جارية").length}</strong><br>
-        الإضافات والخصومات هذا الشهر: <strong>${state.adjustments.filter(x => x.pay_month === currentMonth()).length}</strong><br>
+        عدد الوظائف: <strong>${state.jobTitles.length}</strong><br>
+        عدد الخطوط: <strong>${state.lines.length}</strong><br>
+        عدد السيارات: <strong>${state.vehicles.length}</strong><br>
+        عدد السلف الجارية: <strong>${state.loans.filter(x => x.status === "جارية").length}</strong><br>
         أيام العمل في ${currentMonth()}: <strong>${workingDaysExcludingFridays(currentMonth())}</strong>
       `;
 
       const alerts = [];
-      todayRows.filter(x => x.status === "غياب").slice(0,3).forEach(r => alerts.push(`⚠ غياب اليوم: ${r.employees?.full_name || "موظف"}`));
-      todayRows.filter(x => x.status === "تأخير").slice(0,3).forEach(r => alerts.push(`⚠ تأخير: ${r.employees?.full_name || "موظف"} - ${r.late_minutes || 0} دقيقة`));
-      if(state.loans.filter(x => x.status === "جارية").length){
-        alerts.push(`ℹ توجد سلف/ديون جارية بعدد ${state.loans.filter(x => x.status === "جارية").length}`);
+      todayRows.filter(x => x.status === "غياب").slice(0,3).forEach(r => {
+        const emp = employeeById(r.employee_id);
+        alerts.push(`⚠ غياب اليوم: ${emp?.full_name || "موظف"}`);
+      });
+      todayRows.filter(x => x.status === "تأخير").slice(0,3).forEach(r => {
+        const emp = employeeById(r.employee_id);
+        alerts.push(`⚠ تأخير: ${emp?.full_name || "موظف"} - ${r.late_minutes || 0} دقيقة`);
+      });
+      if(state.deleteRequests.filter(x => x.status === "pending").length){
+        alerts.push(`ℹ توجد ${state.deleteRequests.filter(x => x.status === "pending").length} طلبات حذف معلقة`);
       }
       if(!alerts.length) alerts.push("✅ لا توجد تنبيهات حالياً");
-      qs("alertsBox").innerHTML = alerts.map(a => `<div class="alert">${a}</div>`).join("");
+      $("alertsBox").innerHTML = alerts.map(a => `<div class="alert">${a}</div>`).join("");
     }
 
     function exportTableToExcel(tableId, fileName){
-      const table = qs(tableId);
-      if(!table) return showMessage("الجدول غير موجود", "error");
+      const table = $(tableId);
+      if(!table) return msg("الجدول غير موجود", "error");
       const wb = XLSX.utils.table_to_book(table, { sheet: "Sheet1" });
       XLSX.writeFile(wb, fileName);
-      showMessage("تم تصدير الملف");
+      msg("تم تصدير الملف");
     }
 
     function normalizeHeader(v){ return String(v || "").trim().toLowerCase(); }
     function pickValue(row, names){
       for(const k of Object.keys(row)){
-        const nk = normalizeHeader(k);
-        if(names.includes(nk)) return row[k];
+        if(names.includes(normalizeHeader(k))) return row[k];
       }
       return null;
     }
 
     async function importFingerprintFile(){
-      const file = qs("fingerprintFile").files[0];
-      if(!file) return showMessage("اختر ملفًا أولًا", "error");
+      const file = $("fingerprintFile").files[0];
+      if(!file) return msg("اختر ملفًا أولًا", "error");
       try{
         const data = await file.arrayBuffer();
         const wb = XLSX.read(data);
         const sheet = wb.Sheets[wb.SheetNames[0]];
         const rows = XLSX.utils.sheet_to_json(sheet, { defval:"" });
-        if(!rows.length) return showMessage("الملف فارغ", "error");
+        if(!rows.length) return msg("الملف فارغ", "error");
 
         let successCount = 0;
         for(const row of rows){
@@ -1202,13 +1676,12 @@
           const emp = state.employees.find(e => String(e.employee_no).trim() === String(employeeNo).trim());
           if(!emp) continue;
 
-          const dateStr = String(dateValue).includes("T") ? String(dateValue).split("T")[0] : String(dateValue).trim();
           let status = String(statusValue || "حضور").trim();
           if(!["حضور","غياب","تأخير","إجازة"].includes(status)) status = "حضور";
 
           const payload = {
             employee_id: emp.id,
-            attendance_date: dateStr,
+            attendance_date: String(dateValue).includes("T") ? String(dateValue).split("T")[0] : String(dateValue).trim(),
             status,
             check_in: checkInValue ? String(checkInValue).slice(0,5) : null,
             late_minutes: Number(lateValue || 0),
@@ -1218,56 +1691,54 @@
           const { error } = await sb.from("attendance").upsert([payload], { onConflict:"employee_id,attendance_date" });
           if(!error) successCount++;
         }
-        showMessage(`تم استيراد ${successCount} سجل حضور`);
+
+        msg(`تم استيراد ${successCount} سجل حضور`);
         await loadAttendance();
-      }catch(err){
-        console.error(err);
-        showMessage("فشل استيراد الملف", "error");
+      }catch(e){
+        console.error(e);
+        msg("فشل استيراد الملف", "error");
       }
     }
 
-    async function initAfterLogin(){
-      updateDateTime();
-      setInterval(updateDateTime, 1000);
-      qs("payroll_month").value = currentMonth();
-      qs("adj_month").value = currentMonth();
-      qs("att_date").value = today();
-
-      await loadSettings();
+    async function reloadAllLists(){
       await loadDepartments();
+      await loadJobTitles();
       await loadBranches();
+      await loadLines();
+      await loadVehicles();
+      await loadRates();
       await loadEmployees();
       await loadAttendance();
       await loadLoans();
       await loadAdjustments();
       await loadPayroll();
       await loadUsers();
+      await loadDeleteRequests();
+      toggleDriverFields();
+      toggleReserveFields();
+    }
 
-      if(!state.departments.length){
-        await sb.from("departments").insert([{name:"الإدارة"},{name:"الموارد البشرية"},{name:"الحسابات"}]);
-        await loadDepartments();
-      }
-      if(!state.branches.length){
-        await sb.from("branches").insert([{name:"الرئيسي"}]);
-        await loadBranches();
-      }
+    async function initAfterLogin(){
+      updateDateTime();
+      setInterval(updateDateTime, 1000);
 
-      resetEmployeeForm();
-      resetAttendanceForm();
-      resetLoanForm();
-      resetAdjustmentForm();
-      resetUserForm();
-      fillEmployeeSelects();
-      updateDashboard();
+      $("payroll_month").value = currentMonth();
+      $("adj_month").value = currentMonth();
+      $("att_date").value = today();
+
+      await reloadAllLists();
+
+      $("companyNameSide").textContent = state.appSettings.company_name;
+      $("companyNameTop").textContent = `${state.appSettings.company_name} - v3`;
     }
 
     (function boot(){
-      const user = localStorage.getItem("oyoon_current_user");
-      if(user){
-        state.currentUser = JSON.parse(user);
-        qs("loginScreen").classList.add("hidden");
-        qs("appRoot").classList.remove("hidden");
-        qs("currentUserPill").textContent = `${state.currentUser.full_name || state.currentUser.username} - ${state.currentUser.role}`;
+      const stored = localStorage.getItem("oyoon_current_user_v3");
+      if(stored){
+        state.currentUser = JSON.parse(stored);
+        $("loginScreen").classList.add("hidden");
+        $("appRoot").classList.remove("hidden");
+        $("currentUserPill").textContent = `${state.currentUser.full_name || state.currentUser.username} - ${state.currentUser.role}`;
         applyPermissions();
         initAfterLogin();
       }
