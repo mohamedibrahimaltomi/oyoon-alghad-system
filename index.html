@@ -2,57 +2,257 @@
 <html lang="ar" dir="rtl">
 
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>شركة عيون الغد - نظام الموارد البشرية</title>
 
-  <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+<title>شركة عيون الغد - نظام إدارة الموارد والمرتبات</title>
+
+<link rel="stylesheet" href="style.css">
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 </head>
 
 <body>
 
-  <div class="topbar">
-    <div class="logo">
-      <img id="companyLogo" alt="logo">
-      <span>شركة عيون الغد</span>
-    </div>
+<div class="app">
 
-    <div class="topbar-right">
-      <span id="clock"></span>
-      <button onclick="toggleDark()">🌙</button>
-    </div>
-  </div>
+<!-- القائمة الجانبية -->
 
-  <div class="sidebar">
-    <div class="menu-item" onclick="openPage('dashboard')">لوحة التحكم</div>
-    <div class="menu-item" onclick="openPage('employees')">الموظفون</div>
-    <div class="menu-item" onclick="openPage('departments')">الأقسام</div>
-    <div class="menu-item" onclick="openPage('jobs')">الوظائف</div>
-    <div class="menu-item" onclick="openPage('branches')">الفروع</div>
-    <div class="menu-item" onclick="openPage('lines')">خطوط التوزيع</div>
-    <div class="menu-item" onclick="openPage('vehicles')">أنواع السيارات</div>
-    <div class="menu-item" onclick="openPage('attendance')">الحضور</div>
-    <div class="menu-item" onclick="openPage('fingerprint')">البصمة</div>
-    <div class="menu-item" onclick="openPage('loans')">السلف والديون</div>
-    <div class="menu-item" onclick="openPage('payroll')">الرواتب</div>
-    <div class="menu-item" onclick="openPage('expenses')">المصروفات</div>
-    <div class="menu-item" onclick="openPage('reports')">التقارير</div>
-    <div class="menu-item" onclick="openPage('users')">المستخدمون</div>
-    <div class="menu-item" onclick="openPage('backups')">النسخ الاحتياطية</div>
-    <div class="menu-item" onclick="openPage('settings')">الإعدادات</div>
-  </div>
+<aside class="sidebar">
 
-  <div class="content" id="contentArea">
-    <div class="card">
-      <h2>مرحبا بك في نظام شركة عيون الغد</h2>
-      <p>الإصدار الرابع V4</p>
-    </div>
-  </div>
+<div class="logo">
+<h2>عيون الغد</h2>
+</div>
 
-  <script src="app.js"></script>
+<nav>
+
+<button onclick="showSection('dashboard')">لوحة التحكم</button>
+
+<button onclick="showSection('employees')">الموظفون</button>
+
+<button onclick="showSection('departments')">الأقسام</button>
+
+<button onclick="showSection('jobs')">الوظائف</button>
+
+<button onclick="showSection('lines')">خطوط التوزيع</button>
+
+<button onclick="showSection('vehicles')">أنواع السيارات</button>
+
+<button onclick="showSection('pricing')">تسعير الخطوط</button>
+
+<button onclick="showSection('attendance')">الحضور</button>
+
+<button onclick="showSection('fingerprint')">البصمة</button>
+
+<button onclick="showSection('loans')">السلف والديون</button>
+
+<button onclick="showSection('adjustments')">الإضافات والخصومات</button>
+
+<button onclick="showSection('payroll')">الرواتب</button>
+
+<button onclick="showSection('deleteRequests')">طلبات الحذف</button>
+
+<button onclick="showSection('users')">المستخدمون</button>
+
+<button onclick="showSection('reports')">التقارير</button>
+
+<button onclick="showSection('backups')">النسخ الاحتياطية</button>
+
+<button onclick="showSection('settings')">الإعدادات</button>
+
+</nav>
+
+</aside>
+
+
+<!-- المحتوى -->
+
+<main class="content">
+
+<header class="topbar">
+
+<div>
+
+<h2 id="pageTitle">لوحة التحكم</h2>
+
+<p id="dateTime"></p>
+
+</div>
+
+<div>
+
+<button onclick="toggleDarkMode()">الوضع الليلي</button>
+
+</div>
+
+</header>
+
+
+<!-- لوحة التحكم -->
+
+<section id="dashboard" class="section active">
+
+<div class="cards">
+
+<div class="card">
+<h3>عدد الموظفين</h3>
+<p id="employeesCount">0</p>
+</div>
+
+<div class="card">
+<h3>الحضور اليوم</h3>
+<p id="todayAttendance">0</p>
+</div>
+
+<div class="card">
+<h3>الغياب اليوم</h3>
+<p id="todayAbsence">0</p>
+</div>
+
+<div class="card">
+<h3>التأخير اليوم</h3>
+<p id="todayLate">0</p>
+</div>
+
+</div>
+
+<div class="charts">
+
+<canvas id="attendanceChart"></canvas>
+
+<canvas id="departmentChart"></canvas>
+
+</div>
+
+<div class="topEmployees">
+
+<h3>الأكثر حضورًا</h3>
+<ul id="topAttendance"></ul>
+
+<h3>الأكثر غيابًا</h3>
+<ul id="topAbsence"></ul>
+
+<h3>الأكثر تأخيرًا</h3>
+<ul id="topLate"></ul>
+
+</div>
+
+<div class="backupStatus">
+
+<h3>حالة النسخ الاحتياطي</h3>
+
+<p id="backupUsage"></p>
+
+</div>
+
+</section>
+
+
+<!-- الموظفون -->
+
+<section id="employees" class="section">
+
+<h3>الموظفون</h3>
+
+<button onclick="openEmployeeForm()">إضافة موظف</button>
+
+<table>
+
+<thead>
+<tr>
+<th>الرقم الوظيفي</th>
+<th>الاسم</th>
+<th>القسم</th>
+<th>الوظيفة</th>
+<th>النوع</th>
+<th>الراتب</th>
+</tr>
+</thead>
+
+<tbody id="employeesTable"></tbody>
+
+</table>
+
+</section>
+
+
+<!-- الحضور -->
+
+<section id="attendance" class="section">
+
+<h3>الحضور</h3>
+
+<table>
+
+<thead>
+
+<tr>
+<th>التاريخ</th>
+<th>الموظف</th>
+<th>الحالة</th>
+<th>الدخول</th>
+<th>التأخير</th>
+</tr>
+
+</thead>
+
+<tbody id="attendanceTable"></tbody>
+
+</table>
+
+</section>
+
+
+<!-- التقارير -->
+
+<section id="reports" class="section">
+
+<h3>التقارير</h3>
+
+<button onclick="exportEmployees()">تصدير الموظفين Excel</button>
+
+<button onclick="exportAttendance()">تصدير الحضور Excel</button>
+
+<button onclick="exportPayroll()">تصدير الرواتب Excel</button>
+
+<button onclick="exportPayrollPDF()">تصدير الرواتب PDF</button>
+
+</section>
+
+
+<!-- النسخ الاحتياطية -->
+
+<section id="backups" class="section">
+
+<h3>النسخ الاحتياطية</h3>
+
+<button onclick="createBackup()">إنشاء نسخة احتياطية</button>
+
+<table>
+
+<thead>
+<tr>
+<th>التاريخ</th>
+<th>الحجم</th>
+<th>تحميل</th>
+</tr>
+</thead>
+
+<tbody id="backupsTable"></tbody>
+
+</table>
+
+</section>
+
+
+</main>
+
+</div>
+
+<script src="app.js"></script>
+
 </body>
 
 </html>
