@@ -1,12 +1,27 @@
 {
-  "name": "Oyoon Alghad HR System",
-  "short_name": "Oyoon HR",
-  "start_url": "./index.html",
+  "name": "نظام عيون الغد",
+  "short_name": "عيون الغد",
+  "start_url": "/login.html",
   "display": "standalone",
-  "background_color": "#f4f6f8",
-  "theme_color": "#0f4c81",
+  "background_color": "#0b1220",
+  "theme_color": "#2563eb",
   "lang": "ar",
   "dir": "rtl",
-  "description": "نظام الموارد البشرية والمرتبات - شركة عيون الغد",
-  "icons": []
+  "orientation": "portrait-primary",
+  "description": "نظام إدارة الموارد البشرية والمرتبات لشركة عيون الغد",
+  "icons": [
+    {
+      "src": "assets/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "assets/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "scope": "/"
 }

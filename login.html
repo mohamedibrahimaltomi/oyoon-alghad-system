@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>تسجيل الدخول - عيون الغد</title>
+  <meta name="description" content="تسجيل الدخول إلى نظام عيون الغد" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="stylesheet" href="css/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+  <section id="loginPage" class="login-page">
+    <div class="login-shell">
+      <div class="login-brand">
+        <div class="brand-icon-3d">ع</div>
+        <div>
+          <h1>شركة عيون الغد</h1>
+          <p>نظام الموارد البشرية والمرتبات</p>
+        </div>
+      </div>
+
+      <form id="loginForm" class="login-card">
+        <div class="login-card-head">
+          <h2>تسجيل الدخول</h2>
+          <p>اسم مستخدم + كلمة مرور</p>
+        </div>
+
+        <div class="form-grid one">
+          <div class="field">
+            <label for="loginUsername">اسم المستخدم</label>
+            <input id="loginUsername" type="text" autocomplete="username" data-enter-next />
+          </div>
+
+          <div class="field">
+            <label for="loginPassword">كلمة المرور</label>
+            <input id="loginPassword" type="password" autocomplete="current-password" data-enter-next />
+          </div>
+        </div>
+
+        <div class="login-actions">
+          <button id="loginBtn" type="submit" class="btn btn-primary">دخول</button>
+        </div>
+
+        <div id="loginError" class="message-box error hidden"></div>
+      </form>
+    </div>
+  </section>
+
+  <script src="config/supabase.js"></script>
+  <script src="js/auth_split.js"></script>
+</body>
+</html>
