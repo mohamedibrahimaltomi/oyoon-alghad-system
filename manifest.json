@@ -1,0 +1,12 @@
+{
+  "name": "Oyoon Alghad HR System",
+  "short_name": "Oyoon HR",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#f4f6f8",
+  "theme_color": "#0f4c81",
+  "lang": "ar",
+  "dir": "rtl",
+  "description": "نظام الموارد البشرية والمرتبات - شركة عيون الغد",
+  "icons": []
+}

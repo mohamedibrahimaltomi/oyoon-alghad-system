@@ -1,837 +1,148 @@
-/* =========================================
-   Oyoon Alghad HR System - V4 Final
-   Reviewed + corrected from user-provided code
-   LocalStorage + PWA-ready
-========================================= */
 
-const STORAGE_KEYS = {
-  employees: "oyoon_v4_employees",
-  employeeTypes: "oyoon_v4_employee_types",
-  departments: "oyoon_v4_departments",
-  jobs: "oyoon_v4_jobs",
-  lines: "oyoon_v4_lines",
-  vehicles: "oyoon_v4_vehicles",
-  pricing: "oyoon_v4_pricing",
-  attendance: "oyoon_v4_attendance",
-  leave: "oyoon_v4_leave",
-  loans: "oyoon_v4_loans",
-  adjustments: "oyoon_v4_adjustments",
-  deleteRequests: "oyoon_v4_delete_requests",
-  users: "oyoon_v4_users",
-  permissions: "oyoon_v4_permissions",
-  logs: "oyoon_v4_logs",
-  payrollArchive: "oyoon_v4_payroll_archive",
-  employeeHistory: "oyoon_v4_employee_history",
-  backups: "oyoon_v4_backups",
-  darkMode: "oyoon_v4_dark_mode",
-  notifications: "oyoon_v4_notifications"
-};
-
-const BACKUP_LIMIT_MB = 50;
+const SUPABASE_URL = "https://okyujxqzzrxtmtuimndk.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9reXVqeHF6enJ4dG10dWltbmRrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMxMDIyNjYsImV4cCI6MjA4ODY3ODI2Nn0.KAk2TEAm_QVBo15wK5AWk4RfT5I7CNWd7SoiACqs7Yw";
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 const state = {
-  employees: [],
   employeeTypes: [],
   departments: [],
   jobs: [],
   lines: [],
   vehicles: [],
   pricing: [],
+  employees: [],
   attendance: [],
-  leave: [],
+  leaveRequests: [],
   loans: [],
   adjustments: [],
   deleteRequests: [],
   users: [],
-  permissions: [],
   logs: [],
   payrollArchive: [],
   employeeHistory: [],
   backups: [],
+  permissions: [
+    { role: "مدير النظام", access: "كل شيء" },
+    { role: "HR", access: "الموظفون / الحضور / الإجازات / التقارير" },
+    { role: "محاسب", access: "الرواتب / السلف / الإضافات والخصومات" },
+    { role: "موظف", access: "عرض فقط" }
+  ],
+  currentUser: null,
+  modalSave: null,
+  deferredInstallPrompt: null,
   attendanceChart: null,
   departmentChart: null,
-  deferredInstallPrompt: null,
-  currentUser: { username: "admin", fullName: "مدير النظام", role: "مدير النظام", status: "active" },
-  currentModalSave: null,
-  currentDeleteContext: null
+  fingerprintPreviewRows: []
 };
 
-/* =========================================
-   Base helpers
-========================================= */
+const App = {};
 
-function $(id) {
-  return document.getElementById(id);
-}
-
-function safeArray(value) {
-  return Array.isArray(value) ? value : [];
-}
-
-function saveToStorage(key, value) {
-  localStorage.setItem(key, JSON.stringify(value));
-}
-
-function loadFromStorage(key, fallback = []) {
-  try {
-    const raw = localStorage.getItem(key);
-    return raw ? JSON.parse(raw) : fallback;
-  } catch {
-    return fallback;
-  }
-}
-
-function createId(prefix = "id") {
-  return `${prefix}_${Date.now()}_${Math.floor(Math.random() * 100000)}`;
-}
-
-function todayISO() {
-  return new Date().toISOString().split("T")[0];
-}
-
-function currentMonthPrefix() {
-  return new Date().toISOString().slice(0, 7);
-}
-
-function bytesToMB(bytes) {
-  return (bytes / (1024 * 1024)).toFixed(2);
-}
-
-function estimateObjectSizeBytes(obj) {
-  return new Blob([JSON.stringify(obj)]).size;
-}
-
-function formatDateTime(value = new Date()) {
-  const date = value instanceof Date ? value : new Date(value);
-  return date.toLocaleString("en-GB", {
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-    hour12: true
-  });
-}
-
-function formatNumber(value) {
-  return Number(value || 0).toFixed(2);
-}
-
-function escapeHtml(value) {
-  return String(value ?? "")
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
-}
-
-function monthNameLabel(monthValue) {
-  if (!monthValue) return "-";
-  const [year, month] = monthValue.split("-").map(Number);
-  const d = new Date(year, month - 1, 1);
-  return d.toLocaleDateString("en-GB", { year: "numeric", month: "long" });
-}
-
-function countWorkDaysInMonth(year, month) {
-  const daysInMonth = new Date(year, month, 0).getDate();
-  let count = 0;
-  for (let day = 1; day <= daysInMonth; day++) {
-    const weekDay = new Date(year, month - 1, day).getDay();
-    if (weekDay !== 5) count++;
-  }
-  return count;
-}
-
-function getStatusBadge(status) {
-  const map = {
-    "حضور": "success",
-    "غياب": "danger",
-    "تأخير": "warn",
-    "إجازة": "info",
-    "نشط": "success",
-    "معلق": "warn",
-    "active": "success",
-    "inactive": "danger"
-  };
-  const cls = map[status] || "info";
-  return `<span class="status-pill ${cls}">${escapeHtml(status)}</span>`;
-}
-
-function downloadTextFile(filename, content, mime = "text/plain;charset=utf-8") {
-  const blob = new Blob([content], { type: mime });
-  const link = document.createElement("a");
-  link.href = URL.createObjectURL(blob);
-  link.download = filename;
-  link.click();
-}
-
-function exportArrayToCSV(filename, rows) {
-  if (!rows || rows.length === 0) {
-    openInfoModal("لا توجد بيانات للتصدير.");
-    return;
-  }
+function $(id){ return document.getElementById(id); }
+function esc(v){ return String(v ?? "").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;"); }
+function fmt(n){ return Number(n || 0).toFixed(2); }
+function todayISO(){ return new Date().toISOString().split("T")[0]; }
+function currentMonthPrefix(){ return new Date().toISOString().slice(0,7); }
+function currentTimeString(){ return new Date().toLocaleString("en-GB",{year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",second:"2-digit",hour12:true}); }
+function countWorkDaysInMonth(year, month){ const days = new Date(year, month, 0).getDate(); let c = 0; for(let d=1; d<=days; d++){ if(new Date(year, month-1, d).getDay() !== 5) c++; } return c; }
+function monthNameLabel(monthValue){ if(!monthValue) return "-"; const [y,m]=monthValue.split("-").map(Number); return new Date(y,m-1,1).toLocaleDateString("en-GB",{year:"numeric",month:"long"}); }
+function statusBadge(status){ const map={"حضور":"success","غياب":"danger","تأخير":"warn","إجازة":"info","نشط":"success","معلق":"warn","active":"success","inactive":"danger"}; return `<span class="status-pill ${map[status]||'info'}">${esc(status)}</span>`; }
+function downloadText(name, content, mime="text/plain;charset=utf-8"){ const blob = new Blob([content], {type:mime}); const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=name; a.click(); }
+function exportCsv(name, rows){
+  if(!rows.length){ App.info("لا توجد بيانات للتصدير."); return; }
   const headers = Object.keys(rows[0]);
-  const csvLines = [
-    headers.join(","),
-    ...rows.map((row) =>
-      headers
-        .map((header) => `"${String(row[header] ?? "").replace(/"/g, '""')}"`)
-        .join(",")
-    )
-  ];
-  downloadTextFile(filename, "\uFEFF" + csvLines.join("\n"), "text/csv;charset=utf-8");
+  const lines = [headers.join(","), ...rows.map(row => headers.map(h => `"${String(row[h] ?? "").replace(/"/g,'""')}"`).join(","))];
+  downloadText(name, "\uFEFF" + lines.join("\n"), "text/csv;charset=utf-8");
 }
+function required(ids){ let ok=true; ids.forEach(id=>{ const el=$(id); if(!el) return; if(!String(el.value||"").trim()){ el.style.borderColor="var(--danger)"; ok=false; } else { el.style.borderColor="var(--border)"; }}); return ok; }
+function selectOptions(rows, valueKey="id", labelGetter=(x)=>x.name){ return rows.map(row=>`<option value="${esc(row[valueKey])}">${esc(typeof labelGetter === "function" ? labelGetter(row) : row[labelGetter])}</option>`).join(""); }
 
-/* =========================================
-   UI helpers added during review
-========================================= */
+function getType(id){ return state.employeeTypes.find(x=>x.id===id) || null; }
+function getDepartment(id){ return state.departments.find(x=>x.id===id) || null; }
+function getJob(id){ return state.jobs.find(x=>x.id===id) || null; }
+function getLine(id){ return state.lines.find(x=>x.id===id) || null; }
+function getVehicle(id){ return state.vehicles.find(x=>x.id===id) || null; }
+function getEmployee(id){ return state.employees.find(x=>x.id===id) || null; }
+function getTypeName(id){ return getType(id)?.name || "-"; }
+function getDepartmentName(id){ return getDepartment(id)?.name || "-"; }
+function getJobName(id){ return getJob(id)?.name || "-"; }
+function getLineName(id){ return getLine(id)?.name || "-"; }
+function getVehicleName(id){ return getVehicle(id)?.name || "-"; }
+function getEmployeeName(id){ return getEmployee(id)?.name || "-"; }
+function pricingValue(lineId, vehicleId){ return Number(state.pricing.find(x=>x.line_id===lineId && x.vehicle_id===vehicleId)?.amount || 0); }
 
-function applyDarkMode() {
-  const enabled = localStorage.getItem(STORAGE_KEYS.darkMode) === "1";
-  document.documentElement.classList.toggle("dark", enabled);
-}
-
-function toggleDarkMode() {
-  const enabled = localStorage.getItem(STORAGE_KEYS.darkMode) === "1";
-  localStorage.setItem(STORAGE_KEYS.darkMode, enabled ? "0" : "1");
-  applyDarkMode();
-}
-
-function updateDateTime() {
-  const box = $("dateTime");
-  if (box) box.textContent = formatDateTime(new Date());
-}
-
-function showSection(sectionId, btn = null) {
-  document.querySelectorAll(".section").forEach((s) => s.classList.remove("active"));
-  const target = $(sectionId);
-  if (target) target.classList.add("active");
-
-  document.querySelectorAll(".menu-btn").forEach((b) => b.classList.remove("active"));
-  if (btn && typeof btn.classList !== "undefined") {
-    btn.classList.add("active");
-  } else {
-    const found = document.querySelector(`.menu-btn[data-section="${sectionId}"]`);
-    if (found) found.classList.add("active");
-  }
-
-  const titleMap = {
-    dashboard: "لوحة التحكم",
-    employees: "الموظفون",
-    employeeTypes: "أنواع الموظفين",
-    departments: "الأقسام",
-    jobs: "الوظائف",
-    lines: "خطوط التوزيع",
-    vehicles: "أنواع السيارات",
-    pricing: "تسعير الخطوط",
-    attendance: "الحضور",
-    leave: "الإجازات",
-    fingerprint: "البصمة / Excel",
-    loans: "السلف والديون",
-    adjustments: "الإضافات والخصومات",
-    payroll: "الرواتب",
-    payrollArchive: "أرشيف الرواتب",
-    employeeHistory: "سجل تاريخ الموظف",
-    attendanceHistory: "سجل الحضور الشهري",
-    deleteRequests: "طلبات الحذف",
-    users: "المستخدمون",
-    permissions: "الصلاحيات",
-    logs: "سجل العمليات",
-    reports: "التقارير",
-    backups: "النسخ الاحتياطية",
-    settings: "الإعدادات"
+App.showSection = function(id, btn){
+  document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));
+  $(id)?.classList.add("active");
+  document.querySelectorAll(".menu-btn").forEach(b=>b.classList.remove("active"));
+  if(btn) btn.classList.add("active");
+  const titles = {
+    dashboard:"لوحة التحكم", employeeTypes:"أنواع الموظفين", departments:"الأقسام", jobs:"الوظائف", lines:"خطوط التوزيع", vehicles:"أنواع السيارات",
+    pricing:"تسعير الخطوط", employees:"الموظفون", attendance:"الحضور", leaveRequests:"الإجازات", fingerprint:"استيراد البصمة", loans:"السلف والديون",
+    adjustments:"الإضافات والخصومات", payroll:"الرواتب", payrollArchive:"أرشيف الرواتب", employeeHistory:"سجل تاريخ الموظف",
+    attendanceHistory:"سجل الحضور الشهري", deleteRequests:"طلبات الحذف", users:"المستخدمون", logs:"سجل العمليات", reports:"التقارير",
+    backups:"النسخ الاحتياطية", settings:"الإعدادات"
   };
+  $("pageTitle").textContent = titles[id] || "النظام";
+};
 
-  const title = $("pageTitle");
-  if (title) title.textContent = titleMap[sectionId] || "النظام";
-}
+App.toggleDarkMode = function(){
+  document.documentElement.classList.toggle("dark");
+  localStorage.setItem("oyoon_dark", document.documentElement.classList.contains("dark") ? "1" : "0");
+};
 
-/* =========================================
-   Logging
-========================================= */
+App.applyDarkMode = function(){
+  if(localStorage.getItem("oyoon_dark")==="1") document.documentElement.classList.add("dark");
+};
 
-function addLog(action, details = "") {
-  state.logs.unshift({
-    id: createId("log"),
-    action,
-    user: state.currentUser.username || "admin",
-    time: new Date().toISOString(),
-    details
-  });
-  saveToStorage(STORAGE_KEYS.logs, state.logs);
-}
+App.requestBrowserNotifications = function(){
+  if(!("Notification" in window)){ App.info("المتصفح لا يدعم الإشعارات."); return; }
+  Notification.requestPermission().then(p => App.info(p === "granted" ? "تم تفعيل الإشعارات." : "لم يتم تفعيل الإشعارات."));
+};
 
-function addEmployeeHistory(employeeId, changeText) {
-  state.employeeHistory.unshift({
-    id: createId("eh"),
-    employeeId,
-    createdAt: new Date().toISOString(),
-    changeText
-  });
-  saveToStorage(STORAGE_KEYS.employeeHistory, state.employeeHistory);
-}
+App.notify = function(title, body){
+  if("Notification" in window && Notification.permission === "granted"){
+    new Notification(title, { body });
+  }
+};
 
-/* =========================================
-   Lookup helpers
-========================================= */
-
-function getEmployeeTypeById(id) {
-  return state.employeeTypes.find((x) => x.id === id) || null;
-}
-
-function getEmployeeTypeByName(name) {
-  return state.employeeTypes.find((x) => x.name === name) || null;
-}
-
-function getEmployeeTypeName(id) {
-  return getEmployeeTypeById(id)?.name || "-";
-}
-
-function getPayrollMethodLabel(method) {
-  if (method === "driver_line_vehicle") return "حسب الخط والسيارة";
-  if (method === "reserve_driver") return "احتياط / بدل سائق";
-  return "راتب ثابت";
-}
-
-function getDepartmentById(id) {
-  return state.departments.find((x) => x.id === id) || null;
-}
-
-function getDepartmentByName(name) {
-  return state.departments.find((x) => x.name === name) || null;
-}
-
-function getDepartmentName(id) {
-  return getDepartmentById(id)?.name || "-";
-}
-
-function getJobById(id) {
-  return state.jobs.find((x) => x.id === id) || null;
-}
-
-function getJobByName(name) {
-  return state.jobs.find((x) => x.name === name) || null;
-}
-
-function getJobName(id) {
-  return getJobById(id)?.name || "-";
-}
-
-function getLineById(id) {
-  return state.lines.find((x) => x.id === id) || null;
-}
-
-function getLineByName(name) {
-  return state.lines.find((x) => x.name === name) || null;
-}
-
-function getLineName(id) {
-  return getLineById(id)?.name || "-";
-}
-
-function getVehicleById(id) {
-  return state.vehicles.find((x) => x.id === id) || null;
-}
-
-function getVehicleByName(name) {
-  return state.vehicles.find((x) => x.name === name) || null;
-}
-
-function getVehicleName(id) {
-  return getVehicleById(id)?.name || "-";
-}
-
-function getEmployeeById(id) {
-  return state.employees.find((x) => x.id === id) || null;
-}
-
-function getEmployeeByNoOrName(value) {
-  return state.employees.find((x) => x.employeeNo === value || x.name === value) || null;
-}
-
-function getEmployeeName(id) {
-  return getEmployeeById(id)?.name || "-";
-}
-
-function getPricingValue(lineId, vehicleId) {
-  return Number(
-    state.pricing.find((x) => x.lineId === lineId && x.vehicleId === vehicleId)?.amount || 0
-  );
-}
-
-/* =========================================
-   Modal helpers
-========================================= */
-
-function openModal(title, bodyHtml, onSave) {
-  if (!$("appModal")) return;
+App.openModal = function(title, bodyHtml, onSave){
   $("modalTitle").textContent = title;
   $("modalBody").innerHTML = bodyHtml;
   $("appModal").classList.remove("hidden");
-  state.currentModalSave = onSave || null;
+  state.modalSave = onSave || null;
+  $("modalSaveBtn").onclick = ()=>{ if(typeof state.modalSave === "function") state.modalSave(); };
+};
 
-  const saveBtn = $("modalSaveBtn");
-  saveBtn.onclick = () => {
-    if (typeof state.currentModalSave === "function") {
-      state.currentModalSave();
-    }
-  };
-}
-
-function closeModal() {
-  if (!$("appModal")) return;
+App.closeModal = function(){
   $("appModal").classList.add("hidden");
-  $("modalTitle").textContent = "نموذج";
   $("modalBody").innerHTML = "";
-  state.currentModalSave = null;
-  state.currentDeleteContext = null;
+  state.modalSave = null;
+};
+
+App.info = function(text){
+  App.openModal("تنبيه", `<div class="note-box">${esc(text)}</div>`, ()=>App.closeModal());
+};
+
+App.formShell = function(inner, cols=""){
+  return `<div class="form-grid ${cols}">${inner}</div>`;
+};
+
+async function logAction(action, details=""){
+  if(!state.currentUser) return;
+  await sb.from("app_logs").insert([{ action, username: state.currentUser.username, details }]);
 }
 
-function openInfoModal(text) {
-  openModal(
-    "تنبيه",
-    `<div class="note-box">${escapeHtml(text)}</div>`,
-    () => closeModal()
-  );
+async function addDeleteRequest(tableName, itemLabel){
+  await sb.from("delete_requests").insert([{ table_name: tableName, item_label: itemLabel, status: "معلق" }]);
 }
 
-function getFieldValue(id) {
-  const el = $(id);
-  return el ? el.value : "";
+async function addEmployeeHistory(employeeId, changeText){
+  if(!employeeId) return;
+  await sb.from("employee_history").insert([{ employee_id: employeeId, change_text: changeText }]);
 }
 
-function validateRequiredFields(ids) {
-  let ok = true;
-  ids.forEach((id) => {
-    const el = $(id);
-    if (!el) return;
-    const value = String(el.value || "").trim();
-    if (!value) {
-      el.style.borderColor = "var(--danger)";
-      ok = false;
-    } else {
-      el.style.borderColor = "var(--input-border)";
-    }
-  });
-  return ok;
-}
-
-function buildOptions(items, valueKey = "id", labelGetter) {
-  return items
-    .map((item) => {
-      const label = typeof labelGetter === "function" ? labelGetter(item) : item[labelGetter];
-      return `<option value="${escapeHtml(item[valueKey])}">${escapeHtml(label)}</option>`;
-    })
-    .join("");
-}
-
-function buildSelectField(id, label, optionsHtml, selectedValue = "", hint = "") {
-  return `
-    <div class="field">
-      <label for="${id}">${label}</label>
-      <select id="${id}">
-        <option value="">اختر</option>
-        ${optionsHtml}
-      </select>
-      ${hint ? `<div class="hint">${hint}</div>` : ""}
-    </div>
-    <script>
-      setTimeout(function(){
-        var el=document.getElementById(${JSON.stringify(id)});
-        if(el) el.value=${JSON.stringify(selectedValue || "")};
-      },0);
-    </script>
-  `;
-}
-
-function buildInputField(id, label, value = "", type = "text", hint = "") {
-  return `
-    <div class="field">
-      <label for="${id}">${label}</label>
-      <input id="${id}" type="${type}" value="${escapeHtml(value)}" />
-      ${hint ? `<div class="hint">${hint}</div>` : ""}
-    </div>
-  `;
-}
-
-function buildTextAreaField(id, label, value = "", hint = "") {
-  return `
-    <div class="field">
-      <label for="${id}">${label}</label>
-      <textarea id="${id}">${escapeHtml(value)}</textarea>
-      ${hint ? `<div class="hint">${hint}</div>` : ""}
-    </div>
-  `;
-}
-
-function openDeleteModal(entityLabel, onConfirm) {
-  openModal(
-    "تأكيد الحذف",
-    `<div class="note-box">هل أنت متأكد من حذف: <strong>${escapeHtml(entityLabel)}</strong> ؟ سيتم أيضًا إنشاء طلب حذف وسجل عملية.</div>`,
-    () => {
-      onConfirm();
-      closeModal();
-    }
-  );
-}
-
-/* =========================================
-   Generic placeholder forms for missing CRUD
-   Added so app does not crash while preserving structure
-========================================= */
-
-function notImplementedModal(title) {
-  openInfoModal(`وظيفة ${title} لم تكتمل بعد في الملف الذي تم مراجعته. جهزت لك الملف بحيث لا يتوقف النظام، لكن هذه الشاشة تحتاج استكمال CRUD كامل.`);
-}
-
-function openEmployeeTypeModal() { notImplementedModal("أنواع الموظفين"); }
-function openDepartmentModal() { notImplementedModal("الأقسام"); }
-function openJobModal() { notImplementedModal("الوظائف"); }
-function openLineModal() { notImplementedModal("خطوط التوزيع"); }
-function openVehicleModal() { notImplementedModal("أنواع السيارات"); }
-function openPricingModal() { notImplementedModal("تسعير الخطوط"); }
-function openEmployeeModal() { notImplementedModal("الموظفين"); }
-function openAttendanceModal() { notImplementedModal("الحضور"); }
-function openLeaveModal() { notImplementedModal("الإجازات"); }
-function openLoanModal() { notImplementedModal("السلف والديون"); }
-function openAdjustmentModal() { notImplementedModal("الإضافات والخصومات"); }
-function openUserModal() { notImplementedModal("المستخدمين"); }
-
-function deleteEmployeeType(id) { genericDelete("employeeTypes", id, state.employeeTypes, "أنواع الموظفين"); }
-function deleteDepartment(id) { genericDelete("departments", id, state.departments, "الأقسام"); }
-function deleteJob(id) { genericDelete("jobs", id, state.jobs, "الوظائف"); }
-function deleteLine(id) { genericDelete("lines", id, state.lines, "الخطوط"); }
-function deleteVehicle(id) { genericDelete("vehicles", id, state.vehicles, "السيارات"); }
-function deletePricing(id) { genericDelete("pricing", id, state.pricing, "التسعيرات"); }
-function deleteEmployee(id) { genericDelete("employees", id, state.employees, "الموظفين"); }
-function deleteAttendance(id) { genericDelete("attendance", id, state.attendance, "الحضور"); }
-function deleteLeave(id) { genericDelete("leave", id, state.leave, "الإجازات"); }
-function deleteLoan(id) { genericDelete("loans", id, state.loans, "السلف والديون"); }
-function deleteAdjustment(id) { genericDelete("adjustments", id, state.adjustments, "الإضافات والخصومات"); }
-function deleteUser(id) { genericDelete("users", id, state.users, "المستخدمين"); }
-
-function genericDelete(keyName, id, sourceArray, label) {
-  const item = sourceArray.find((x) => x.id === id);
-  if (!item) return;
-  openDeleteModal(item.name || item.username || item.itemLabel || item.type || label, () => {
-    const idx = sourceArray.findIndex((x) => x.id === id);
-    if (idx >= 0) sourceArray.splice(idx, 1);
-    createDeleteRequest(keyName, item.name || item.username || item.itemLabel || item.type || label);
-    addLog(`حذف من ${label}`, `تم حذف عنصر بالمعرف ${id}`);
-    persistAll();
-    autoCreateBackup(`حذف من ${label}`);
-    renderAll();
-  });
-}
-
-/* =========================================
-   Notifications
-========================================= */
-
-function requestBrowserNotifications() {
-  if (!("Notification" in window)) {
-    openInfoModal("المتصفح لا يدعم الإشعارات.");
-    return;
-  }
-  Notification.requestPermission().then((permission) => {
-    if (permission === "granted") {
-      localStorage.setItem(STORAGE_KEYS.notifications, "1");
-      openInfoModal("تم تفعيل الإشعارات.");
-    } else {
-      openInfoModal("لم يتم تفعيل الإشعارات.");
-    }
-  });
-}
-
-function notify(title, body) {
-  if (
-    localStorage.getItem(STORAGE_KEYS.notifications) === "1" &&
-    "Notification" in window &&
-    Notification.permission === "granted"
-  ) {
-    new Notification(title, { body });
-  }
-}
-
-/* =========================================
-   PWA
-========================================= */
-
-function initPWA() {
-  if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("service-worker.js").catch(() => {});
-  }
-
-  window.addEventListener("beforeinstallprompt", (e) => {
-    e.preventDefault();
-    state.deferredInstallPrompt = e;
-    const installBtn = $("installBtn");
-    if (installBtn) installBtn.style.display = "inline-flex";
-  });
-
-  const installBtn = $("installBtn");
-  if (installBtn) {
-    installBtn.addEventListener("click", async () => {
-      if (!state.deferredInstallPrompt) return;
-      state.deferredInstallPrompt.prompt();
-      await state.deferredInstallPrompt.userChoice;
-      state.deferredInstallPrompt = null;
-      installBtn.style.display = "none";
-    });
-  }
-}
-
-/* =========================================
-   Seed + load
-========================================= */
-
-function seedDemoData() {
-  if (loadFromStorage(STORAGE_KEYS.employeeTypes).length === 0) {
-    saveToStorage(STORAGE_KEYS.employeeTypes, [
-      { id: createId("etype"), name: "سائق", payrollMethod: "driver_line_vehicle" },
-      { id: createId("etype"), name: "سائق احتياط", payrollMethod: "reserve_driver" },
-      { id: createId("etype"), name: "مسوق", payrollMethod: "fixed_salary" },
-      { id: createId("etype"), name: "موظف", payrollMethod: "fixed_salary" }
-    ]);
-  }
-
-  if (loadFromStorage(STORAGE_KEYS.departments).length === 0) {
-    saveToStorage(STORAGE_KEYS.departments, [
-      { id: createId("dep"), name: "المبيعات" },
-      { id: createId("dep"), name: "الحركة" },
-      { id: createId("dep"), name: "الإدارة" }
-    ]);
-  }
-
-  const departments = loadFromStorage(STORAGE_KEYS.departments);
-  if (loadFromStorage(STORAGE_KEYS.jobs).length === 0) {
-    saveToStorage(STORAGE_KEYS.jobs, [
-      { id: createId("job"), departmentId: departments[0]?.id || "", name: "مسوق" },
-      { id: createId("job"), departmentId: departments[1]?.id || "", name: "سائق" },
-      { id: createId("job"), departmentId: departments[1]?.id || "", name: "سائق احتياط" },
-      { id: createId("job"), departmentId: departments[2]?.id || "", name: "موظف إداري" }
-    ]);
-  }
-
-  if (loadFromStorage(STORAGE_KEYS.lines).length === 0) {
-    saveToStorage(STORAGE_KEYS.lines, [
-      { id: createId("line"), name: "خط الساحل" },
-      { id: createId("line"), name: "خط صبراتة" },
-      { id: createId("line"), name: "خط الزاوية" }
-    ]);
-  }
-
-  if (loadFromStorage(STORAGE_KEYS.vehicles).length === 0) {
-    saveToStorage(STORAGE_KEYS.vehicles, [
-      { id: createId("veh"), name: "سيارة صغيرة" },
-      { id: createId("veh"), name: "فان" },
-      { id: createId("veh"), name: "شاحنة" }
-    ]);
-  }
-
-  const lines = loadFromStorage(STORAGE_KEYS.lines);
-  const vehicles = loadFromStorage(STORAGE_KEYS.vehicles);
-
-  if (loadFromStorage(STORAGE_KEYS.pricing).length === 0) {
-    saveToStorage(STORAGE_KEYS.pricing, [
-      { id: createId("price"), lineId: lines[0]?.id || "", vehicleId: vehicles[0]?.id || "", amount: 2200 },
-      { id: createId("price"), lineId: lines[1]?.id || "", vehicleId: vehicles[1]?.id || "", amount: 2600 },
-      { id: createId("price"), lineId: lines[2]?.id || "", vehicleId: vehicles[2]?.id || "", amount: 3000 }
-    ]);
-  }
-
-  if (loadFromStorage(STORAGE_KEYS.users).length === 0) {
-    saveToStorage(STORAGE_KEYS.users, [
-      { id: createId("usr"), username: "admin", fullName: "مدير النظام", role: "مدير النظام", status: "active" },
-      { id: createId("usr"), username: "hr", fullName: "مسؤول الموارد البشرية", role: "HR", status: "active" },
-      { id: createId("usr"), username: "accountant", fullName: "المحاسب", role: "محاسب", status: "active" }
-    ]);
-  }
-
-  if (loadFromStorage(STORAGE_KEYS.permissions).length === 0) {
-    saveToStorage(STORAGE_KEYS.permissions, [
-      { role: "مدير النظام", access: "كل شيء" },
-      { role: "HR", access: "الموظفون / الحضور / الإجازات / التقارير" },
-      { role: "محاسب", access: "الرواتب / السلف / الإضافات والخصومات" },
-      { role: "موظف", access: "عرض فقط" }
-    ]);
-  }
-
-  const employeeTypes = loadFromStorage(STORAGE_KEYS.employeeTypes);
-  const jobs = loadFromStorage(STORAGE_KEYS.jobs);
-
-  if (loadFromStorage(STORAGE_KEYS.employees).length === 0) {
-    saveToStorage(STORAGE_KEYS.employees, [
-      {
-        id: createId("emp"),
-        employeeNo: "1001",
-        name: "أحمد سالم",
-        departmentId: departments[0]?.id || "",
-        jobId: jobs.find((x) => x.name === "مسوق")?.id || "",
-        employeeTypeId: employeeTypes.find((x) => x.name === "مسوق")?.id || "",
-        lineId: "",
-        vehicleId: "",
-        salary: 1800,
-        status: "نشط",
-        notes: ""
-      },
-      {
-        id: createId("emp"),
-        employeeNo: "1002",
-        name: "محمد علي",
-        departmentId: departments[1]?.id || "",
-        jobId: jobs.find((x) => x.name === "سائق")?.id || "",
-        employeeTypeId: employeeTypes.find((x) => x.name === "سائق")?.id || "",
-        lineId: lines[0]?.id || "",
-        vehicleId: vehicles[0]?.id || "",
-        salary: 0,
-        status: "نشط",
-        notes: ""
-      },
-      {
-        id: createId("emp"),
-        employeeNo: "1003",
-        name: "خالد محمود",
-        departmentId: departments[1]?.id || "",
-        jobId: jobs.find((x) => x.name === "سائق احتياط")?.id || "",
-        employeeTypeId: employeeTypes.find((x) => x.name === "سائق احتياط")?.id || "",
-        lineId: "",
-        vehicleId: "",
-        salary: 1600,
-        status: "نشط",
-        notes: ""
-      },
-      {
-        id: createId("emp"),
-        employeeNo: "1004",
-        name: "يوسف إبراهيم",
-        departmentId: departments[2]?.id || "",
-        jobId: jobs.find((x) => x.name === "موظف إداري")?.id || "",
-        employeeTypeId: employeeTypes.find((x) => x.name === "موظف")?.id || "",
-        lineId: "",
-        vehicleId: "",
-        salary: 2500,
-        status: "نشط",
-        notes: ""
-      }
-    ]);
-  }
-
-  const employees = loadFromStorage(STORAGE_KEYS.employees);
-
-  if (loadFromStorage(STORAGE_KEYS.attendance).length === 0) {
-    saveToStorage(STORAGE_KEYS.attendance, [
-      {
-        id: createId("att"),
-        date: todayISO(),
-        employeeId: employees[0]?.id || "",
-        status: "حضور",
-        checkIn: "08:05",
-        lateMinutes: 0,
-        reserveReplacement: false,
-        actualLineId: "",
-        actualVehicleId: ""
-      },
-      {
-        id: createId("att"),
-        date: todayISO(),
-        employeeId: employees[1]?.id || "",
-        status: "تأخير",
-        checkIn: "08:25",
-        lateMinutes: 25,
-        reserveReplacement: false,
-        actualLineId: "",
-        actualVehicleId: ""
-      },
-      {
-        id: createId("att"),
-        date: todayISO(),
-        employeeId: employees[2]?.id || "",
-        status: "غياب",
-        checkIn: "",
-        lateMinutes: 0,
-        reserveReplacement: false,
-        actualLineId: "",
-        actualVehicleId: ""
-      },
-      {
-        id: createId("att"),
-        date: todayISO(),
-        employeeId: employees[3]?.id || "",
-        status: "حضور",
-        checkIn: "07:58",
-        lateMinutes: 0,
-        reserveReplacement: false,
-        actualLineId: "",
-        actualVehicleId: ""
-      }
-    ]);
-  }
-
-  if (loadFromStorage(STORAGE_KEYS.leave).length === 0) saveToStorage(STORAGE_KEYS.leave, []);
-  if (loadFromStorage(STORAGE_KEYS.loans).length === 0) saveToStorage(STORAGE_KEYS.loans, []);
-  if (loadFromStorage(STORAGE_KEYS.adjustments).length === 0) saveToStorage(STORAGE_KEYS.adjustments, []);
-  if (loadFromStorage(STORAGE_KEYS.deleteRequests).length === 0) saveToStorage(STORAGE_KEYS.deleteRequests, []);
-  if (loadFromStorage(STORAGE_KEYS.logs).length === 0) saveToStorage(STORAGE_KEYS.logs, []);
-  if (loadFromStorage(STORAGE_KEYS.payrollArchive).length === 0) saveToStorage(STORAGE_KEYS.payrollArchive, []);
-  if (loadFromStorage(STORAGE_KEYS.employeeHistory).length === 0) saveToStorage(STORAGE_KEYS.employeeHistory, []);
-  if (loadFromStorage(STORAGE_KEYS.backups).length === 0) saveToStorage(STORAGE_KEYS.backups, []);
-}
-
-function loadState() {
-  state.employees = safeArray(loadFromStorage(STORAGE_KEYS.employees));
-  state.employeeTypes = safeArray(loadFromStorage(STORAGE_KEYS.employeeTypes));
-  state.departments = safeArray(loadFromStorage(STORAGE_KEYS.departments));
-  state.jobs = safeArray(loadFromStorage(STORAGE_KEYS.jobs));
-  state.lines = safeArray(loadFromStorage(STORAGE_KEYS.lines));
-  state.vehicles = safeArray(loadFromStorage(STORAGE_KEYS.vehicles));
-  state.pricing = safeArray(loadFromStorage(STORAGE_KEYS.pricing));
-  state.attendance = safeArray(loadFromStorage(STORAGE_KEYS.attendance));
-  state.leave = safeArray(loadFromStorage(STORAGE_KEYS.leave));
-  state.loans = safeArray(loadFromStorage(STORAGE_KEYS.loans));
-  state.adjustments = safeArray(loadFromStorage(STORAGE_KEYS.adjustments));
-  state.deleteRequests = safeArray(loadFromStorage(STORAGE_KEYS.deleteRequests));
-  state.users = safeArray(loadFromStorage(STORAGE_KEYS.users));
-  state.permissions = safeArray(loadFromStorage(STORAGE_KEYS.permissions));
-  state.logs = safeArray(loadFromStorage(STORAGE_KEYS.logs));
-  state.payrollArchive = safeArray(loadFromStorage(STORAGE_KEYS.payrollArchive));
-  state.employeeHistory = safeArray(loadFromStorage(STORAGE_KEYS.employeeHistory));
-  state.backups = safeArray(loadFromStorage(STORAGE_KEYS.backups));
-}
-
-/* =========================================
-   Save all
-========================================= */
-
-function persistAll() {
-  saveToStorage(STORAGE_KEYS.employees, state.employees);
-  saveToStorage(STORAGE_KEYS.employeeTypes, state.employeeTypes);
-  saveToStorage(STORAGE_KEYS.departments, state.departments);
-  saveToStorage(STORAGE_KEYS.jobs, state.jobs);
-  saveToStorage(STORAGE_KEYS.lines, state.lines);
-  saveToStorage(STORAGE_KEYS.vehicles, state.vehicles);
-  saveToStorage(STORAGE_KEYS.pricing, state.pricing);
-  saveToStorage(STORAGE_KEYS.attendance, state.attendance);
-  saveToStorage(STORAGE_KEYS.leave, state.leave);
-  saveToStorage(STORAGE_KEYS.loans, state.loans);
-  saveToStorage(STORAGE_KEYS.adjustments, state.adjustments);
-  saveToStorage(STORAGE_KEYS.deleteRequests, state.deleteRequests);
-  saveToStorage(STORAGE_KEYS.users, state.users);
-  saveToStorage(STORAGE_KEYS.permissions, state.permissions);
-  saveToStorage(STORAGE_KEYS.logs, state.logs);
-  saveToStorage(STORAGE_KEYS.payrollArchive, state.payrollArchive);
-  saveToStorage(STORAGE_KEYS.employeeHistory, state.employeeHistory);
-  saveToStorage(STORAGE_KEYS.backups, state.backups);
-}
-
-/* =========================================
-   Backups
-========================================= */
-
-function buildBackupSnapshot(reason = "نسخة احتياطية") {
-  return {
+async function createCloudBackup(reason){
+  const payload = {
     employeeTypes: state.employeeTypes,
     departments: state.departments,
     jobs: state.jobs,
@@ -840,649 +151,188 @@ function buildBackupSnapshot(reason = "نسخة احتياطية") {
     pricing: state.pricing,
     employees: state.employees,
     attendance: state.attendance,
-    leave: state.leave,
+    leaveRequests: state.leaveRequests,
     loans: state.loans,
     adjustments: state.adjustments,
-    deleteRequests: state.deleteRequests,
-    users: state.users,
-    permissions: state.permissions,
-    logs: state.logs,
     payrollArchive: state.payrollArchive,
     employeeHistory: state.employeeHistory,
-    reason
+    by: state.currentUser?.username || "system"
   };
+  const sizeBytes = new Blob([JSON.stringify(payload)]).size;
+  await sb.from("backups").insert([{ reason, payload, size_bytes: sizeBytes }]);
 }
 
-function getBackupUsageBytes() {
-  return state.backups.reduce((sum, item) => sum + Number(item.sizeBytes || 0), 0);
+async function withMutation(actionLabel, reason, work){
+  const result = await work();
+  if(result.error){
+    console.error(result.error);
+    App.info("فشلت العملية. راجع Console أو إعدادات Supabase.");
+    return false;
+  }
+  await logAction(actionLabel, reason);
+  await createCloudBackup(reason);
+  await loadAll();
+  return true;
 }
 
-function getBackupUsageMB() {
-  return Number(bytesToMB(getBackupUsageBytes()));
+async function login(){
+  const username = $("loginUsername").value.trim();
+  const password = $("loginPassword").value.trim();
+  if(!username || !password){ App.info("أدخل اسم المستخدم وكلمة المرور."); return; }
+  const { data, error } = await sb.rpc("verify_app_user", { p_username: username, p_password: password });
+  if(error){ console.error(error); App.info("فشل تسجيل الدخول."); return; }
+  if(!data || !data.length){ App.info("بيانات الدخول غير صحيحة."); return; }
+  state.currentUser = data[0];
+  sessionStorage.setItem("oyoon_user", JSON.stringify(state.currentUser));
+  $("loginScreen").classList.add("hidden");
+  $("appShell").classList.remove("hidden");
+  $("currentUserBadge").textContent = `${state.currentUser.full_name} - ${state.currentUser.role}`;
+  await loadAll();
 }
 
-function getRemainingBackupMB() {
-  return Math.max(BACKUP_LIMIT_MB - getBackupUsageMB(), 0).toFixed(2);
+function logout(){
+  sessionStorage.removeItem("oyoon_user");
+  state.currentUser = null;
+  $("appShell").classList.add("hidden");
+  $("loginScreen").classList.remove("hidden");
 }
 
-function cleanupOldBackupsIfNeeded() {
-  let totalMB = getBackupUsageMB();
-  while (totalMB >= BACKUP_LIMIT_MB && state.backups.length > 0) {
-    state.backups.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
-    state.backups.shift();
-    totalMB = getBackupUsageMB();
+async function restoreSession(){
+  const raw = sessionStorage.getItem("oyoon_user");
+  if(!raw) return false;
+  try{
+    state.currentUser = JSON.parse(raw);
+    $("loginScreen").classList.add("hidden");
+    $("appShell").classList.remove("hidden");
+    $("currentUserBadge").textContent = `${state.currentUser.full_name} - ${state.currentUser.role}`;
+    return true;
+  }catch{
+    return false;
   }
 }
 
-function autoCreateBackup(reason = "تحديث تلقائي") {
-  const snapshot = buildBackupSnapshot(reason);
-  const sizeBytes = estimateObjectSizeBytes(snapshot);
-  state.backups.push({
-    id: createId("backup"),
-    createdAt: new Date().toISOString(),
-    reason,
-    sizeBytes,
-    snapshot
-  });
-  cleanupOldBackupsIfNeeded();
-  saveToStorage(STORAGE_KEYS.backups, state.backups);
-  renderBackupsTable();
-  updateBackupStatus();
+async function fetchTable(key, table, orderBy=null, ascending=true){
+  let query = sb.from(table).select("*");
+  if(orderBy) query = query.order(orderBy, { ascending });
+  const { data, error } = await query;
+  if(error){ console.error(table, error); state[key] = []; return; }
+  state[key] = data || [];
 }
 
-function createBackup() {
-  autoCreateBackup("نسخة يدوية");
-  addLog("إنشاء نسخة احتياطية", "تم إنشاء نسخة احتياطية يدوية");
+async function loadAll(){
+  await Promise.all([
+    fetchTable("employeeTypes","employee_types","name"),
+    fetchTable("departments","departments","name"),
+    fetchTable("jobs","jobs","created_at",false),
+    fetchTable("lines","lines","name"),
+    fetchTable("vehicles","vehicles","name"),
+    fetchTable("pricing","pricing","created_at",false),
+    fetchTable("employees","employees","employee_no"),
+    fetchTable("attendance","attendance","date",false),
+    fetchTable("leaveRequests","leave_requests","from_date",false),
+    fetchTable("loans","loans","created_at",false),
+    fetchTable("adjustments","adjustments","month",false),
+    fetchTable("deleteRequests","delete_requests","created_at",false),
+    fetchTable("users","app_users","created_at",false),
+    fetchTable("logs","app_logs","created_at",false),
+    fetchTable("payrollArchive","payroll_archive","month",false),
+    fetchTable("employeeHistory","employee_history","created_at",false),
+    fetchTable("backups","backups","created_at",false),
+  ]);
   renderAll();
 }
 
-function downloadBackup(id) {
-  const backup = state.backups.find((x) => x.id === id);
-  if (!backup) return;
-  downloadTextFile(
-    `backup-${backup.createdAt}.json`,
-    JSON.stringify(backup.snapshot, null, 2),
-    "application/json"
-  );
+async function ensureSeeds(){
+  const { data: types } = await sb.from("employee_types").select("id").limit(1);
+  if(!types || !types.length){
+    await sb.from("employee_types").insert([
+      { name:"سائق", payroll_method:"driver_line_vehicle" },
+      { name:"سائق احتياط", payroll_method:"reserve_driver" },
+      { name:"مسوق", payroll_method:"fixed_salary" },
+      { name:"موظف", payroll_method:"fixed_salary" }
+    ]);
+  }
+  const { data: deps } = await sb.from("departments").select("id").limit(1);
+  if(!deps || !deps.length){
+    await sb.from("departments").insert([{ name:"المبيعات" }, { name:"الحركة" }, { name:"الإدارة" }]);
+  }
 }
 
-function updateBackupStatus() {
-  const last = state.backups.length
-    ? [...state.backups].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))[0]
-    : null;
-
-  const box = $("backupUsage");
-  if (!box) return;
-
-  box.innerHTML = `
-    <div>عدد النسخ: <strong>${state.backups.length}</strong></div>
-    <div>آخر نسخة: <strong>${last ? formatDateTime(last.createdAt) : "-"}</strong></div>
-    <div>الحجم المستخدم: <strong>${getBackupUsageMB().toFixed(2)} MB</strong></div>
-    <div>المساحة المتاحة: <strong>${getRemainingBackupMB()} MB</strong></div>
-    <div>المساحة الكلية: <strong>${BACKUP_LIMIT_MB} MB</strong></div>
-  `;
+function updateDateTime(){
+  $("dateTime").textContent = currentTimeString();
 }
 
-/* =========================================
-   Delete requests
-========================================= */
+function getTodayRows(){ return state.attendance.filter(x=>x.date === todayISO()); }
 
-function createDeleteRequest(tableName, itemLabel) {
-  state.deleteRequests.unshift({
-    id: createId("del"),
-    tableName,
-    itemLabel,
-    status: "معلق",
-    createdAt: new Date().toISOString()
-  });
-  saveToStorage(STORAGE_KEYS.deleteRequests, state.deleteRequests);
-}
-
-/* =========================================
-   Rendering tables
-========================================= */
-
-function renderEmployeeTypesTable() {
-  const tbody = $("employeeTypesTable");
-  if (!tbody) return;
-  tbody.innerHTML = state.employeeTypes.length
-    ? state.employeeTypes.map((item) => `
-      <tr>
-        <td>${escapeHtml(item.name)}</td>
-        <td>${escapeHtml(getPayrollMethodLabel(item.payrollMethod))}</td>
-        <td>
-          <div class="inline-actions">
-            <button onclick="openEmployeeTypeModal('${item.id}')">تعديل</button>
-            <button class="secondary-btn" onclick="deleteEmployeeType('${item.id}')">حذف</button>
-          </div>
-        </td>
-      </tr>
-    `).join("")
-    : `<tr><td colspan="3">لا توجد أنواع موظفين</td></tr>`;
-}
-
-function renderDepartmentsTable() {
-  const tbody = $("departmentsTable");
-  if (!tbody) return;
-  tbody.innerHTML = state.departments.length
-    ? state.departments.map((item) => `
-      <tr>
-        <td>${escapeHtml(item.name)}</td>
-        <td>
-          <div class="inline-actions">
-            <button onclick="openDepartmentModal('${item.id}')">تعديل</button>
-            <button class="secondary-btn" onclick="deleteDepartment('${item.id}')">حذف</button>
-          </div>
-        </td>
-      </tr>
-    `).join("")
-    : `<tr><td colspan="2">لا توجد أقسام</td></tr>`;
-}
-
-function renderJobsTable() {
-  const tbody = $("jobsTable");
-  if (!tbody) return;
-  tbody.innerHTML = state.jobs.length
-    ? state.jobs.map((item) => `
-      <tr>
-        <td>${escapeHtml(getDepartmentName(item.departmentId))}</td>
-        <td>${escapeHtml(item.name)}</td>
-        <td>
-          <div class="inline-actions">
-            <button onclick="openJobModal('${item.id}')">تعديل</button>
-            <button class="secondary-btn" onclick="deleteJob('${item.id}')">حذف</button>
-          </div>
-        </td>
-      </tr>
-    `).join("")
-    : `<tr><td colspan="3">لا توجد وظائف</td></tr>`;
-}
-
-function renderLinesTable() {
-  const tbody = $("linesTable");
-  if (!tbody) return;
-  tbody.innerHTML = state.lines.length
-    ? state.lines.map((item) => `
-      <tr>
-        <td>${escapeHtml(item.name)}</td>
-        <td>
-          <div class="inline-actions">
-            <button onclick="openLineModal('${item.id}')">تعديل</button>
-            <button class="secondary-btn" onclick="deleteLine('${item.id}')">حذف</button>
-          </div>
-        </td>
-      </tr>
-    `).join("")
-    : `<tr><td colspan="2">لا توجد خطوط توزيع</td></tr>`;
-}
-
-function renderVehiclesTable() {
-  const tbody = $("vehiclesTable");
-  if (!tbody) return;
-  tbody.innerHTML = state.vehicles.length
-    ? state.vehicles.map((item) => `
-      <tr>
-        <td>${escapeHtml(item.name)}</td>
-        <td>
-          <div class="inline-actions">
-            <button onclick="openVehicleModal('${item.id}')">تعديل</button>
-            <button class="secondary-btn" onclick="deleteVehicle('${item.id}')">حذف</button>
-          </div>
-        </td>
-      </tr>
-    `).join("")
-    : `<tr><td colspan="2">لا توجد أنواع سيارات</td></tr>`;
-}
-
-function renderPricingTable() {
-  const tbody = $("pricingTable");
-  if (!tbody) return;
-  tbody.innerHTML = state.pricing.length
-    ? state.pricing.map((item) => `
-      <tr>
-        <td>${escapeHtml(getLineName(item.lineId))}</td>
-        <td>${escapeHtml(getVehicleName(item.vehicleId))}</td>
-        <td>${formatNumber(item.amount)}</td>
-        <td>
-          <div class="inline-actions">
-            <button onclick="openPricingModal('${item.id}')">تعديل</button>
-            <button class="secondary-btn" onclick="deletePricing('${item.id}')">حذف</button>
-          </div>
-        </td>
-      </tr>
-    `).join("")
-    : `<tr><td colspan="4">لا توجد تسعيرات</td></tr>`;
-}
-
-function renderEmployeesTable() {
-  const tbody = $("employeesTable");
-  if (!tbody) return;
-  const q = String(getFieldValue("employeesSearch") || "").trim().toLowerCase();
-
-  const rows = state.employees.filter((e) => {
-    const haystack = [
-      e.employeeNo,
-      e.name,
-      getDepartmentName(e.departmentId),
-      getJobName(e.jobId),
-      getEmployeeTypeName(e.employeeTypeId)
-    ].join(" ").toLowerCase();
-    return !q || haystack.includes(q);
-  });
-
-  tbody.innerHTML = rows.length
-    ? rows.map((e) => `
-      <tr>
-        <td>${escapeHtml(e.employeeNo)}</td>
-        <td>${escapeHtml(e.name)}</td>
-        <td>${escapeHtml(getDepartmentName(e.departmentId))}</td>
-        <td>${escapeHtml(getJobName(e.jobId))}</td>
-        <td>${escapeHtml(getEmployeeTypeName(e.employeeTypeId))}</td>
-        <td>${escapeHtml(getLineName(e.lineId))}</td>
-        <td>${escapeHtml(getVehicleName(e.vehicleId))}</td>
-        <td>${formatNumber(e.salary)}</td>
-        <td>${getStatusBadge(e.status || "نشط")}</td>
-        <td>
-          <div class="inline-actions">
-            <button onclick="openEmployeeModal('${e.id}')">تعديل</button>
-            <button class="secondary-btn" onclick="deleteEmployee('${e.id}')">حذف</button>
-          </div>
-        </td>
-      </tr>
-    `).join("")
-    : `<tr><td colspan="10">لا توجد بيانات موظفين</td></tr>`;
-}
-
-function renderAttendanceTable() {
-  const tbody = $("attendanceTable");
-  if (!tbody) return;
-  const q = String(getFieldValue("attendanceSearch") || "").trim().toLowerCase();
-
-  const rows = [...state.attendance]
-    .sort((a, b) => String(b.date).localeCompare(String(a.date)))
-    .filter((row) => {
-      const haystack = [
-        row.date,
-        getEmployeeName(row.employeeId),
-        row.status,
-        getLineName(row.actualLineId),
-        getVehicleName(row.actualVehicleId)
-      ].join(" ").toLowerCase();
-      return !q || haystack.includes(q);
-    });
-
-  tbody.innerHTML = rows.length
-    ? rows.map((row) => `
-      <tr>
-        <td>${escapeHtml(row.date)}</td>
-        <td>${escapeHtml(getEmployeeName(row.employeeId))}</td>
-        <td>${getStatusBadge(row.status)}</td>
-        <td>${escapeHtml(row.checkIn || "-")}</td>
-        <td>${escapeHtml(row.lateMinutes || 0)}</td>
-        <td>${row.reserveReplacement ? "نعم" : "لا"}</td>
-        <td>${escapeHtml(getLineName(row.actualLineId))}</td>
-        <td>${escapeHtml(getVehicleName(row.actualVehicleId))}</td>
-        <td>
-          <div class="inline-actions">
-            <button onclick="openAttendanceModal('${row.id}')">تعديل</button>
-            <button class="secondary-btn" onclick="deleteAttendance('${row.id}')">حذف</button>
-          </div>
-        </td>
-      </tr>
-    `).join("")
-    : `<tr><td colspan="9">لا توجد سجلات حضور</td></tr>`;
-}
-
-function renderLeaveTable() {
-  const tbody = $("leaveTable");
-  if (!tbody) return;
-  tbody.innerHTML = state.leave.length
-    ? [...state.leave]
-        .sort((a, b) => String(b.fromDate).localeCompare(String(a.fromDate)))
-        .map((item) => `
-          <tr>
-            <td>${escapeHtml(getEmployeeName(item.employeeId))}</td>
-            <td>${escapeHtml(item.leaveType)}</td>
-            <td>${escapeHtml(item.fromDate)}</td>
-            <td>${escapeHtml(item.toDate)}</td>
-            <td>${escapeHtml(item.notes || "-")}</td>
-            <td>
-              <div class="inline-actions">
-                <button onclick="openLeaveModal('${item.id}')">تعديل</button>
-                <button class="secondary-btn" onclick="deleteLeave('${item.id}')">حذف</button>
-              </div>
-            </td>
-          </tr>
-        `).join("")
-    : `<tr><td colspan="6">لا توجد إجازات</td></tr>`;
-}
-
-function renderLoansTable() {
-  const tbody = $("loansTable");
-  if (!tbody) return;
-  tbody.innerHTML = state.loans.length
-    ? state.loans.map((item) => `
-      <tr>
-        <td>${escapeHtml(getEmployeeName(item.employeeId))}</td>
-        <td>${escapeHtml(item.type)}</td>
-        <td>${formatNumber(item.amount)}</td>
-        <td>${escapeHtml(item.monthsCount)}</td>
-        <td>${formatNumber(item.monthlyInstallment)}</td>
-        <td>${formatNumber(item.remainingAmount)}</td>
-        <td>${Array.isArray(item.plan) ? item.plan.join(" / ") : "-"}</td>
-        <td>
-          <div class="inline-actions">
-            <button onclick="openLoanModal('${item.id}')">تعديل</button>
-            <button class="secondary-btn" onclick="deleteLoan('${item.id}')">حذف</button>
-          </div>
-        </td>
-      </tr>
-    `).join("")
-    : `<tr><td colspan="8">لا توجد سلف أو ديون</td></tr>`;
-}
-
-function renderAdjustmentsTable() {
-  const tbody = $("adjustmentsTable");
-  if (!tbody) return;
-  tbody.innerHTML = state.adjustments.length
-    ? [...state.adjustments]
-        .sort((a, b) => String(b.month).localeCompare(String(a.month)))
-        .map((item) => `
-          <tr>
-            <td>${escapeHtml(getEmployeeName(item.employeeId))}</td>
-            <td>${escapeHtml(item.type)}</td>
-            <td>${formatNumber(item.amount)}</td>
-            <td>${escapeHtml(item.month)}</td>
-            <td>${escapeHtml(item.notes || "-")}</td>
-            <td>
-              <div class="inline-actions">
-                <button onclick="openAdjustmentModal('${item.id}')">تعديل</button>
-                <button class="secondary-btn" onclick="deleteAdjustment('${item.id}')">حذف</button>
-              </div>
-            </td>
-          </tr>
-        `).join("")
-    : `<tr><td colspan="6">لا توجد إضافات أو خصومات</td></tr>`;
-}
-
-function renderDeleteRequestsTable() {
-  const tbody = $("deleteRequestsTable");
-  if (!tbody) return;
-  tbody.innerHTML = state.deleteRequests.length
-    ? [...state.deleteRequests]
-        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-        .map((item) => `
-          <tr>
-            <td>${escapeHtml(item.tableName)}</td>
-            <td>${escapeHtml(item.itemLabel)}</td>
-            <td>${getStatusBadge(item.status)}</td>
-            <td>${formatDateTime(item.createdAt)}</td>
-          </tr>
-        `).join("")
-    : `<tr><td colspan="4">لا توجد طلبات حذف</td></tr>`;
-}
-
-function renderUsersTable() {
-  const tbody = $("usersTable");
-  if (!tbody) return;
-  tbody.innerHTML = state.users.length
-    ? state.users.map((item) => `
-      <tr>
-        <td>${escapeHtml(item.username)}</td>
-        <td>${escapeHtml(item.fullName)}</td>
-        <td>${escapeHtml(item.role)}</td>
-        <td>${getStatusBadge(item.status)}</td>
-        <td>
-          <div class="inline-actions">
-            <button onclick="openUserModal('${item.id}')">تعديل</button>
-            <button class="secondary-btn" onclick="deleteUser('${item.id}')">حذف</button>
-          </div>
-        </td>
-      </tr>
-    `).join("")
-    : `<tr><td colspan="5">لا يوجد مستخدمون</td></tr>`;
-}
-
-function renderPermissionsTable() {
-  const tbody = $("permissionsTable");
-  if (!tbody) return;
-  tbody.innerHTML = state.permissions.length
-    ? state.permissions.map((item) => `
-      <tr>
-        <td>${escapeHtml(item.role)}</td>
-        <td>${escapeHtml(item.access)}</td>
-      </tr>
-    `).join("")
-    : `<tr><td colspan="2">لا توجد صلاحيات</td></tr>`;
-}
-
-function renderLogsTable() {
-  const tbody = $("logsTable");
-  if (!tbody) return;
-  tbody.innerHTML = state.logs.length
-    ? state.logs.map((item) => `
-      <tr>
-        <td>${escapeHtml(item.action)}</td>
-        <td>${escapeHtml(item.user)}</td>
-        <td>${formatDateTime(item.time)}</td>
-        <td>${escapeHtml(item.details || "-")}</td>
-      </tr>
-    `).join("")
-    : `<tr><td colspan="4">لا توجد عمليات</td></tr>`;
-}
-
-function renderPayrollArchiveTable() {
-  const tbody = $("payrollArchiveTable");
-  if (!tbody) return;
-  tbody.innerHTML = state.payrollArchive.length
-    ? [...state.payrollArchive]
-        .sort((a, b) => String(b.month).localeCompare(String(a.month)))
-        .map((archive) => `
-          <tr>
-            <td>${escapeHtml(monthNameLabel(archive.month))}</td>
-            <td>${archive.rows.length}</td>
-            <td>${formatNumber(archive.rows.reduce((sum, row) => sum + Number(row.net || 0), 0))}</td>
-          </tr>
-        `).join("")
-    : `<tr><td colspan="3">لا يوجد أرشيف رواتب</td></tr>`;
-}
-
-function renderEmployeeHistoryTable() {
-  const tbody = $("employeeHistoryTable");
-  if (!tbody) return;
-  tbody.innerHTML = state.employeeHistory.length
-    ? state.employeeHistory.map((item) => `
-      <tr>
-        <td>${escapeHtml(getEmployeeName(item.employeeId))}</td>
-        <td>${formatDateTime(item.createdAt)}</td>
-        <td>${escapeHtml(item.changeText)}</td>
-      </tr>
-    `).join("")
-    : `<tr><td colspan="3">لا يوجد سجل تاريخ للموظفين</td></tr>`;
-}
-
-function renderAttendanceHistoryTable() {
-  const tbody = $("attendanceHistoryTable");
-  if (!tbody) return;
-  const q = String(getFieldValue("attendanceHistorySearch") || "").trim().toLowerCase();
-
-  const rows = [...state.attendance]
-    .sort((a, b) => String(b.date).localeCompare(String(a.date)))
-    .filter((row) => {
-      const emp = getEmployeeById(row.employeeId);
-      const hay = [emp?.employeeNo, emp?.name, row.date, row.status].join(" ").toLowerCase();
-      return !q || hay.includes(q);
-    });
-
-  tbody.innerHTML = rows.length
-    ? rows.map((row) => `
-      <tr>
-        <td>${escapeHtml(getEmployeeName(row.employeeId))}</td>
-        <td>${escapeHtml(row.date)}</td>
-        <td>${escapeHtml(row.status)}</td>
-        <td>${escapeHtml(row.lateMinutes || 0)}</td>
-      </tr>
-    `).join("")
-    : `<tr><td colspan="4">لا توجد سجلات حضور شهرية</td></tr>`;
-}
-
-function renderBackupsTable() {
-  const tbody = $("backupsTable");
-  if (!tbody) return;
-  tbody.innerHTML = state.backups.length
-    ? [...state.backups]
-        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-        .map((item) => `
-          <tr>
-            <td>${formatDateTime(item.createdAt)}</td>
-            <td>${escapeHtml(item.reason)}</td>
-            <td>${bytesToMB(item.sizeBytes)} MB</td>
-            <td><button onclick="downloadBackup('${item.id}')">تحميل</button></td>
-          </tr>
-        `).join("")
-    : `<tr><td colspan="4">لا توجد نسخ احتياطية</td></tr>`;
-}
-
-function renderReportsFilters() {
-  const dep = $("reportDepartmentFilter");
-  const type = $("reportTypeFilter");
-  const line = $("reportLineFilter");
-  if (dep) dep.innerHTML = `<option value="">كل الأقسام</option>` + buildOptions(state.departments, "id", "name");
-  if (type) type.innerHTML = `<option value="">كل أنواع الموظفين</option>` + buildOptions(state.employeeTypes, "id", "name");
-  if (line) line.innerHTML = `<option value="">كل الخطوط</option>` + buildOptions(state.lines, "id", "name");
-}
-
-/* =========================================
-   Dashboard
-========================================= */
-
-function getTodayAttendanceRows() {
-  return state.attendance.filter((x) => x.date === todayISO());
-}
-
-function getTodayPresentCount() {
-  return getTodayAttendanceRows().filter((x) => x.status === "حضور").length;
-}
-
-function getTodayAbsentCount() {
-  return getTodayAttendanceRows().filter((x) => x.status === "غياب").length;
-}
-
-function getTodayLateCount() {
-  return getTodayAttendanceRows().filter((x) => x.status === "تأخير").length;
-}
-
-function computeTopByStatus(status) {
-  const month = currentMonthPrefix();
+function computeTopByStatus(status){
   const counts = {};
-  state.attendance
-    .filter((row) => String(row.date).startsWith(month))
-    .forEach((row) => {
-      if (row.status === status) {
-        const key = getEmployeeName(row.employeeId);
-        counts[key] = (counts[key] || 0) + 1;
-      }
-    });
-  return Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 5);
+  state.attendance.filter(r=>String(r.date).startsWith(currentMonthPrefix()) && r.status === status).forEach(r=>{
+    const key = getEmployeeName(r.employee_id);
+    counts[key] = (counts[key] || 0) + 1;
+  });
+  return Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,5);
 }
 
-function computeTopLate() {
-  const month = currentMonthPrefix();
+function computeTopLate(){
   const counts = {};
-  state.attendance
-    .filter((row) => String(row.date).startsWith(month))
-    .forEach((row) => {
-      if (row.status === "تأخير") {
-        const key = getEmployeeName(row.employeeId);
-        counts[key] = (counts[key] || 0) + Number(row.lateMinutes || 0);
-      }
-    });
-  return Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 5);
+  state.attendance.filter(r=>String(r.date).startsWith(currentMonthPrefix()) && r.status === "تأخير").forEach(r=>{
+    const key = getEmployeeName(r.employee_id);
+    counts[key] = (counts[key] || 0) + Number(r.late_minutes || 0);
+  });
+  return Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,5);
 }
 
-function buildPayrollRows(month = currentMonthPrefix()) {
+function buildPayrollRows(month = currentMonthPrefix()){
   const [year, monthNumber] = month.split("-").map(Number);
   const workDays = countWorkDaysInMonth(year, monthNumber);
 
-  return state.employees.map((employee) => {
-    const type = getEmployeeTypeById(employee.employeeTypeId);
-    const employeeAttendance = state.attendance.filter(
-      (row) => row.employeeId === employee.id && String(row.date).startsWith(month)
-    );
-    const leaveRows = state.leave.filter(
-      (row) => row.employeeId === employee.id && String(row.fromDate).startsWith(month)
-    );
+  return state.employees.map(employee => {
+    const type = getType(employee.employee_type_id);
+    const employeeAttendance = state.attendance.filter(row => row.employee_id === employee.id && String(row.date).startsWith(month));
+    const leaveRows = state.leaveRequests.filter(row => row.employee_id === employee.id && String(row.from_date).startsWith(month));
 
     const leaveAsPresenceDays = leaveRows.length;
-    const presentRows = employeeAttendance.filter((row) =>
-      ["حضور", "تأخير", "إجازة"].includes(row.status)
-    );
-
+    const presentRows = employeeAttendance.filter(row => ["حضور","تأخير","إجازة"].includes(row.status));
     const presentDays = presentRows.length + leaveAsPresenceDays;
-    const absentDays = employeeAttendance.filter((row) => row.status === "غياب").length;
+    const absentDays = employeeAttendance.filter(row => row.status === "غياب").length;
 
     let deservedSalary = 0;
-
-    if (type?.payrollMethod === "driver_line_vehicle") {
-      const monthlyRate = getPricingValue(employee.lineId, employee.vehicleId);
+    if(type?.payroll_method === "driver_line_vehicle"){
+      const monthlyRate = pricingValue(employee.line_id, employee.vehicle_id);
       deservedSalary = workDays > 0 ? (monthlyRate / workDays) * presentDays : 0;
-    } else if (type?.payrollMethod === "reserve_driver") {
+    } else if(type?.payroll_method === "reserve_driver"){
       let total = 0;
-
-      for (const row of presentRows) {
-        if (row.reserveReplacement && row.actualLineId && row.actualVehicleId) {
-          const actualMonthly = getPricingValue(row.actualLineId, row.actualVehicleId);
-          total += workDays > 0 ? actualMonthly / workDays : 0;
+      for(const row of presentRows){
+        if(row.reserve_replacement && row.actual_line_id && row.actual_vehicle_id){
+          total += workDays > 0 ? pricingValue(row.actual_line_id, row.actual_vehicle_id) / workDays : 0;
         } else {
           total += workDays > 0 ? Number(employee.salary || 0) / workDays : 0;
         }
       }
-
       total += leaveAsPresenceDays * (workDays > 0 ? Number(employee.salary || 0) / workDays : 0);
       deservedSalary = total;
     } else {
-      deservedSalary = workDays > 0
-        ? (Number(employee.salary || 0) / workDays) * presentDays
-        : 0;
+      deservedSalary = workDays > 0 ? (Number(employee.salary || 0) / workDays) * presentDays : 0;
     }
 
-    const monthLoans = state.loans.filter(
-      (l) => l.employeeId === employee.id && Number(l.remainingAmount || 0) > 0
-    );
-
+    const monthLoans = state.loans.filter(l => l.employee_id === employee.id && Number(l.remaining_amount || 0) > 0);
     let loanDeduction = 0;
+    monthLoans.forEach(loan => { loanDeduction += Math.min(Number(loan.monthly_installment || 0), Number(loan.remaining_amount || 0)); });
 
-    monthLoans.forEach((loan) => {
-      const deduction = Math.min(
-        Number(loan.monthlyInstallment || 0),
-        Number(loan.remainingAmount || 0)
-      );
-      loanDeduction += deduction;
-    });
-
-    const monthAdjustments = state.adjustments.filter(
-      (a) => a.employeeId === employee.id && a.month === month
-    );
-
-    const additions = monthAdjustments
-      .filter((a) => a.type === "إضافة")
-      .reduce((sum, a) => sum + Number(a.amount || 0), 0);
-
-    const manualDeduction = monthAdjustments
-      .filter((a) => a.type === "خصم")
-      .reduce((sum, a) => sum + Number(a.amount || 0), 0);
+    const monthAdjustments = state.adjustments.filter(a => a.employee_id === employee.id && a.month === month);
+    const additions = monthAdjustments.filter(a => a.type === "إضافة").reduce((s,a)=>s + Number(a.amount || 0),0);
+    const manualDeduction = monthAdjustments.filter(a => a.type === "خصم").reduce((s,a)=>s + Number(a.amount || 0),0);
 
     const gross = Number(deservedSalary || 0) + Number(additions || 0);
     const totalDeductions = Number(loanDeduction || 0) + Number(manualDeduction || 0);
 
     let net = 0;
     let transported = 0;
-
-    if (totalDeductions <= gross) {
+    if(totalDeductions <= gross){
       net = gross - totalDeductions;
     } else {
-      net = 0;
       transported = totalDeductions - gross;
+      net = 0;
     }
 
     return {
@@ -1492,53 +342,39 @@ function buildPayrollRows(month = currentMonthPrefix()) {
       workDays,
       presentDays,
       absentDays,
-      deservedSalary: Number(deservedSalary.toFixed(2)),
-      additions: Number(additions.toFixed(2)),
-      loanDeduction: Number(loanDeduction.toFixed(2)),
-      manualDeduction: Number(manualDeduction.toFixed(2)),
-      transported: Number(transported.toFixed(2)),
-      net: Number(net.toFixed(2))
+      deservedSalary: +deservedSalary.toFixed(2),
+      additions: +additions.toFixed(2),
+      loanDeduction: +loanDeduction.toFixed(2),
+      manualDeduction: +manualDeduction.toFixed(2),
+      transported: +transported.toFixed(2),
+      net: +net.toFixed(2)
     };
   });
 }
 
-function renderCards() {
-  if (!$("employeesCount")) return;
+function renderCards(){
   $("employeesCount").textContent = state.employees.length;
-  $("todayAttendance").textContent = getTodayPresentCount();
-  $("todayAbsence").textContent = getTodayAbsentCount();
-  $("todayLate").textContent = getTodayLateCount();
-  $("activeLoansCount").textContent = state.loans.filter(
-    (x) => Number(x.remainingAmount || 0) > 0
-  ).length;
-  $("pendingDeletesCount").textContent = state.deleteRequests.filter(
-    (x) => x.status === "معلق"
-  ).length;
+  $("todayAttendance").textContent = getTodayRows().filter(x=>x.status==="حضور").length;
+  $("todayAbsence").textContent = getTodayRows().filter(x=>x.status==="غياب").length;
+  $("todayLate").textContent = getTodayRows().filter(x=>x.status==="تأخير").length;
+  $("activeLoansCount").textContent = state.loans.filter(x=>Number(x.remaining_amount || 0) > 0).length;
+  $("pendingDeletesCount").textContent = state.deleteRequests.filter(x=>x.status==="معلق").length;
 
   const payrollRows = buildPayrollRows(currentMonthPrefix());
-  const totalPresent = payrollRows.reduce((sum, r) => sum + Number(r.presentDays || 0), 0);
-  const totalAbsent = payrollRows.reduce((sum, r) => sum + Number(r.absentDays || 0), 0);
+  const totalPresent = payrollRows.reduce((s,r)=>s + Number(r.presentDays || 0),0);
+  const totalAbsent = payrollRows.reduce((s,r)=>s + Number(r.absentDays || 0),0);
   const totalDays = totalPresent + totalAbsent;
+  const attendanceAverage = totalDays > 0 ? (totalPresent / totalDays) * 100 : 0;
+  const absenceRate = totalDays > 0 ? (totalAbsent / totalDays) * 100 : 0;
+  const salaryCost = payrollRows.reduce((s,r)=>s + Number(r.net || 0),0);
 
-  const attendanceAverage = totalDays > 0 ? ((totalPresent / totalDays) * 100) : 0;
-  const absenceRate = totalDays > 0 ? ((totalAbsent / totalDays) * 100) : 0;
-  const salaryCost = payrollRows.reduce((sum, r) => sum + Number(r.net || 0), 0);
-
-  const departmentCosts = {};
-  payrollRows.forEach((row) => {
-    const employee = state.employees.find((e) => e.id === row.employeeId);
-    const depName = getDepartmentName(employee?.departmentId);
-    departmentCosts[depName] = (departmentCosts[depName] || 0) + Number(row.net || 0);
+  const depCosts = {};
+  payrollRows.forEach(row=>{
+    const depName = getDepartmentName(getEmployee(row.employeeId)?.department_id);
+    depCosts[depName] = (depCosts[depName] || 0) + Number(row.net || 0);
   });
-
-  let highestDepartmentCost = "-";
-  let maxCost = 0;
-  Object.entries(departmentCosts).forEach(([dep, cost]) => {
-    if (cost > maxCost) {
-      maxCost = cost;
-      highestDepartmentCost = dep;
-    }
-  });
+  let highestDepartmentCost = "-", maxCost = 0;
+  Object.entries(depCosts).forEach(([dep,cost])=>{ if(cost > maxCost){ maxCost = cost; highestDepartmentCost = dep; }});
 
   $("attendanceAverage").textContent = `${attendanceAverage.toFixed(1)}%`;
   $("absenceRate").textContent = `${absenceRate.toFixed(1)}%`;
@@ -1546,202 +382,95 @@ function renderCards() {
   $("highestDepartmentCost").textContent = highestDepartmentCost;
 }
 
-function renderTopLists() {
-  const topAttendance = $("topAttendance");
-  const topAbsence = $("topAbsence");
-  const topLate = $("topLate");
-  if (!topAttendance || !topAbsence || !topLate) return;
-
-  topAttendance.innerHTML =
-    computeTopByStatus("حضور").map((r) => `<li>${r[0]} - ${r[1]}</li>`).join("") ||
-    "<li>لا توجد بيانات</li>";
-
-  topAbsence.innerHTML =
-    computeTopByStatus("غياب").map((r) => `<li>${r[0]} - ${r[1]}</li>`).join("") ||
-    "<li>لا توجد بيانات</li>";
-
-  topLate.innerHTML =
-    computeTopLate().map((r) => `<li>${r[0]} - ${r[1]} دقيقة</li>`).join("") ||
-    "<li>لا توجد بيانات</li>";
+function renderTopLists(){
+  $("topAttendance").innerHTML = computeTopByStatus("حضور").map(r=>`<li>${r[0]} - ${r[1]}</li>`).join("") || "<li>لا توجد بيانات</li>";
+  $("topAbsence").innerHTML = computeTopByStatus("غياب").map(r=>`<li>${r[0]} - ${r[1]}</li>`).join("") || "<li>لا توجد بيانات</li>";
+  $("topLate").innerHTML = computeTopLate().map(r=>`<li>${r[0]} - ${r[1]} دقيقة</li>`).join("") || "<li>لا توجد بيانات</li>";
 }
 
-function renderDashboardAlerts() {
-  const box = $("dashboardAlerts");
-  if (!box) return;
-
+function renderDashboardAlerts(){
   const alerts = [];
-
-  state.attendance
-    .filter((x) => x.date === todayISO() && x.status === "غياب")
-    .forEach((x) => {
-      alerts.push({
-        text: `غياب اليوم: ${getEmployeeName(x.employeeId)}`,
-        type: "danger"
-      });
-    });
-
-  state.attendance
-    .filter((x) => x.date === todayISO() && x.status === "تأخير")
-    .forEach((x) => {
-      alerts.push({
-        text: `تأخير اليوم: ${getEmployeeName(x.employeeId)} - ${x.lateMinutes || 0} دقيقة`,
-        type: "warn"
-      });
-    });
-
-  const pendingDeletes = state.deleteRequests.filter((x) => x.status === "معلق").length;
-  if (pendingDeletes > 0) {
-    alerts.push({
-      text: `يوجد ${pendingDeletes} طلبات حذف معلقة`,
-      type: "warn"
-    });
-  }
-
-  if (getBackupUsageMB() > 40) {
-    alerts.push({
-      text: "تنبيه: مساحة النسخ الاحتياطية اقتربت من الحد",
-      type: "warn"
-    });
-  }
-
-  const employeesWithoutType = state.employees.filter((e) => !e.employeeTypeId).length;
-  if (employeesWithoutType > 0) {
-    alerts.push({
-      text: `يوجد ${employeesWithoutType} موظفين بدون نوع موظف`,
-      type: "warn"
-    });
-  }
-
-  if (!alerts.length) {
-    box.innerHTML = `<div class="alert-item success">لا توجد تنبيهات حالياً</div>`;
-    return;
-  }
-
-  box.innerHTML = alerts
-    .map((a) => `<div class="alert-item ${a.type}">${a.text}</div>`)
-    .join("");
+  getTodayRows().filter(x=>x.status==="غياب").forEach(x=>alerts.push(`غياب اليوم: ${getEmployeeName(x.employee_id)}`));
+  getTodayRows().filter(x=>x.status==="تأخير").forEach(x=>alerts.push(`تأخير اليوم: ${getEmployeeName(x.employee_id)} - ${x.late_minutes || 0} دقيقة`));
+  const pending = state.deleteRequests.filter(x=>x.status==="معلق").length;
+  if(pending) alerts.push(`يوجد ${pending} طلبات حذف معلقة`);
+  $("dashboardAlerts").innerHTML = alerts.length ? alerts.map(t=>`<div class="alert-item">${esc(t)}</div>`).join("") : `<div class="alert-item">لا توجد تنبيهات حالياً</div>`;
 }
 
-function renderAttendanceChart() {
-  const canvas = $("attendanceChart");
-  if (!canvas || typeof Chart === "undefined") return;
-
-  if (state.attendanceChart) {
-    state.attendanceChart.destroy();
-  }
-
-  state.attendanceChart = new Chart(canvas, {
-    type: "bar",
-    data: {
-      labels: ["حضور", "غياب", "تأخير"],
-      datasets: [
-        {
-          label: "إحصائيات اليوم",
-          data: [
-            getTodayPresentCount(),
-            getTodayAbsentCount(),
-            getTodayLateCount()
-          ]
-        }
-      ]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false
-    }
+function renderAttendanceChart(){
+  if(state.attendanceChart) state.attendanceChart.destroy();
+  state.attendanceChart = new Chart($("attendanceChart"), {
+    type:"bar",
+    data:{labels:["حضور","غياب","تأخير"],datasets:[{label:"إحصائيات اليوم",data:[
+      getTodayRows().filter(x=>x.status==="حضور").length,
+      getTodayRows().filter(x=>x.status==="غياب").length,
+      getTodayRows().filter(x=>x.status==="تأخير").length
+    ]}]},
+    options:{responsive:true,maintainAspectRatio:false}
   });
 }
 
-function renderDepartmentChart() {
-  const canvas = $("departmentChart");
-  if (!canvas || typeof Chart === "undefined") return;
-
+function renderDepartmentChart(){
   const counts = {};
-  state.employees.forEach((e) => {
-    const dep = getDepartmentName(e.departmentId);
-    counts[dep] = (counts[dep] || 0) + 1;
-  });
-
-  if (state.departmentChart) {
-    state.departmentChart.destroy();
-  }
-
-  state.departmentChart = new Chart(canvas, {
-    type: "pie",
-    data: {
-      labels: Object.keys(counts),
-      datasets: [
-        {
-          label: "الموظفون حسب القسم",
-          data: Object.values(counts)
-        }
-      ]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false
-    }
+  state.employees.forEach(e=>{ const dep = getDepartmentName(e.department_id); counts[dep] = (counts[dep] || 0) + 1; });
+  if(state.departmentChart) state.departmentChart.destroy();
+  state.departmentChart = new Chart($("departmentChart"), {
+    type:"pie",
+    data:{labels:Object.keys(counts),datasets:[{label:"الموظفون حسب القسم",data:Object.values(counts)}]},
+    options:{responsive:true,maintainAspectRatio:false}
   });
 }
 
-function renderPayrollTable() {
-  const tbody = $("payrollTable");
-  if (!tbody) return;
-
-  const month = $("payrollMonth")?.value || currentMonthPrefix();
-  const rows = buildPayrollRows(month);
-
-  tbody.innerHTML = rows.length
-    ? rows.map((r) => `
-      <tr>
-        <td>${r.name}</td>
-        <td>${r.type}</td>
-        <td>${r.workDays}</td>
-        <td>${r.presentDays}</td>
-        <td>${r.absentDays}</td>
-        <td>${r.deservedSalary.toFixed(2)}</td>
-        <td>${r.additions.toFixed(2)}</td>
-        <td>${r.loanDeduction.toFixed(2)}</td>
-        <td>${r.manualDeduction.toFixed(2)}</td>
-        <td>${r.transported.toFixed(2)}</td>
-        <td>${r.net.toFixed(2)}</td>
-      </tr>
-    `).join("")
-    : `<tr><td colspan="11">لا توجد بيانات رواتب</td></tr>`;
+function renderEmployeeTypesTable(){
+  $("employeeTypesTable").innerHTML = state.employeeTypes.length ? state.employeeTypes.map(item=>`
+    <tr>
+      <td>${esc(item.name)}</td>
+      <td>${esc(item.payroll_method === "driver_line_vehicle" ? "حسب الخط والسيارة" : item.payroll_method === "reserve_driver" ? "احتياط / بدل سائق" : "راتب ثابت")}</td>
+      <td><div class="inline-actions"><button onclick="App.openEmployeeTypeModal('${item.id}')">تعديل</button><button class="secondary-btn" onclick="App.deleteEmployeeType('${item.id}')">حذف</button></div></td>
+    </tr>`).join("") : `<tr><td colspan="3">لا توجد أنواع</td></tr>`;
+}
+function renderDepartmentsTable(){ $("departmentsTable").innerHTML = state.departments.length ? state.departments.map(item=>`<tr><td>${esc(item.name)}</td><td><div class="inline-actions"><button onclick="App.openDepartmentModal('${item.id}')">تعديل</button><button class="secondary-btn" onclick="App.deleteDepartment('${item.id}')">حذف</button></div></td></tr>`).join("") : `<tr><td colspan="2">لا توجد أقسام</td></tr>`; }
+function renderJobsTable(){ $("jobsTable").innerHTML = state.jobs.length ? state.jobs.map(item=>`<tr><td>${esc(getDepartmentName(item.department_id))}</td><td>${esc(item.name)}</td><td><div class="inline-actions"><button onclick="App.openJobModal('${item.id}')">تعديل</button><button class="secondary-btn" onclick="App.deleteJob('${item.id}')">حذف</button></div></td></tr>`).join("") : `<tr><td colspan="3">لا توجد وظائف</td></tr>`; }
+function renderLinesTable(){ $("linesTable").innerHTML = state.lines.length ? state.lines.map(item=>`<tr><td>${esc(item.name)}</td><td><div class="inline-actions"><button onclick="App.openLineModal('${item.id}')">تعديل</button><button class="secondary-btn" onclick="App.deleteLine('${item.id}')">حذف</button></div></td></tr>`).join("") : `<tr><td colspan="2">لا توجد خطوط</td></tr>`; }
+function renderVehiclesTable(){ $("vehiclesTable").innerHTML = state.vehicles.length ? state.vehicles.map(item=>`<tr><td>${esc(item.name)}</td><td><div class="inline-actions"><button onclick="App.openVehicleModal('${item.id}')">تعديل</button><button class="secondary-btn" onclick="App.deleteVehicle('${item.id}')">حذف</button></div></td></tr>`).join("") : `<tr><td colspan="2">لا توجد سيارات</td></tr>`; }
+function renderPricingTable(){ $("pricingTable").innerHTML = state.pricing.length ? state.pricing.map(item=>`<tr><td>${esc(getLineName(item.line_id))}</td><td>${esc(getVehicleName(item.vehicle_id))}</td><td>${fmt(item.amount)}</td><td><div class="inline-actions"><button onclick="App.openPricingModal('${item.id}')">تعديل</button><button class="secondary-btn" onclick="App.deletePricing('${item.id}')">حذف</button></div></td></tr>`).join("") : `<tr><td colspan="4">لا توجد تسعيرات</td></tr>`; }
+function renderEmployeesTable(){
+  const q = ($("employeesSearch").value || "").trim().toLowerCase();
+  const rows = state.employees.filter(e=>[e.employee_no,e.name,getDepartmentName(e.department_id),getJobName(e.job_id),getTypeName(e.employee_type_id)].join(" ").toLowerCase().includes(q));
+  $("employeesTable").innerHTML = rows.length ? rows.map(e=>`<tr><td>${esc(e.employee_no)}</td><td>${esc(e.name)}</td><td>${esc(getDepartmentName(e.department_id))}</td><td>${esc(getJobName(e.job_id))}</td><td>${esc(getTypeName(e.employee_type_id))}</td><td>${esc(getLineName(e.line_id))}</td><td>${esc(getVehicleName(e.vehicle_id))}</td><td>${fmt(e.salary)}</td><td>${statusBadge(e.status || "نشط")}</td><td><div class="inline-actions"><button onclick="App.openEmployeeModal('${e.id}')">تعديل</button><button class="secondary-btn" onclick="App.deleteEmployee('${e.id}')">حذف</button></div></td></tr>`).join("") : `<tr><td colspan="10">لا توجد بيانات</td></tr>`;
+}
+function renderAttendanceTable(){
+  const q = ($("attendanceSearch").value || "").trim().toLowerCase();
+  const rows = state.attendance.filter(r=>[r.date,getEmployeeName(r.employee_id),r.status,getLineName(r.actual_line_id),getVehicleName(r.actual_vehicle_id)].join(" ").toLowerCase().includes(q));
+  $("attendanceTable").innerHTML = rows.length ? rows.map(r=>`<tr><td>${esc(r.date)}</td><td>${esc(getEmployeeName(r.employee_id))}</td><td>${statusBadge(r.status)}</td><td>${esc(r.check_in || "-")}</td><td>${esc(r.late_minutes || 0)}</td><td>${r.reserve_replacement ? "نعم" : "لا"}</td><td>${esc(getLineName(r.actual_line_id))}</td><td>${esc(getVehicleName(r.actual_vehicle_id))}</td><td><div class="inline-actions"><button onclick="App.openAttendanceModal('${r.id}')">تعديل</button><button class="secondary-btn" onclick="App.deleteAttendance('${r.id}')">حذف</button></div></td></tr>`).join("") : `<tr><td colspan="9">لا توجد سجلات</td></tr>`;
+}
+function renderLeaveTable(){ $("leaveTable").innerHTML = state.leaveRequests.length ? state.leaveRequests.map(item=>`<tr><td>${esc(getEmployeeName(item.employee_id))}</td><td>${esc(item.leave_type)}</td><td>${esc(item.from_date)}</td><td>${esc(item.to_date)}</td><td>${esc(item.notes || "-")}</td><td><div class="inline-actions"><button onclick="App.openLeaveModal('${item.id}')">تعديل</button><button class="secondary-btn" onclick="App.deleteLeave('${item.id}')">حذف</button></div></td></tr>`).join("") : `<tr><td colspan="6">لا توجد إجازات</td></tr>`; }
+function renderLoansTable(){ $("loansTable").innerHTML = state.loans.length ? state.loans.map(item=>`<tr><td>${esc(getEmployeeName(item.employee_id))}</td><td>${esc(item.type)}</td><td>${fmt(item.amount)}</td><td>${esc(item.months_count)}</td><td>${fmt(item.monthly_installment)}</td><td>${fmt(item.remaining_amount)}</td><td>${Array.isArray(item.plan) ? item.plan.join(" / ") : "-"}</td><td><div class="inline-actions"><button onclick="App.openLoanModal('${item.id}')">تعديل</button><button class="secondary-btn" onclick="App.deleteLoan('${item.id}')">حذف</button></div></td></tr>`).join("") : `<tr><td colspan="8">لا توجد سلف أو ديون</td></tr>`; }
+function renderAdjustmentsTable(){ $("adjustmentsTable").innerHTML = state.adjustments.length ? state.adjustments.map(item=>`<tr><td>${esc(getEmployeeName(item.employee_id))}</td><td>${esc(item.type)}</td><td>${fmt(item.amount)}</td><td>${esc(item.month)}</td><td>${esc(item.notes || "-")}</td><td><div class="inline-actions"><button onclick="App.openAdjustmentModal('${item.id}')">تعديل</button><button class="secondary-btn" onclick="App.deleteAdjustment('${item.id}')">حذف</button></div></td></tr>`).join("") : `<tr><td colspan="6">لا توجد إضافات أو خصومات</td></tr>`; }
+function renderPayrollTable(){ const rows = buildPayrollRows($("payrollMonth").value || currentMonthPrefix()); $("payrollTable").innerHTML = rows.length ? rows.map(r=>`<tr><td>${r.name}</td><td>${r.type}</td><td>${r.workDays}</td><td>${r.presentDays}</td><td>${r.absentDays}</td><td>${r.deservedSalary.toFixed(2)}</td><td>${r.additions.toFixed(2)}</td><td>${r.loanDeduction.toFixed(2)}</td><td>${r.manualDeduction.toFixed(2)}</td><td>${r.transported.toFixed(2)}</td><td>${r.net.toFixed(2)}</td></tr>`).join("") : `<tr><td colspan="11">لا توجد بيانات رواتب</td></tr>`; }
+function renderPayrollArchiveTable(){ $("payrollArchiveTable").innerHTML = state.payrollArchive.length ? state.payrollArchive.map(item=>`<tr><td>${esc(monthNameLabel(item.month))}</td><td>${(item.rows || []).length}</td><td>${fmt((item.rows || []).reduce((s,r)=>s + Number(r.net || 0),0))}</td></tr>`).join("") : `<tr><td colspan="3">لا يوجد أرشيف</td></tr>`; }
+function renderEmployeeHistoryTable(){ $("employeeHistoryTable").innerHTML = state.employeeHistory.length ? state.employeeHistory.map(item=>`<tr><td>${esc(getEmployeeName(item.employee_id))}</td><td>${esc(new Date(item.created_at).toLocaleString("en-GB"))}</td><td>${esc(item.change_text)}</td></tr>`).join("") : `<tr><td colspan="3">لا يوجد سجل</td></tr>`; }
+function renderAttendanceHistoryTable(){ const q = ($("attendanceHistorySearch").value || "").trim().toLowerCase(); const rows = state.attendance.filter(r=>[getEmployeeName(r.employee_id), getEmployee(r.employee_id)?.employee_no || "", r.date, r.status].join(" ").toLowerCase().includes(q)); $("attendanceHistoryTable").innerHTML = rows.length ? rows.map(r=>`<tr><td>${esc(getEmployeeName(r.employee_id))}</td><td>${esc(r.date)}</td><td>${esc(r.status)}</td><td>${esc(r.late_minutes || 0)}</td></tr>`).join("") : `<tr><td colspan="4">لا يوجد سجل</td></tr>`; }
+function renderDeleteRequestsTable(){ $("deleteRequestsTable").innerHTML = state.deleteRequests.length ? state.deleteRequests.map(item=>`<tr><td>${esc(item.table_name)}</td><td>${esc(item.item_label)}</td><td>${statusBadge(item.status)}</td><td>${esc(new Date(item.created_at).toLocaleString("en-GB"))}</td></tr>`).join("") : `<tr><td colspan="4">لا توجد طلبات</td></tr>`; }
+function renderUsersTable(){ $("usersTable").innerHTML = state.users.length ? state.users.map(item=>`<tr><td>${esc(item.username)}</td><td>${esc(item.full_name)}</td><td>${esc(item.role)}</td><td>${statusBadge(item.status)}</td><td><div class="inline-actions"><button onclick="App.openUserModal('${item.id}')">تعديل</button><button class="secondary-btn" onclick="App.deleteUser('${item.id}')">حذف</button></div></td></tr>`).join("") : `<tr><td colspan="5">لا يوجد مستخدمون</td></tr>`; }
+function renderLogsTable(){ $("logsTable").innerHTML = state.logs.length ? state.logs.map(item=>`<tr><td>${esc(item.action)}</td><td>${esc(item.username)}</td><td>${esc(new Date(item.created_at).toLocaleString("en-GB"))}</td><td>${esc(item.details || "-")}</td></tr>`).join("") : `<tr><td colspan="4">لا توجد عمليات</td></tr>`; }
+function renderBackupsTable(){ $("backupsTable").innerHTML = state.backups.length ? state.backups.map(item=>`<tr><td>${esc(new Date(item.created_at).toLocaleString("en-GB"))}</td><td>${esc(item.reason)}</td><td>${(Number(item.size_bytes || 0)/(1024*1024)).toFixed(2)} MB</td><td><button onclick="App.downloadBackup('${item.id}')">تحميل</button></td></tr>`).join("") : `<tr><td colspan="4">لا توجد نسخ</td></tr>`; }
+function renderReportsFilters(){
+  $("reportDepartmentFilter").innerHTML = `<option value="">كل الأقسام</option>` + selectOptions(state.departments);
+  $("reportTypeFilter").innerHTML = `<option value="">كل أنواع الموظفين</option>` + selectOptions(state.employeeTypes);
+  $("reportLineFilter").innerHTML = `<option value="">كل الخطوط</option>` + selectOptions(state.lines);
+}
+function updateBackupStatus(){
+  const totalBytes = state.backups.reduce((s,b)=>s + Number(b.size_bytes || 0),0);
+  const last = state.backups[0];
+  $("backupUsage").innerHTML = `
+    <div>عدد النسخ: <strong>${state.backups.length}</strong></div>
+    <div>آخر نسخة: <strong>${last ? new Date(last.created_at).toLocaleString("en-GB") : "-"}</strong></div>
+    <div>الحجم المستخدم: <strong>${(totalBytes / (1024*1024)).toFixed(2)} MB</strong></div>
+  `;
 }
 
-function generatePayroll() {
-  renderPayrollTable();
-  addLog("تحديث الرواتب", "تم تحديث كشف الرواتب");
-  notify("تحديث الرواتب", "تم تحديث كشف الرواتب الحالي");
-}
-
-function approvePayrollMonth() {
-  const month = $("payrollMonth")?.value || currentMonthPrefix();
-  const rows = buildPayrollRows(month);
-
-  const existingIndex = state.payrollArchive.findIndex((x) => x.month === month);
-  const archivePayload = {
-    id: createId("par"),
-    month,
-    createdAt: new Date().toISOString(),
-    rows
-  };
-
-  if (existingIndex >= 0) {
-    state.payrollArchive[existingIndex] = archivePayload;
-  } else {
-    state.payrollArchive.push(archivePayload);
-  }
-
-  saveToStorage(STORAGE_KEYS.payrollArchive, state.payrollArchive);
-  autoCreateBackup(`اعتماد رواتب ${month}`);
-  addLog("اعتماد رواتب", `تم اعتماد رواتب شهر ${month}`);
-  notify("اعتماد الرواتب", `تم اعتماد رواتب شهر ${month}`);
-  renderPayrollArchiveTable();
-}
-
-function renderAll() {
+function renderAll(){
   renderEmployeeTypesTable();
   renderDepartmentsTable();
   renderJobsTable();
@@ -1759,14 +488,9 @@ function renderAll() {
   renderAttendanceHistoryTable();
   renderDeleteRequestsTable();
   renderUsersTable();
-  renderPermissionsTable();
   renderLogsTable();
   renderBackupsTable();
-  refreshDashboard();
   renderReportsFilters();
-}
-
-function refreshDashboard() {
   renderCards();
   renderTopLists();
   renderDashboardAlerts();
@@ -1775,21 +499,557 @@ function refreshDashboard() {
   updateBackupStatus();
 }
 
-function initApp() {
-  seedDemoData();
-  loadState();
-  applyDarkMode();
-  updateDateTime();
+App.openEmployeeTypeModal = function(id=""){
+  const row = state.employeeTypes.find(x=>x.id===id);
+  App.openModal(row ? "تعديل نوع موظف" : "إضافة نوع موظف", App.formShell(`
+    <div class="field"><label>الاسم</label><input id="f_name" value="${esc(row?.name || "")}" /></div>
+    <div class="field"><label>طريقة الاحتساب</label><select id="f_payroll_method">
+      <option value="fixed_salary">راتب ثابت</option>
+      <option value="driver_line_vehicle">حسب الخط والسيارة</option>
+      <option value="reserve_driver">احتياط / بدل سائق</option>
+    </select></div>
+  `), async()=>{
+    if(!required(["f_name","f_payroll_method"])) return;
+    const payload = { name: $("f_name").value.trim(), payroll_method: $("f_payroll_method").value };
+    const ok = row
+      ? await withMutation("تعديل نوع موظف", `تعديل نوع موظف ${payload.name}`, ()=>sb.from("employee_types").update(payload).eq("id", row.id))
+      : await withMutation("إضافة نوع موظف", `إضافة نوع موظف ${payload.name}`, ()=>sb.from("employee_types").insert([payload]));
+    if(ok) App.closeModal();
+  });
+  $("f_payroll_method").value = row?.payroll_method || "fixed_salary";
+};
 
-  if ($("payrollMonth") && !$("payrollMonth").value) {
-    $("payrollMonth").value = currentMonthPrefix();
+App.deleteEmployeeType = async function(id){
+  const row = state.employeeTypes.find(x=>x.id===id);
+  App.openModal("تأكيد الحذف", `<div class="note-box">حذف نوع الموظف: <strong>${esc(row?.name || "")}</strong> ؟</div>`, async()=>{
+    const ok = await withMutation("حذف نوع موظف", `حذف نوع موظف ${row?.name || ""}`, ()=>sb.from("employee_types").delete().eq("id", id));
+    if(ok){ await addDeleteRequest("employee_types", row?.name || ""); App.closeModal(); }
+  });
+};
+
+App.openDepartmentModal = function(id=""){
+  const row = state.departments.find(x=>x.id===id);
+  App.openModal(row ? "تعديل قسم" : "إضافة قسم", App.formShell(`
+    <div class="field"><label>اسم القسم</label><input id="f_name" value="${esc(row?.name || "")}" /></div>
+  `, "one"), async()=>{
+    if(!required(["f_name"])) return;
+    const payload = { name: $("f_name").value.trim() };
+    const ok = row
+      ? await withMutation("تعديل قسم", `تعديل قسم ${payload.name}`, ()=>sb.from("departments").update(payload).eq("id", row.id))
+      : await withMutation("إضافة قسم", `إضافة قسم ${payload.name}`, ()=>sb.from("departments").insert([payload]));
+    if(ok) App.closeModal();
+  });
+};
+
+App.deleteDepartment = async function(id){
+  const row = state.departments.find(x=>x.id===id);
+  App.openModal("تأكيد الحذف", `<div class="note-box">حذف القسم: <strong>${esc(row?.name || "")}</strong> ؟</div>`, async()=>{
+    const ok = await withMutation("حذف قسم", `حذف قسم ${row?.name || ""}`, ()=>sb.from("departments").delete().eq("id", id));
+    if(ok){ await addDeleteRequest("departments", row?.name || ""); App.closeModal(); }
+  });
+};
+
+App.openJobModal = function(id=""){
+  const row = state.jobs.find(x=>x.id===id);
+  App.openModal(row ? "تعديل وظيفة" : "إضافة وظيفة", App.formShell(`
+    <div class="field"><label>القسم</label><select id="f_department_id"><option value="">اختر</option>${selectOptions(state.departments)}</select></div>
+    <div class="field"><label>اسم الوظيفة</label><input id="f_name" value="${esc(row?.name || "")}" /></div>
+  `), async()=>{
+    if(!required(["f_department_id","f_name"])) return;
+    const payload = { department_id: $("f_department_id").value || null, name: $("f_name").value.trim() };
+    const ok = row
+      ? await withMutation("تعديل وظيفة", `تعديل وظيفة ${payload.name}`, ()=>sb.from("jobs").update(payload).eq("id", row.id))
+      : await withMutation("إضافة وظيفة", `إضافة وظيفة ${payload.name}`, ()=>sb.from("jobs").insert([payload]));
+    if(ok) App.closeModal();
+  });
+  $("f_department_id").value = row?.department_id || "";
+};
+
+App.deleteJob = async function(id){
+  const row = state.jobs.find(x=>x.id===id);
+  App.openModal("تأكيد الحذف", `<div class="note-box">حذف الوظيفة: <strong>${esc(row?.name || "")}</strong> ؟</div>`, async()=>{
+    const ok = await withMutation("حذف وظيفة", `حذف وظيفة ${row?.name || ""}`, ()=>sb.from("jobs").delete().eq("id", id));
+    if(ok){ await addDeleteRequest("jobs", row?.name || ""); App.closeModal(); }
+  });
+};
+
+function simpleNameModal(title, rows, table, id){
+  const row = rows.find(x=>x.id===id);
+  App.openModal(row ? `تعديل ${title}` : `إضافة ${title}`, App.formShell(`<div class="field"><label>الاسم</label><input id="f_name" value="${esc(row?.name || "")}" /></div>`, "one"), async()=>{
+    if(!required(["f_name"])) return;
+    const payload = { name: $("f_name").value.trim() };
+    const ok = row
+      ? await withMutation(`تعديل ${title}`, `تعديل ${title} ${payload.name}`, ()=>sb.from(table).update(payload).eq("id", row.id))
+      : await withMutation(`إضافة ${title}`, `إضافة ${title} ${payload.name}`, ()=>sb.from(table).insert([payload]));
+    if(ok) App.closeModal();
+  });
+}
+App.openLineModal = function(id=""){ simpleNameModal("خط", state.lines, "lines", id); };
+App.openVehicleModal = function(id=""){ simpleNameModal("نوع سيارة", state.vehicles, "vehicles", id); };
+
+App.deleteLine = async function(id){
+  const row = state.lines.find(x=>x.id===id);
+  App.openModal("تأكيد الحذف", `<div class="note-box">حذف الخط: <strong>${esc(row?.name || "")}</strong> ؟</div>`, async()=>{
+    const ok = await withMutation("حذف خط", `حذف خط ${row?.name || ""}`, ()=>sb.from("lines").delete().eq("id", id));
+    if(ok){ await addDeleteRequest("lines", row?.name || ""); App.closeModal(); }
+  });
+};
+App.deleteVehicle = async function(id){
+  const row = state.vehicles.find(x=>x.id===id);
+  App.openModal("تأكيد الحذف", `<div class="note-box">حذف نوع السيارة: <strong>${esc(row?.name || "")}</strong> ؟</div>`, async()=>{
+    const ok = await withMutation("حذف نوع سيارة", `حذف نوع سيارة ${row?.name || ""}`, ()=>sb.from("vehicles").delete().eq("id", id));
+    if(ok){ await addDeleteRequest("vehicles", row?.name || ""); App.closeModal(); }
+  });
+};
+
+App.openPricingModal = function(id=""){
+  const row = state.pricing.find(x=>x.id===id);
+  App.openModal(row ? "تعديل تسعيرة" : "إضافة تسعيرة", App.formShell(`
+    <div class="field"><label>الخط</label><select id="f_line_id"><option value="">اختر</option>${selectOptions(state.lines)}</select></div>
+    <div class="field"><label>السيارة</label><select id="f_vehicle_id"><option value="">اختر</option>${selectOptions(state.vehicles)}</select></div>
+    <div class="field"><label>القيمة الشهرية</label><input id="f_amount" type="number" value="${esc(row?.amount || 0)}" /></div>
+  `), async()=>{
+    if(!required(["f_line_id","f_vehicle_id","f_amount"])) return;
+    const payload = { line_id: $("f_line_id").value, vehicle_id: $("f_vehicle_id").value, amount: Number($("f_amount").value || 0) };
+    const ok = row
+      ? await withMutation("تعديل تسعيرة", "تعديل تسعيرة", ()=>sb.from("pricing").update(payload).eq("id", row.id))
+      : await withMutation("إضافة تسعيرة", "إضافة تسعيرة", ()=>sb.from("pricing").insert([payload]));
+    if(ok) App.closeModal();
+  });
+  $("f_line_id").value = row?.line_id || "";
+  $("f_vehicle_id").value = row?.vehicle_id || "";
+};
+
+App.deletePricing = async function(id){
+  const row = state.pricing.find(x=>x.id===id);
+  App.openModal("تأكيد الحذف", `<div class="note-box">حذف التسعيرة الحالية؟</div>`, async()=>{
+    const ok = await withMutation("حذف تسعيرة", "حذف تسعيرة", ()=>sb.from("pricing").delete().eq("id", id));
+    if(ok){ await addDeleteRequest("pricing", `${getLineName(row?.line_id)} - ${getVehicleName(row?.vehicle_id)}`); App.closeModal(); }
+  });
+};
+
+App.openEmployeeModal = function(id=""){
+  const row = state.employees.find(x=>x.id===id);
+  App.openModal(row ? "تعديل موظف" : "إضافة موظف", App.formShell(`
+    <div class="field"><label>الرقم الوظيفي</label><input id="f_employee_no" value="${esc(row?.employee_no || "")}" /></div>
+    <div class="field"><label>الاسم</label><input id="f_name" value="${esc(row?.name || "")}" /></div>
+    <div class="field"><label>القسم</label><select id="f_department_id"><option value="">اختر</option>${selectOptions(state.departments)}</select></div>
+    <div class="field"><label>الوظيفة</label><select id="f_job_id"><option value="">اختر</option>${selectOptions(state.jobs, "id", x => `${getDepartmentName(x.department_id)} - ${x.name}`)}</select></div>
+    <div class="field"><label>نوع الموظف</label><select id="f_employee_type_id"><option value="">اختر</option>${selectOptions(state.employeeTypes)}</select></div>
+    <div class="field"><label>الخط</label><select id="f_line_id"><option value="">اختر</option>${selectOptions(state.lines)}</select></div>
+    <div class="field"><label>السيارة</label><select id="f_vehicle_id"><option value="">اختر</option>${selectOptions(state.vehicles)}</select></div>
+    <div class="field"><label>الراتب</label><input id="f_salary" type="number" value="${esc(row?.salary || 0)}" /></div>
+    <div class="field"><label>الحالة</label><select id="f_status"><option value="نشط">نشط</option><option value="موقوف">موقوف</option></select></div>
+    <div class="field"><label>ملاحظات</label><textarea id="f_notes">${esc(row?.notes || "")}</textarea></div>
+  `), async()=>{
+    if(!required(["f_employee_no","f_name","f_employee_type_id"])) return;
+    const payload = {
+      employee_no: $("f_employee_no").value.trim(),
+      name: $("f_name").value.trim(),
+      department_id: $("f_department_id").value || null,
+      job_id: $("f_job_id").value || null,
+      employee_type_id: $("f_employee_type_id").value || null,
+      line_id: $("f_line_id").value || null,
+      vehicle_id: $("f_vehicle_id").value || null,
+      salary: Number($("f_salary").value || 0),
+      status: $("f_status").value,
+      notes: $("f_notes").value.trim()
+    };
+    const ok = row
+      ? await withMutation("تعديل موظف", `تعديل موظف ${payload.name}`, ()=>sb.from("employees").update(payload).eq("id", row.id))
+      : await withMutation("إضافة موظف", `إضافة موظف ${payload.name}`, ()=>sb.from("employees").insert([payload]));
+    if(ok){
+      if(row) await addEmployeeHistory(row.id, `تم تعديل بيانات الموظف ${payload.name}`);
+      App.closeModal();
+    }
+  });
+  $("f_department_id").value = row?.department_id || "";
+  $("f_job_id").value = row?.job_id || "";
+  $("f_employee_type_id").value = row?.employee_type_id || "";
+  $("f_line_id").value = row?.line_id || "";
+  $("f_vehicle_id").value = row?.vehicle_id || "";
+  $("f_status").value = row?.status || "نشط";
+};
+
+App.deleteEmployee = async function(id){
+  const row = state.employees.find(x=>x.id===id);
+  App.openModal("تأكيد الحذف", `<div class="note-box">حذف الموظف: <strong>${esc(row?.name || "")}</strong> ؟</div>`, async()=>{
+    const ok = await withMutation("حذف موظف", `حذف موظف ${row?.name || ""}`, ()=>sb.from("employees").delete().eq("id", id));
+    if(ok){ await addDeleteRequest("employees", row?.name || ""); App.closeModal(); }
+  });
+};
+
+App.openAttendanceModal = function(id=""){
+  const row = state.attendance.find(x=>x.id===id);
+  App.openModal(row ? "تعديل حضور" : "إضافة حضور", App.formShell(`
+    <div class="field"><label>الموظف</label><select id="f_employee_id"><option value="">اختر</option>${selectOptions(state.employees, "id", x=>`${x.employee_no} - ${x.name}`)}</select></div>
+    <div class="field"><label>التاريخ</label><input id="f_date" type="date" value="${esc(row?.date || todayISO())}" /></div>
+    <div class="field"><label>الحالة</label><select id="f_status"><option>حضور</option><option>غياب</option><option>تأخير</option><option>إجازة</option></select></div>
+    <div class="field"><label>وقت الدخول</label><input id="f_check_in" value="${esc(row?.check_in || "")}" /></div>
+    <div class="field"><label>دقائق التأخير</label><input id="f_late_minutes" type="number" value="${esc(row?.late_minutes || 0)}" /></div>
+    <div class="field"><label>بدل سائق؟</label><select id="f_reserve_replacement"><option value="false">لا</option><option value="true">نعم</option></select></div>
+    <div class="field"><label>الخط الفعلي</label><select id="f_actual_line_id"><option value="">اختر</option>${selectOptions(state.lines)}</select></div>
+    <div class="field"><label>السيارة الفعلية</label><select id="f_actual_vehicle_id"><option value="">اختر</option>${selectOptions(state.vehicles)}</select></div>
+  `), async()=>{
+    if(!required(["f_employee_id","f_date","f_status"])) return;
+    const payload = {
+      employee_id: $("f_employee_id").value,
+      date: $("f_date").value,
+      status: $("f_status").value,
+      check_in: $("f_check_in").value.trim() || null,
+      late_minutes: Number($("f_late_minutes").value || 0),
+      reserve_replacement: $("f_reserve_replacement").value === "true",
+      actual_line_id: $("f_actual_line_id").value || null,
+      actual_vehicle_id: $("f_actual_vehicle_id").value || null
+    };
+    const ok = row
+      ? await withMutation("تعديل حضور", `تعديل حضور ${getEmployeeName(payload.employee_id)}`, ()=>sb.from("attendance").update(payload).eq("id", row.id))
+      : await withMutation("إضافة حضور", `إضافة حضور ${getEmployeeName(payload.employee_id)}`, ()=>sb.from("attendance").insert([payload]));
+    if(ok) App.closeModal();
+  });
+  $("f_employee_id").value = row?.employee_id || "";
+  $("f_status").value = row?.status || "حضور";
+  $("f_reserve_replacement").value = String(row?.reserve_replacement || false);
+  $("f_actual_line_id").value = row?.actual_line_id || "";
+  $("f_actual_vehicle_id").value = row?.actual_vehicle_id || "";
+};
+
+App.deleteAttendance = async function(id){
+  const row = state.attendance.find(x=>x.id===id);
+  App.openModal("تأكيد الحذف", `<div class="note-box">حذف سجل الحضور الحالي؟</div>`, async()=>{
+    const ok = await withMutation("حذف حضور", `حذف حضور ${getEmployeeName(row?.employee_id)}`, ()=>sb.from("attendance").delete().eq("id", id));
+    if(ok){ await addDeleteRequest("attendance", getEmployeeName(row?.employee_id)); App.closeModal(); }
+  });
+};
+
+App.openLeaveModal = function(id=""){
+  const row = state.leaveRequests.find(x=>x.id===id);
+  App.openModal(row ? "تعديل إجازة" : "إضافة إجازة", App.formShell(`
+    <div class="field"><label>الموظف</label><select id="f_employee_id"><option value="">اختر</option>${selectOptions(state.employees, "id", x=>`${x.employee_no} - ${x.name}`)}</select></div>
+    <div class="field"><label>نوع الإجازة</label><select id="f_leave_type"><option>سنوية</option><option>مرضية</option><option>بدون راتب</option></select></div>
+    <div class="field"><label>من</label><input id="f_from_date" type="date" value="${esc(row?.from_date || todayISO())}" /></div>
+    <div class="field"><label>إلى</label><input id="f_to_date" type="date" value="${esc(row?.to_date || todayISO())}" /></div>
+    <div class="field"><label>ملاحظات</label><textarea id="f_notes">${esc(row?.notes || "")}</textarea></div>
+  `), async()=>{
+    if(!required(["f_employee_id","f_leave_type","f_from_date","f_to_date"])) return;
+    const payload = { employee_id: $("f_employee_id").value, leave_type: $("f_leave_type").value, from_date: $("f_from_date").value, to_date: $("f_to_date").value, notes: $("f_notes").value.trim() };
+    const ok = row
+      ? await withMutation("تعديل إجازة", `تعديل إجازة ${getEmployeeName(payload.employee_id)}`, ()=>sb.from("leave_requests").update(payload).eq("id", row.id))
+      : await withMutation("إضافة إجازة", `إضافة إجازة ${getEmployeeName(payload.employee_id)}`, ()=>sb.from("leave_requests").insert([payload]));
+    if(ok) App.closeModal();
+  });
+  $("f_employee_id").value = row?.employee_id || "";
+  $("f_leave_type").value = row?.leave_type || "سنوية";
+};
+
+App.deleteLeave = async function(id){
+  const row = state.leaveRequests.find(x=>x.id===id);
+  App.openModal("تأكيد الحذف", `<div class="note-box">حذف الإجازة الحالية؟</div>`, async()=>{
+    const ok = await withMutation("حذف إجازة", `حذف إجازة ${getEmployeeName(row?.employee_id)}`, ()=>sb.from("leave_requests").delete().eq("id", id));
+    if(ok){ await addDeleteRequest("leave_requests", getEmployeeName(row?.employee_id)); App.closeModal(); }
+  });
+};
+
+function installmentPlan(amount, months){
+  amount = Math.floor(Number(amount || 0));
+  months = Math.max(1, Math.floor(Number(months || 1)));
+  const base = Math.floor(amount / months);
+  const remainder = amount - (base * months);
+  const plan = [];
+  for(let i=0;i<months;i++){ plan.push(i===0 ? base + remainder : base); }
+  return plan;
+}
+
+App.openLoanModal = function(id=""){
+  const row = state.loans.find(x=>x.id===id);
+  App.openModal(row ? "تعديل سلفة / دين" : "إضافة سلفة / دين", App.formShell(`
+    <div class="field"><label>الموظف</label><select id="f_employee_id"><option value="">اختر</option>${selectOptions(state.employees, "id", x=>`${x.employee_no} - ${x.name}`)}</select></div>
+    <div class="field"><label>النوع</label><select id="f_type"><option>سلفة</option><option>مديونية</option></select></div>
+    <div class="field"><label>المبلغ</label><input id="f_amount" type="number" value="${esc(row?.amount || 0)}" /></div>
+    <div class="field"><label>عدد الشهور</label><input id="f_months_count" type="number" value="${esc(row?.months_count || 1)}" /></div>
+  `), async()=>{
+    if(!required(["f_employee_id","f_type","f_amount","f_months_count"])) return;
+    const amount = Number($("f_amount").value || 0);
+    const months_count = Number($("f_months_count").value || 1);
+    const plan = installmentPlan(amount, months_count);
+    const payload = {
+      employee_id: $("f_employee_id").value,
+      type: $("f_type").value,
+      amount,
+      months_count,
+      monthly_installment: plan[0] || 0,
+      remaining_amount: amount,
+      plan
+    };
+    const ok = row
+      ? await withMutation("تعديل سلفة / دين", `تعديل سلفة / دين ${getEmployeeName(payload.employee_id)}`, ()=>sb.from("loans").update(payload).eq("id", row.id))
+      : await withMutation("إضافة سلفة / دين", `إضافة سلفة / دين ${getEmployeeName(payload.employee_id)}`, ()=>sb.from("loans").insert([payload]));
+    if(ok) App.closeModal();
+  });
+  $("f_employee_id").value = row?.employee_id || "";
+  $("f_type").value = row?.type || "سلفة";
+};
+
+App.deleteLoan = async function(id){
+  const row = state.loans.find(x=>x.id===id);
+  App.openModal("تأكيد الحذف", `<div class="note-box">حذف السلفة / الدين الحالي؟</div>`, async()=>{
+    const ok = await withMutation("حذف سلفة / دين", `حذف سلفة / دين ${getEmployeeName(row?.employee_id)}`, ()=>sb.from("loans").delete().eq("id", id));
+    if(ok){ await addDeleteRequest("loans", getEmployeeName(row?.employee_id)); App.closeModal(); }
+  });
+};
+
+App.openAdjustmentModal = function(id=""){
+  const row = state.adjustments.find(x=>x.id===id);
+  App.openModal(row ? "تعديل إضافة / خصم" : "إضافة إضافة / خصم", App.formShell(`
+    <div class="field"><label>الموظف</label><select id="f_employee_id"><option value="">اختر</option>${selectOptions(state.employees, "id", x=>`${x.employee_no} - ${x.name}`)}</select></div>
+    <div class="field"><label>النوع</label><select id="f_type"><option>إضافة</option><option>خصم</option></select></div>
+    <div class="field"><label>المبلغ</label><input id="f_amount" type="number" value="${esc(row?.amount || 0)}" /></div>
+    <div class="field"><label>الشهر</label><input id="f_month" type="month" value="${esc(row?.month || currentMonthPrefix())}" /></div>
+    <div class="field"><label>ملاحظات</label><textarea id="f_notes">${esc(row?.notes || "")}</textarea></div>
+  `), async()=>{
+    if(!required(["f_employee_id","f_type","f_amount","f_month"])) return;
+    const payload = {
+      employee_id: $("f_employee_id").value,
+      type: $("f_type").value,
+      amount: Number($("f_amount").value || 0),
+      month: $("f_month").value,
+      notes: $("f_notes").value.trim()
+    };
+    const ok = row
+      ? await withMutation("تعديل إضافة / خصم", `تعديل إضافة / خصم ${getEmployeeName(payload.employee_id)}`, ()=>sb.from("adjustments").update(payload).eq("id", row.id))
+      : await withMutation("إضافة إضافة / خصم", `إضافة إضافة / خصم ${getEmployeeName(payload.employee_id)}`, ()=>sb.from("adjustments").insert([payload]));
+    if(ok) App.closeModal();
+  });
+  $("f_employee_id").value = row?.employee_id || "";
+  $("f_type").value = row?.type || "إضافة";
+};
+
+App.deleteAdjustment = async function(id){
+  const row = state.adjustments.find(x=>x.id===id);
+  App.openModal("تأكيد الحذف", `<div class="note-box">حذف هذا السجل؟</div>`, async()=>{
+    const ok = await withMutation("حذف إضافة / خصم", `حذف إضافة / خصم ${getEmployeeName(row?.employee_id)}`, ()=>sb.from("adjustments").delete().eq("id", id));
+    if(ok){ await addDeleteRequest("adjustments", getEmployeeName(row?.employee_id)); App.closeModal(); }
+  });
+};
+
+App.generatePayroll = async function(){
+  renderPayrollTable();
+  await logAction("تحديث الرواتب", "تم تحديث كشف الرواتب");
+  App.notify("تحديث الرواتب", "تم تحديث كشف الرواتب الحالي");
+};
+
+App.approvePayrollMonth = async function(){
+  const month = $("payrollMonth").value || currentMonthPrefix();
+  const rows = buildPayrollRows(month);
+  const existing = state.payrollArchive.find(x=>x.month === month);
+  const ok = existing
+    ? await withMutation("اعتماد رواتب", `تم اعتماد رواتب شهر ${month}`, ()=>sb.from("payroll_archive").update({ rows, created_at: new Date().toISOString() }).eq("id", existing.id))
+    : await withMutation("اعتماد رواتب", `تم اعتماد رواتب شهر ${month}`, ()=>sb.from("payroll_archive").insert([{ month, rows }]));
+  if(ok) App.notify("اعتماد الرواتب", `تم اعتماد رواتب شهر ${month}`);
+};
+
+App.openUserModal = function(id=""){
+  const row = state.users.find(x=>x.id===id);
+  App.openModal(row ? "تعديل مستخدم" : "إضافة مستخدم", App.formShell(`
+    <div class="field"><label>اسم المستخدم</label><input id="f_username" value="${esc(row?.username || "")}" /></div>
+    <div class="field"><label>الاسم الكامل</label><input id="f_full_name" value="${esc(row?.full_name || "")}" /></div>
+    <div class="field"><label>الدور</label><select id="f_role"><option>مدير النظام</option><option>HR</option><option>محاسب</option><option>موظف</option></select></div>
+    <div class="field"><label>الحالة</label><select id="f_status"><option value="active">active</option><option value="inactive">inactive</option></select></div>
+    <div class="field"><label>كلمة المرور ${row ? "(اختياري للتغيير)" : ""}</label><input id="f_password" type="password" /></div>
+  `), async()=>{
+    if(!required(["f_username","f_full_name","f_role","f_status"])) return;
+    const username = $("f_username").value.trim();
+    const fullName = $("f_full_name").value.trim();
+    const role = $("f_role").value;
+    const status = $("f_status").value;
+    const password = $("f_password").value;
+    if(!row && !password){ App.info("أدخل كلمة المرور."); return; }
+
+    let result;
+    if(row){
+      result = await sb.rpc("update_app_user", { p_id: row.id, p_username: username, p_full_name: fullName, p_role: role, p_status: status, p_password: password || null });
+    } else {
+      result = await sb.rpc("create_app_user", { p_username: username, p_full_name: fullName, p_role: role, p_status: status, p_password: password });
+    }
+    if(result.error){ console.error(result.error); App.info("فشل حفظ المستخدم."); return; }
+    await logAction(row ? "تعديل مستخدم" : "إضافة مستخدم", `${row ? "تعديل" : "إضافة"} مستخدم ${username}`);
+    await createCloudBackup(`${row ? "تعديل" : "إضافة"} مستخدم ${username}`);
+    await loadAll();
+    App.closeModal();
+  });
+  $("f_role").value = row?.role || "موظف";
+  $("f_status").value = row?.status || "active";
+};
+
+App.deleteUser = async function(id){
+  const row = state.users.find(x=>x.id===id);
+  if(!row) return;
+  App.openModal("تأكيد الحذف", `<div class="note-box">حذف المستخدم: <strong>${esc(row.username)}</strong> ؟</div>`, async()=>{
+    const ok = await withMutation("حذف مستخدم", `حذف مستخدم ${row.username}`, ()=>sb.from("app_users").delete().eq("id", id));
+    if(ok){ await addDeleteRequest("app_users", row.username); App.closeModal(); }
+  });
+};
+
+App.previewFingerprintImport = async function(){
+  const file = $("fingerprintFile").files[0];
+  if(!file){ App.info("اختر ملفًا أولًا."); return; }
+  const data = await file.arrayBuffer();
+  let rows = [];
+  if(file.name.toLowerCase().endsWith(".csv")){
+    const text = new TextDecoder().decode(data);
+    const workbook = XLSX.read(text, { type:"string" });
+    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+    rows = XLSX.utils.sheet_to_json(sheet, { defval:"" });
+  } else {
+    const workbook = XLSX.read(data);
+    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+    rows = XLSX.utils.sheet_to_json(sheet, { defval:"" });
   }
+  const normalize = (obj, keys)=> {
+    for(const k of Object.keys(obj)){
+      const low = String(k).trim().toLowerCase();
+      if(keys.includes(low)) return obj[k];
+    }
+    return "";
+  };
+  state.fingerprintPreviewRows = rows.map(row=>{
+    const employeeNo = String(normalize(row, ["employee_no","employee no","الرقم الوظيفي","رقم وظيفي","رقم"])).trim();
+    const date = String(normalize(row, ["date","التاريخ"])).trim();
+    const status = String(normalize(row, ["status","الحالة"])).trim() || "حضور";
+    const checkIn = String(normalize(row, ["check_in","check in","وقت الدخول"])).trim();
+    const lateMinutes = Number(normalize(row, ["late_minutes","late","التأخير"]) || 0);
+    const employee = state.employees.find(e=>String(e.employee_no).trim() === employeeNo);
+    return {
+      employeeNo,
+      employeeId: employee?.id || null,
+      date,
+      status,
+      checkIn,
+      lateMinutes,
+      ok: Boolean(employee?.id && date)
+    };
+  });
+  $("fingerprintPreviewTable").innerHTML = state.fingerprintPreviewRows.length ? state.fingerprintPreviewRows.map(r=>`
+    <tr>
+      <td>${esc(r.employeeNo)}</td>
+      <td>${esc(r.date)}</td>
+      <td>${esc(r.status)}</td>
+      <td>${esc(r.checkIn || "-")}</td>
+      <td>${esc(r.lateMinutes || 0)}</td>
+      <td class="${r.ok ? 'preview-ok' : 'preview-bad'}">${r.ok ? "جاهز" : "غير مطابق"}</td>
+    </tr>
+  `).join("") : `<tr><td colspan="6">لا توجد بيانات للمعاينة</td></tr>`;
+};
 
-  renderAll();
-  showSection("dashboard", document.querySelector(".menu-btn.active"));
+App.importFingerprintRows = async function(){
+  if(!state.fingerprintPreviewRows.length){ App.info("قم بالمعاينة أولًا."); return; }
+  const validRows = state.fingerprintPreviewRows.filter(r=>r.ok).map(r=>({
+    employee_id: r.employeeId,
+    date: r.date,
+    status: r.status,
+    check_in: r.checkIn || null,
+    late_minutes: Number(r.lateMinutes || 0),
+    reserve_replacement: false,
+    actual_line_id: null,
+    actual_vehicle_id: null
+  }));
+  if(!validRows.length){ App.info("لا توجد صفوف صالحة للاستيراد."); return; }
+  const ok = await withMutation("استيراد بصمة", `استيراد ${validRows.length} سجل بصمة`, ()=>sb.from("attendance").insert(validRows));
+  if(ok){
+    state.fingerprintPreviewRows = [];
+    $("fingerprintPreviewTable").innerHTML = "";
+    App.info("تم استيراد البصمة بنجاح.");
+  }
+};
+
+App.createBackup = async function(){
+  await createCloudBackup("نسخة يدوية");
+  await logAction("إنشاء نسخة احتياطية", "تم إنشاء نسخة يدوية");
+  await loadAll();
+};
+
+App.downloadBackup = async function(id){
+  const row = state.backups.find(x=>x.id===id);
+  if(!row) return;
+  downloadText(`backup-${row.created_at}.json`, JSON.stringify(row.payload, null, 2), "application/json");
+};
+
+App.exportEmployees = function(){
+  exportCsv("employees.csv", state.employees.map(e=>({
+    employee_no: e.employee_no,
+    name: e.name,
+    department: getDepartmentName(e.department_id),
+    job: getJobName(e.job_id),
+    employee_type: getTypeName(e.employee_type_id),
+    line: getLineName(e.line_id),
+    vehicle: getVehicleName(e.vehicle_id),
+    salary: e.salary,
+    status: e.status
+  })));
+};
+
+App.exportAttendance = function(){
+  exportCsv("attendance.csv", state.attendance.map(r=>({
+    date: r.date,
+    employee_no: getEmployee(r.employee_id)?.employee_no || "",
+    employee_name: getEmployeeName(r.employee_id),
+    status: r.status,
+    check_in: r.check_in || "",
+    late_minutes: r.late_minutes || 0
+  })));
+};
+
+App.exportPayroll = function(){
+  const rows = buildPayrollRows($("payrollMonth").value || currentMonthPrefix());
+  exportCsv("payroll.csv", rows);
+};
+
+function bindStaticEvents(){
+  document.querySelectorAll(".menu-btn").forEach(btn=>{
+    btn.addEventListener("click", ()=>App.showSection(btn.dataset.section, btn));
+  });
+  $("loginBtn").addEventListener("click", login);
+  $("logoutBtn").addEventListener("click", logout);
+  $("darkModeBtn").addEventListener("click", App.toggleDarkMode);
+  $("notifyBtn").addEventListener("click", App.requestBrowserNotifications);
+  $("employeesSearch").addEventListener("input", renderEmployeesTable);
+  $("attendanceSearch").addEventListener("input", renderAttendanceTable);
+  $("attendanceHistorySearch").addEventListener("input", renderAttendanceHistoryTable);
+  $("appModal").addEventListener("click", (e)=>{ if(e.target.id === "appModal") App.closeModal(); });
+  document.addEventListener("keydown", (e)=>{ if(e.key === "Escape") App.closeModal(); });
+}
+
+function initPWA(){
+  if("serviceWorker" in navigator){
+    navigator.serviceWorker.register("service-worker.js").catch(()=>{});
+  }
+  window.addEventListener("beforeinstallprompt", (e)=>{
+    e.preventDefault();
+    state.deferredInstallPrompt = e;
+    $("installBtn").style.display = "inline-block";
+    $("installBtn").onclick = async ()=>{
+      if(!state.deferredInstallPrompt) return;
+      state.deferredInstallPrompt.prompt();
+      await state.deferredInstallPrompt.userChoice;
+      state.deferredInstallPrompt = null;
+      $("installBtn").style.display = "none";
+    };
+  });
+}
+
+async function initApp(){
+  App.applyDarkMode();
+  bindStaticEvents();
   initPWA();
-
+  updateDateTime();
   setInterval(updateDateTime, 1000);
+  $("payrollMonth").value = currentMonthPrefix();
+
+  const restored = await restoreSession();
+  if(restored){
+    await ensureSeeds();
+    await loadAll();
+  }
 }
 
 window.addEventListener("load", initApp);
