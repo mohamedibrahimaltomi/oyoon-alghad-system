@@ -1,10 +1,3 @@
 {
-  "routes": [
-    { "src": "^/login\\.html$", "status": 308, "headers": { "Location": "/login" } },
-    { "src": "^/dashboard\\.html$", "status": 308, "headers": { "Location": "/dashboard" } },
-
-    { "src": "^/$", "dest": "/index.html" },
-    { "src": "^/login$", "dest": "/login.html" },
-    { "src": "^/dashboard$", "dest": "/dashboard.html" }
-  ]
+  "cleanUrls": true
 }
