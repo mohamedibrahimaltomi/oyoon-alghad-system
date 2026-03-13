@@ -1,6 +1,7 @@
 const Auth = {
   async login(username, password) {
     hideMessage("loginError");
+
     if (!username || !password) {
       showMessage("loginError", "يرجى إدخال اسم المستخدم وكلمة المرور.");
       return false;
@@ -25,7 +26,9 @@ const Auth = {
 
       AppState.currentUser = data[0];
       sessionStorage.setItem("oyoon_current_user", JSON.stringify(AppState.currentUser));
-      window.location.href = "dashboard";
+      sessionStorage.setItem("oyoon_login_time", Date.now());
+
+      window.location.href = "/dashboard";
       return true;
     } catch (err) {
       console.error(err);
@@ -37,9 +40,20 @@ const Auth = {
   restoreSession() {
     try {
       const raw = sessionStorage.getItem("oyoon_current_user");
-      if (!raw) return false;
+      const loginTime = sessionStorage.getItem("oyoon_login_time");
+
+      if (!raw || !loginTime) return false;
+
+      const SESSION_LIMIT = 30 * 60 * 1000; // 30 دقيقة
+
+      if (Date.now() - Number(loginTime) > SESSION_LIMIT) {
+        sessionStorage.clear();
+        return false;
+      }
+
       const parsed = JSON.parse(raw);
       if (!parsed || !parsed.username) return false;
+
       AppState.currentUser = parsed;
       return true;
     } catch (err) {
@@ -50,24 +64,48 @@ const Auth = {
 
   requireSession() {
     if (!this.restoreSession()) {
-      window.location.href = "login";
+      window.location.href = "/login";
       return false;
     }
+
     if ($("currentUserBadge")) {
       $("currentUserBadge").textContent = `${AppState.currentUser.full_name} - ${AppState.currentUser.role}`;
     }
+
     return true;
   },
 
   logout() {
     sessionStorage.removeItem("oyoon_current_user");
+    sessionStorage.removeItem("oyoon_login_time");
     AppState.currentUser = null;
-    window.location.href = "login";
+    window.location.href = "/login";
+  },
+
+  refreshSessionActivity() {
+    if (sessionStorage.getItem("oyoon_current_user")) {
+      sessionStorage.setItem("oyoon_login_time", Date.now());
+    }
+  },
+
+  bindSessionActivity() {
+    const events = ["click", "keydown", "mousemove", "scroll", "touchstart"];
+
+    events.forEach((eventName) => {
+      window.addEventListener(
+        eventName,
+        () => {
+          this.refreshSessionActivity();
+        },
+        { passive: true }
+      );
+    });
   },
 
   bindLoginForm() {
     const loginForm = $("loginForm");
     if (!loginForm) return;
+
     loginForm.addEventListener("submit", async (e) => {
       e.preventDefault();
       const username = $("loginUsername")?.value?.trim() || "";
@@ -82,10 +120,12 @@ const Auth = {
 
   bindLoginEnterNavigation() {
     const fields = [$("loginUsername"), $("loginPassword")].filter(Boolean);
+
     fields.forEach((field, index) => {
       field.addEventListener("keydown", (e) => {
         if (e.key !== "Enter") return;
         e.preventDefault();
+
         const nextField = fields[index + 1];
         if (nextField) {
           nextField.focus();
