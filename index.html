@@ -19,7 +19,6 @@
 <div class="app">
 
 <!-- القائمة الجانبية -->
-
 <aside class="sidebar">
 
 <div class="logo">
@@ -33,6 +32,8 @@
 <button onclick="showSection('employees')">الموظفون</button>
 
 <button onclick="showSection('departments')">الأقسام</button>
+
+<button onclick="showSection('employeeTypes')">أنواع الموظفين</button>
 
 <button onclick="showSection('jobs')">الوظائف</button>
 
@@ -66,32 +67,23 @@
 
 </aside>
 
-
 <!-- المحتوى -->
-
 <main class="content">
 
 <header class="topbar">
 
 <div>
-
 <h2 id="pageTitle">لوحة التحكم</h2>
-
 <p id="dateTime"></p>
-
 </div>
 
 <div>
-
 <button onclick="toggleDarkMode()">الوضع الليلي</button>
-
 </div>
 
 </header>
 
-
 <!-- لوحة التحكم -->
-
 <section id="dashboard" class="section active">
 
 <div class="cards">
@@ -142,16 +134,13 @@
 <div class="backupStatus">
 
 <h3>حالة النسخ الاحتياطي</h3>
-
 <p id="backupUsage"></p>
 
 </div>
 
 </section>
 
-
 <!-- الموظفون -->
-
 <section id="employees" class="section">
 
 <h3>الموظفون</h3>
@@ -177,9 +166,85 @@
 
 </section>
 
+<!-- أنواع الموظفين -->
+<section id="employeeTypes" class="section">
+
+<h3>أنواع الموظفين</h3>
+
+<button onclick="addEmployeeType()">إضافة نوع موظف</button>
+
+<table>
+
+<thead>
+<tr>
+<th>الاسم</th>
+<th>طريقة الاحتساب</th>
+<th>الإجراءات</th>
+</tr>
+</thead>
+
+<tbody id="employeeTypesTable"></tbody>
+
+</table>
+
+</section>
+
+<!-- الأقسام -->
+<section id="departments" class="section">
+
+<h3>الأقسام</h3>
+
+<div class="card">
+<p>سيتم ربط هذا القسم في المرحلة التالية من V4</p>
+</div>
+
+</section>
+
+<!-- الوظائف -->
+<section id="jobs" class="section">
+
+<h3>الوظائف</h3>
+
+<div class="card">
+<p>سيتم ربط هذا القسم في المرحلة التالية من V4</p>
+</div>
+
+</section>
+
+<!-- خطوط التوزيع -->
+<section id="lines" class="section">
+
+<h3>خطوط التوزيع</h3>
+
+<div class="card">
+<p>سيتم ربط هذا القسم في المرحلة التالية من V4</p>
+</div>
+
+</section>
+
+<!-- أنواع السيارات -->
+<section id="vehicles" class="section">
+
+<h3>أنواع السيارات</h3>
+
+<div class="card">
+<p>سيتم ربط هذا القسم في المرحلة التالية من V4</p>
+</div>
+
+</section>
+
+<!-- تسعير الخطوط -->
+<section id="pricing" class="section">
+
+<h3>تسعير الخطوط</h3>
+
+<div class="card">
+<p>سيتم ربط هذا القسم في المرحلة التالية من V4</p>
+</div>
+
+</section>
 
 <!-- الحضور -->
-
 <section id="attendance" class="section">
 
 <h3>الحضور</h3>
@@ -187,7 +252,6 @@
 <table>
 
 <thead>
-
 <tr>
 <th>التاريخ</th>
 <th>الموظف</th>
@@ -195,7 +259,6 @@
 <th>الدخول</th>
 <th>التأخير</th>
 </tr>
-
 </thead>
 
 <tbody id="attendanceTable"></tbody>
@@ -204,9 +267,73 @@
 
 </section>
 
+<!-- البصمة -->
+<section id="fingerprint" class="section">
+
+<h3>البصمة</h3>
+
+<div class="card">
+<p>سيتم ربط استيراد Excel في المرحلة التالية من V4</p>
+</div>
+
+</section>
+
+<!-- السلف -->
+<section id="loans" class="section">
+
+<h3>السلف والديون</h3>
+
+<div class="card">
+<p>سيتم ربط هذا القسم في المرحلة التالية من V4</p>
+</div>
+
+</section>
+
+<!-- الإضافات والخصومات -->
+<section id="adjustments" class="section">
+
+<h3>الإضافات والخصومات</h3>
+
+<div class="card">
+<p>سيتم ربط هذا القسم في المرحلة التالية من V4</p>
+</div>
+
+</section>
+
+<!-- الرواتب -->
+<section id="payroll" class="section">
+
+<h3>الرواتب</h3>
+
+<div class="card">
+<p>سيتم تطوير هذا القسم في المرحلة التالية من V4</p>
+</div>
+
+</section>
+
+<!-- طلبات الحذف -->
+<section id="deleteRequests" class="section">
+
+<h3>طلبات الحذف</h3>
+
+<div class="card">
+<p>سيتم ربط هذا القسم في المرحلة التالية من V4</p>
+</div>
+
+</section>
+
+<!-- المستخدمون -->
+<section id="users" class="section">
+
+<h3>المستخدمون</h3>
+
+<div class="card">
+<p>سيتم ربط هذا القسم في المرحلة التالية من V4</p>
+</div>
+
+</section>
 
 <!-- التقارير -->
-
 <section id="reports" class="section">
 
 <h3>التقارير</h3>
@@ -221,9 +348,7 @@
 
 </section>
 
-
 <!-- النسخ الاحتياطية -->
-
 <section id="backups" class="section">
 
 <h3>النسخ الاحتياطية</h3>
@@ -246,6 +371,16 @@
 
 </section>
 
+<!-- الإعدادات -->
+<section id="settings" class="section">
+
+<h3>الإعدادات</h3>
+
+<div class="card">
+<p>سيتم تطوير الإعدادات في المرحلة التالية من V4</p>
+</div>
+
+</section>
 
 </main>
 
