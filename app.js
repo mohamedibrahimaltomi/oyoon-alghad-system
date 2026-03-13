@@ -1,10 +1,11 @@
 /* =========================================
    نظام عيون الغد - app.js
-   نسخة منظمة مبدئية V4
+   نسخة منظمة مبدئية V4 - المرحلة الثانية
 ========================================= */
 
 const STORAGE_KEYS = {
   employees: "oyoon_v4_employees",
+  employeeTypes: "oyoon_v4_employee_types",
   attendance: "oyoon_v4_attendance",
   backups: "oyoon_v4_backups",
   darkMode: "oyoon_v4_dark_mode"
@@ -14,6 +15,7 @@ const BACKUP_LIMIT_MB = 50;
 
 const state = {
   employees: [],
+  employeeTypes: [],
   attendance: [],
   backups: [],
   attendanceChart: null,
@@ -84,14 +86,168 @@ function countWorkDaysInMonth(year, month) {
 }
 
 /* =========================================
+   أنواع الموظفين
+========================================= */
+
+function getEmployeeTypeName(employeeTypeId) {
+  const row = state.employeeTypes.find((t) => t.id === employeeTypeId);
+  return row ? row.name : "غير محدد";
+}
+
+function getEmployeeTypeByName(typeName) {
+  return state.employeeTypes.find((t) => t.name === typeName);
+}
+
+function getPayrollMethodLabel(method) {
+  if (method === "driver_line_vehicle") return "حسب الخط والسيارة";
+  if (method === "reserve_driver") return "احتياط / بدل سائق";
+  return "راتب ثابت";
+}
+
+function renderEmployeeTypesTable() {
+  const tbody = $("employeeTypesTable");
+  if (!tbody) return;
+
+  if (state.employeeTypes.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="3">لا توجد أنواع موظفين</td>
+      </tr>
+    `;
+    return;
+  }
+
+  tbody.innerHTML = state.employeeTypes.map((type) => {
+    return `
+      <tr>
+        <td>${type.name}</td>
+        <td>${getPayrollMethodLabel(type.payrollMethod)}</td>
+        <td>
+          <button onclick="editEmployeeType('${type.id}')">تعديل</button>
+          <button onclick="deleteEmployeeType('${type.id}')">حذف</button>
+        </td>
+      </tr>
+    `;
+  }).join("");
+}
+
+function addEmployeeType() {
+  const name = prompt("اسم نوع الموظف");
+  if (!name) return;
+
+  const payrollMethod = prompt(
+    "طريقة الاحتساب:\nfixed_salary = راتب ثابت\ndriver_line_vehicle = حسب الخط والسيارة\nreserve_driver = احتياط / بدل سائق",
+    "fixed_salary"
+  );
+
+  if (!payrollMethod) return;
+
+  state.employeeTypes.push({
+    id: createId("etype"),
+    name: name.trim(),
+    payrollMethod: payrollMethod.trim()
+  });
+
+  saveToStorage(STORAGE_KEYS.employeeTypes, state.employeeTypes);
+  autoCreateBackup("إضافة نوع موظف");
+  renderEmployeeTypesTable();
+  renderEmployeesTable();
+}
+
+function editEmployeeType(typeId) {
+  const row = state.employeeTypes.find((t) => t.id === typeId);
+  if (!row) return;
+
+  const newName = prompt("اسم نوع الموظف", row.name);
+  if (!newName) return;
+
+  const newMethod = prompt(
+    "طريقة الاحتساب:\nfixed_salary = راتب ثابت\ndriver_line_vehicle = حسب الخط والسيارة\nreserve_driver = احتياط / بدل سائق",
+    row.payrollMethod
+  );
+
+  if (!newMethod) return;
+
+  row.name = newName.trim();
+  row.payrollMethod = newMethod.trim();
+
+  saveToStorage(STORAGE_KEYS.employeeTypes, state.employeeTypes);
+  autoCreateBackup("تعديل نوع موظف");
+  renderEmployeeTypesTable();
+  renderEmployeesTable();
+}
+
+function deleteEmployeeType(typeId) {
+  const row = state.employeeTypes.find((t) => t.id === typeId);
+  if (!row) return;
+
+  const ok = confirm(`هل تريد حذف نوع الموظف: ${row.name} ؟`);
+  if (!ok) return;
+
+  state.employeeTypes = state.employeeTypes.filter((t) => t.id !== typeId);
+
+  state.employees = state.employees.map((employee) => {
+    if (employee.employeeTypeId === typeId) {
+      return {
+        ...employee,
+        employeeTypeId: ""
+      };
+    }
+    return employee;
+  });
+
+  saveToStorage(STORAGE_KEYS.employeeTypes, state.employeeTypes);
+  saveToStorage(STORAGE_KEYS.employees, state.employees);
+  autoCreateBackup("حذف نوع موظف");
+  renderEmployeeTypesTable();
+  renderEmployeesTable();
+  refreshDashboard();
+}
+
+/* =========================================
    تهيئة البيانات
 ========================================= */
 
 function seedDemoData() {
+  const employeeTypes = loadFromStorage(STORAGE_KEYS.employeeTypes);
   const employees = loadFromStorage(STORAGE_KEYS.employees);
   const attendance = loadFromStorage(STORAGE_KEYS.attendance);
 
+  if (employeeTypes.length === 0) {
+    const demoEmployeeTypes = [
+      {
+        id: createId("etype"),
+        name: "سائق",
+        payrollMethod: "driver_line_vehicle"
+      },
+      {
+        id: createId("etype"),
+        name: "سائق احتياط",
+        payrollMethod: "reserve_driver"
+      },
+      {
+        id: createId("etype"),
+        name: "مسوق",
+        payrollMethod: "fixed_salary"
+      },
+      {
+        id: createId("etype"),
+        name: "موظف",
+        payrollMethod: "fixed_salary"
+      }
+    ];
+
+    saveToStorage(STORAGE_KEYS.employeeTypes, demoEmployeeTypes);
+  }
+
+  const loadedTypes = loadFromStorage(STORAGE_KEYS.employeeTypes);
+
   if (employees.length === 0) {
+    const driverType = loadedTypes.find((t) => t.name === "سائق");
+    const reserveType = loadedTypes.find((t) => t.name === "سائق احتياط");
+    const marketerType = loadedTypes.find((t) => t.name === "مسوق");
+    const employeeType = loadedTypes.find((t) => t.name === "موظف");
+
     const demoEmployees = [
       {
         id: createId("emp"),
@@ -99,7 +255,7 @@ function seedDemoData() {
         name: "أحمد سالم",
         department: "المبيعات",
         jobTitle: "مسوق",
-        type: "عادي",
+        employeeTypeId: marketerType ? marketerType.id : "",
         salary: 1800
       },
       {
@@ -108,7 +264,7 @@ function seedDemoData() {
         name: "محمد علي",
         department: "الحركة",
         jobTitle: "سائق",
-        type: "سائق",
+        employeeTypeId: driverType ? driverType.id : "",
         salary: 2200
       },
       {
@@ -117,7 +273,7 @@ function seedDemoData() {
         name: "خالد محمود",
         department: "الحركة",
         jobTitle: "سائق احتياط",
-        type: "سائق احتياط",
+        employeeTypeId: reserveType ? reserveType.id : "",
         salary: 1600
       },
       {
@@ -125,8 +281,8 @@ function seedDemoData() {
         employeeNo: "1004",
         name: "يوسف إبراهيم",
         department: "الإدارة",
-        jobTitle: "مشرف",
-        type: "عادي",
+        jobTitle: "موظف إداري",
+        employeeTypeId: employeeType ? employeeType.id : "",
         salary: 2500
       }
     ];
@@ -182,6 +338,7 @@ function seedDemoData() {
 
 function loadState() {
   state.employees = safeArray(loadFromStorage(STORAGE_KEYS.employees));
+  state.employeeTypes = safeArray(loadFromStorage(STORAGE_KEYS.employeeTypes));
   state.attendance = safeArray(loadFromStorage(STORAGE_KEYS.attendance));
   state.backups = safeArray(loadFromStorage(STORAGE_KEYS.backups));
 }
@@ -203,6 +360,7 @@ function showSection(sectionId) {
   const titles = {
     dashboard: "لوحة التحكم",
     employees: "الموظفون",
+    employeeTypes: "أنواع الموظفين",
     departments: "الأقسام",
     jobs: "الوظائف",
     lines: "خطوط التوزيع",
@@ -275,7 +433,7 @@ function renderEmployeesTable() {
         <td>${employee.name || ""}</td>
         <td>${employee.department || ""}</td>
         <td>${employee.jobTitle || ""}</td>
-        <td>${employee.type || ""}</td>
+        <td>${getEmployeeTypeName(employee.employeeTypeId)}</td>
         <td>${Number(employee.salary || 0).toFixed(2)}</td>
       </tr>
     `;
@@ -291,7 +449,11 @@ function openEmployeeForm() {
 
   const department = prompt("القسم", "المبيعات") || "";
   const jobTitle = prompt("الوظيفة", "موظف") || "";
-  const type = prompt("نوع الموظف: عادي / سائق / سائق احتياط", "عادي") || "عادي";
+
+  const typeNames = state.employeeTypes.map((t) => t.name).join(" / ");
+  const selectedTypeName = prompt(`نوع الموظف: ${typeNames}`, "موظف") || "موظف";
+  const selectedType = getEmployeeTypeByName(selectedTypeName);
+
   const salary = Number(prompt("الراتب", "0") || 0);
 
   state.employees.push({
@@ -300,7 +462,7 @@ function openEmployeeForm() {
     name,
     department,
     jobTitle,
-    type,
+    employeeTypeId: selectedType ? selectedType.id : "",
     salary
   });
 
@@ -377,7 +539,7 @@ function exportEmployees() {
     الاسم: e.name,
     القسم: e.department,
     الوظيفة: e.jobTitle,
-    النوع: e.type,
+    النوع: getEmployeeTypeName(e.employeeTypeId),
     الراتب: e.salary
   }));
 
@@ -431,6 +593,7 @@ function getRemainingBackupMB() {
 
 function buildBackupSnapshot(reason = "نسخة احتياطية") {
   return {
+    employeeTypes: state.employeeTypes,
     employees: state.employees,
     attendance: state.attendance,
     reason
@@ -710,13 +873,29 @@ function buildPayrollRows() {
       row.status === "غياب"
     ).length;
 
-    const deservedSalary = workDays > 0
-      ? (Number(employee.salary || 0) / workDays) * presentDays
-      : 0;
+    const employeeType = state.employeeTypes.find(
+      (t) => t.id === employee.employeeTypeId
+    );
+
+    let deservedSalary = 0;
+
+    if (employeeType?.payrollMethod === "driver_line_vehicle") {
+      deservedSalary = workDays > 0
+        ? (Number(employee.salary || 0) / workDays) * presentDays
+        : 0;
+    } else if (employeeType?.payrollMethod === "reserve_driver") {
+      deservedSalary = workDays > 0
+        ? (Number(employee.salary || 0) / workDays) * presentDays
+        : 0;
+    } else {
+      deservedSalary = workDays > 0
+        ? (Number(employee.salary || 0) / workDays) * presentDays
+        : 0;
+    }
 
     return {
       name: employee.name,
-      type: employee.type,
+      type: getEmployeeTypeName(employee.employeeTypeId),
       workDays,
       presentDays,
       absentDays,
@@ -738,6 +917,7 @@ function refreshDashboard() {
 }
 
 function renderAll() {
+  renderEmployeeTypesTable();
   renderEmployeesTable();
   renderAttendanceTable();
   renderBackupsTable();
