@@ -25,7 +25,7 @@ const Auth = {
 
       AppState.currentUser = data[0];
       sessionStorage.setItem("oyoon_current_user", JSON.stringify(AppState.currentUser));
-      window.location.href = "dashboard.html";
+      window.location.href = "dashboard";
       return true;
     } catch (err) {
       console.error(err);
@@ -50,7 +50,7 @@ const Auth = {
 
   requireSession() {
     if (!this.restoreSession()) {
-      window.location.href = "login.html";
+      window.location.href = "login";
       return false;
     }
     if ($("currentUserBadge")) {
@@ -62,7 +62,7 @@ const Auth = {
   logout() {
     sessionStorage.removeItem("oyoon_current_user");
     AppState.currentUser = null;
-    window.location.href = "login.html";
+    window.location.href = "login";
   },
 
   bindLoginForm() {
