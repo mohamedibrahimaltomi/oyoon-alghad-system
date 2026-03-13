@@ -1,393 +1,478 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
-
 <head>
-
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>شركة عيون الغد - نظام إدارة الموارد والمرتبات</title>
-
-<link rel="stylesheet" href="style.css">
-
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>شركة عيون الغد - نظام إدارة الموارد والمرتبات V4</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
-
 <body>
-
-<div class="app">
-
-<!-- القائمة الجانبية -->
-<aside class="sidebar">
-
-<div class="logo">
-<h2>عيون الغد</h2>
-</div>
-
-<nav>
-
-<button onclick="showSection('dashboard')">لوحة التحكم</button>
-
-<button onclick="showSection('employees')">الموظفون</button>
-
-<button onclick="showSection('departments')">الأقسام</button>
-
-<button onclick="showSection('employeeTypes')">أنواع الموظفين</button>
-
-<button onclick="showSection('jobs')">الوظائف</button>
-
-<button onclick="showSection('lines')">خطوط التوزيع</button>
-
-<button onclick="showSection('vehicles')">أنواع السيارات</button>
-
-<button onclick="showSection('pricing')">تسعير الخطوط</button>
-
-<button onclick="showSection('attendance')">الحضور</button>
-
-<button onclick="showSection('fingerprint')">البصمة</button>
-
-<button onclick="showSection('loans')">السلف والديون</button>
-
-<button onclick="showSection('adjustments')">الإضافات والخصومات</button>
-
-<button onclick="showSection('payroll')">الرواتب</button>
-
-<button onclick="showSection('deleteRequests')">طلبات الحذف</button>
-
-<button onclick="showSection('users')">المستخدمون</button>
-
-<button onclick="showSection('reports')">التقارير</button>
-
-<button onclick="showSection('backups')">النسخ الاحتياطية</button>
-
-<button onclick="showSection('settings')">الإعدادات</button>
-
-</nav>
-
-</aside>
-
-<!-- المحتوى -->
-<main class="content">
-
-<header class="topbar">
-
-<div>
-<h2 id="pageTitle">لوحة التحكم</h2>
-<p id="dateTime"></p>
-</div>
-
-<div>
-<button onclick="toggleDarkMode()">الوضع الليلي</button>
-</div>
-
-</header>
-
-<!-- لوحة التحكم -->
-<section id="dashboard" class="section active">
-
-<div class="cards">
-
-<div class="card">
-<h3>عدد الموظفين</h3>
-<p id="employeesCount">0</p>
-</div>
-
-<div class="card">
-<h3>الحضور اليوم</h3>
-<p id="todayAttendance">0</p>
-</div>
-
-<div class="card">
-<h3>الغياب اليوم</h3>
-<p id="todayAbsence">0</p>
-</div>
-
-<div class="card">
-<h3>التأخير اليوم</h3>
-<p id="todayLate">0</p>
-</div>
-
-</div>
-
-<div class="charts">
-
-<canvas id="attendanceChart"></canvas>
-
-<canvas id="departmentChart"></canvas>
-
-</div>
-
-<div class="topEmployees">
-
-<h3>الأكثر حضورًا</h3>
-<ul id="topAttendance"></ul>
-
-<h3>الأكثر غيابًا</h3>
-<ul id="topAbsence"></ul>
-
-<h3>الأكثر تأخيرًا</h3>
-<ul id="topLate"></ul>
-
-</div>
-
-<div class="backupStatus">
-
-<h3>حالة النسخ الاحتياطي</h3>
-<p id="backupUsage"></p>
-
-</div>
-
-</section>
-
-<!-- الموظفون -->
-<section id="employees" class="section">
-
-<h3>الموظفون</h3>
-
-<button onclick="openEmployeeForm()">إضافة موظف</button>
-
-<table>
-
-<thead>
-<tr>
-<th>الرقم الوظيفي</th>
-<th>الاسم</th>
-<th>القسم</th>
-<th>الوظيفة</th>
-<th>النوع</th>
-<th>الراتب</th>
-</tr>
-</thead>
-
-<tbody id="employeesTable"></tbody>
-
-</table>
-
-</section>
-
-<!-- أنواع الموظفين -->
-<section id="employeeTypes" class="section">
-
-<h3>أنواع الموظفين</h3>
-
-<button onclick="addEmployeeType()">إضافة نوع موظف</button>
-
-<table>
-
-<thead>
-<tr>
-<th>الاسم</th>
-<th>طريقة الاحتساب</th>
-<th>الإجراءات</th>
-</tr>
-</thead>
-
-<tbody id="employeeTypesTable"></tbody>
-
-</table>
-
-</section>
-
-<!-- الأقسام -->
-<section id="departments" class="section">
-
-<h3>الأقسام</h3>
-
-<div class="card">
-<p>سيتم ربط هذا القسم في المرحلة التالية من V4</p>
-</div>
-
-</section>
-
-<!-- الوظائف -->
-<section id="jobs" class="section">
-
-<h3>الوظائف</h3>
-
-<div class="card">
-<p>سيتم ربط هذا القسم في المرحلة التالية من V4</p>
-</div>
-
-</section>
-
-<!-- خطوط التوزيع -->
-<section id="lines" class="section">
-
-<h3>خطوط التوزيع</h3>
-
-<div class="card">
-<p>سيتم ربط هذا القسم في المرحلة التالية من V4</p>
-</div>
-
-</section>
-
-<!-- أنواع السيارات -->
-<section id="vehicles" class="section">
-
-<h3>أنواع السيارات</h3>
-
-<div class="card">
-<p>سيتم ربط هذا القسم في المرحلة التالية من V4</p>
-</div>
-
-</section>
-
-<!-- تسعير الخطوط -->
-<section id="pricing" class="section">
-
-<h3>تسعير الخطوط</h3>
-
-<div class="card">
-<p>سيتم ربط هذا القسم في المرحلة التالية من V4</p>
-</div>
-
-</section>
-
-<!-- الحضور -->
-<section id="attendance" class="section">
-
-<h3>الحضور</h3>
-
-<table>
-
-<thead>
-<tr>
-<th>التاريخ</th>
-<th>الموظف</th>
-<th>الحالة</th>
-<th>الدخول</th>
-<th>التأخير</th>
-</tr>
-</thead>
-
-<tbody id="attendanceTable"></tbody>
-
-</table>
-
-</section>
-
-<!-- البصمة -->
-<section id="fingerprint" class="section">
-
-<h3>البصمة</h3>
-
-<div class="card">
-<p>سيتم ربط استيراد Excel في المرحلة التالية من V4</p>
-</div>
-
-</section>
-
-<!-- السلف -->
-<section id="loans" class="section">
-
-<h3>السلف والديون</h3>
-
-<div class="card">
-<p>سيتم ربط هذا القسم في المرحلة التالية من V4</p>
-</div>
-
-</section>
-
-<!-- الإضافات والخصومات -->
-<section id="adjustments" class="section">
-
-<h3>الإضافات والخصومات</h3>
-
-<div class="card">
-<p>سيتم ربط هذا القسم في المرحلة التالية من V4</p>
-</div>
-
-</section>
-
-<!-- الرواتب -->
-<section id="payroll" class="section">
-
-<h3>الرواتب</h3>
-
-<div class="card">
-<p>سيتم تطوير هذا القسم في المرحلة التالية من V4</p>
-</div>
-
-</section>
-
-<!-- طلبات الحذف -->
-<section id="deleteRequests" class="section">
-
-<h3>طلبات الحذف</h3>
-
-<div class="card">
-<p>سيتم ربط هذا القسم في المرحلة التالية من V4</p>
-</div>
-
-</section>
-
-<!-- المستخدمون -->
-<section id="users" class="section">
-
-<h3>المستخدمون</h3>
-
-<div class="card">
-<p>سيتم ربط هذا القسم في المرحلة التالية من V4</p>
-</div>
-
-</section>
-
-<!-- التقارير -->
-<section id="reports" class="section">
-
-<h3>التقارير</h3>
-
-<button onclick="exportEmployees()">تصدير الموظفين Excel</button>
-
-<button onclick="exportAttendance()">تصدير الحضور Excel</button>
-
-<button onclick="exportPayroll()">تصدير الرواتب Excel</button>
-
-<button onclick="exportPayrollPDF()">تصدير الرواتب PDF</button>
-
-</section>
-
-<!-- النسخ الاحتياطية -->
-<section id="backups" class="section">
-
-<h3>النسخ الاحتياطية</h3>
-
-<button onclick="createBackup()">إنشاء نسخة احتياطية</button>
-
-<table>
-
-<thead>
-<tr>
-<th>التاريخ</th>
-<th>الحجم</th>
-<th>تحميل</th>
-</tr>
-</thead>
-
-<tbody id="backupsTable"></tbody>
-
-</table>
-
-</section>
-
-<!-- الإعدادات -->
-<section id="settings" class="section">
-
-<h3>الإعدادات</h3>
-
-<div class="card">
-<p>سيتم تطوير الإعدادات في المرحلة التالية من V4</p>
-</div>
-
-</section>
-
-</main>
-
-</div>
-
-<script src="app.js"></script>
-
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-title">عيون الغد</div>
+        <div class="brand-subtitle">نظام الموارد والمرتبات</div>
+      </div>
+
+      <nav class="menu">
+        <button class="menu-btn active" onclick="showSection('dashboard', this)">لوحة التحكم</button>
+        <button class="menu-btn" onclick="showSection('employees', this)">الموظفون</button>
+        <button class="menu-btn" onclick="showSection('employeeTypes', this)">أنواع الموظفين</button>
+        <button class="menu-btn" onclick="showSection('departments', this)">الأقسام</button>
+        <button class="menu-btn" onclick="showSection('jobs', this)">الوظائف</button>
+        <button class="menu-btn" onclick="showSection('lines', this)">خطوط التوزيع</button>
+        <button class="menu-btn" onclick="showSection('vehicles', this)">أنواع السيارات</button>
+        <button class="menu-btn" onclick="showSection('pricing', this)">تسعير الخطوط</button>
+        <button class="menu-btn" onclick="showSection('attendance', this)">الحضور</button>
+        <button class="menu-btn" onclick="showSection('fingerprint', this)">البصمة / Excel</button>
+        <button class="menu-btn" onclick="showSection('loans', this)">السلف والديون</button>
+        <button class="menu-btn" onclick="showSection('adjustments', this)">الإضافات والخصومات</button>
+        <button class="menu-btn" onclick="showSection('payroll', this)">الرواتب</button>
+        <button class="menu-btn" onclick="showSection('deleteRequests', this)">طلبات الحذف</button>
+        <button class="menu-btn" onclick="showSection('users', this)">المستخدمون</button>
+        <button class="menu-btn" onclick="showSection('reports', this)">التقارير</button>
+        <button class="menu-btn" onclick="showSection('backups', this)">النسخ الاحتياطية</button>
+        <button class="menu-btn" onclick="showSection('settings', this)">الإعدادات</button>
+      </nav>
+    </aside>
+
+    <main class="main-content">
+      <header class="topbar">
+        <div>
+          <h1 id="pageTitle">لوحة التحكم</h1>
+          <div class="muted" id="dateTime"></div>
+        </div>
+        <div class="topbar-actions">
+          <button class="secondary-btn" onclick="toggleDarkMode()">الوضع الليلي</button>
+          <button class="secondary-btn" onclick="requestBrowserNotifications()">تفعيل الإشعارات</button>
+        </div>
+      </header>
+
+      <!-- Dashboard -->
+      <section id="dashboard" class="section active">
+        <div class="cards-grid">
+          <div class="stat-card clickable" onclick="showSection('employees');">
+            <div class="stat-label">عدد الموظفين</div>
+            <div class="stat-value" id="employeesCount">0</div>
+          </div>
+          <div class="stat-card clickable" onclick="showSection('attendance');">
+            <div class="stat-label">الحضور اليوم</div>
+            <div class="stat-value" id="todayAttendance">0</div>
+          </div>
+          <div class="stat-card clickable" onclick="showSection('attendance');">
+            <div class="stat-label">الغياب اليوم</div>
+            <div class="stat-value" id="todayAbsence">0</div>
+          </div>
+          <div class="stat-card clickable" onclick="showSection('attendance');">
+            <div class="stat-label">التأخير اليوم</div>
+            <div class="stat-value" id="todayLate">0</div>
+          </div>
+          <div class="stat-card clickable" onclick="showSection('loans');">
+            <div class="stat-label">السلف الجارية</div>
+            <div class="stat-value" id="activeLoansCount">0</div>
+          </div>
+          <div class="stat-card clickable" onclick="showSection('deleteRequests');">
+            <div class="stat-label">طلبات الحذف المعلقة</div>
+            <div class="stat-value" id="pendingDeletesCount">0</div>
+          </div>
+        </div>
+
+        <div class="dashboard-grid">
+          <div class="panel">
+            <h3>الرسوم البيانية</h3>
+            <div class="chart-box"><canvas id="attendanceChart"></canvas></div>
+          </div>
+          <div class="panel">
+            <h3>الموظفون حسب القسم</h3>
+            <div class="chart-box"><canvas id="departmentChart"></canvas></div>
+          </div>
+        </div>
+
+        <div class="dashboard-grid">
+          <div class="panel">
+            <h3>الأكثر حضورًا</h3>
+            <ul class="rank-list" id="topAttendance"></ul>
+          </div>
+          <div class="panel">
+            <h3>الأكثر غيابًا</h3>
+            <ul class="rank-list" id="topAbsence"></ul>
+          </div>
+          <div class="panel">
+            <h3>الأكثر تأخيرًا</h3>
+            <ul class="rank-list" id="topLate"></ul>
+          </div>
+        </div>
+
+        <div class="dashboard-grid">
+          <div class="panel">
+            <h3>التنبيهات</h3>
+            <div id="dashboardAlerts" class="alerts-list"></div>
+          </div>
+          <div class="panel">
+            <h3>ملخص النسخ الاحتياطية</h3>
+            <div id="backupUsage" class="backup-summary"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Employees -->
+      <section id="employees" class="section">
+        <div class="section-head">
+          <h2>الموظفون</h2>
+          <div class="actions-row">
+            <button onclick="openEmployeeForm()">إضافة موظف</button>
+            <button class="secondary-btn" onclick="exportEmployees()">Excel</button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>الرقم الوظيفي</th>
+                <th>الاسم</th>
+                <th>القسم</th>
+                <th>الوظيفة</th>
+                <th>النوع</th>
+                <th>الخط</th>
+                <th>السيارة</th>
+                <th>الراتب/المرجع</th>
+                <th>إجراءات</th>
+              </tr>
+            </thead>
+            <tbody id="employeesTable"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Employee Types -->
+      <section id="employeeTypes" class="section">
+        <div class="section-head">
+          <h2>أنواع الموظفين</h2>
+          <button onclick="addEmployeeType()">إضافة نوع</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>الاسم</th>
+                <th>طريقة الاحتساب</th>
+                <th>إجراءات</th>
+              </tr>
+            </thead>
+            <tbody id="employeeTypesTable"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Departments -->
+      <section id="departments" class="section">
+        <div class="section-head">
+          <h2>الأقسام</h2>
+          <button onclick="addDepartment()">إضافة قسم</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>اسم القسم</th>
+                <th>إجراءات</th>
+              </tr>
+            </thead>
+            <tbody id="departmentsTable"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Jobs -->
+      <section id="jobs" class="section">
+        <div class="section-head">
+          <h2>الوظائف</h2>
+          <button onclick="addJob()">إضافة وظيفة</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>القسم</th>
+                <th>اسم الوظيفة</th>
+                <th>إجراءات</th>
+              </tr>
+            </thead>
+            <tbody id="jobsTable"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Lines -->
+      <section id="lines" class="section">
+        <div class="section-head">
+          <h2>خطوط التوزيع</h2>
+          <button onclick="addLine()">إضافة خط</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>اسم الخط</th>
+                <th>إجراءات</th>
+              </tr>
+            </thead>
+            <tbody id="linesTable"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Vehicles -->
+      <section id="vehicles" class="section">
+        <div class="section-head">
+          <h2>أنواع السيارات</h2>
+          <button onclick="addVehicle()">إضافة نوع</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>اسم النوع</th>
+                <th>إجراءات</th>
+              </tr>
+            </thead>
+            <tbody id="vehiclesTable"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Pricing -->
+      <section id="pricing" class="section">
+        <div class="section-head">
+          <h2>تسعير الخطوط حسب السيارة</h2>
+          <button onclick="addPricing()">إضافة تسعيرة</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>الخط</th>
+                <th>السيارة</th>
+                <th>القيمة الشهرية</th>
+                <th>إجراءات</th>
+              </tr>
+            </thead>
+            <tbody id="pricingTable"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Attendance -->
+      <section id="attendance" class="section">
+        <div class="section-head">
+          <h2>الحضور</h2>
+          <div class="actions-row">
+            <button onclick="addAttendance()">إضافة سجل حضور</button>
+            <button class="secondary-btn" onclick="exportAttendance()">Excel</button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>التاريخ</th>
+                <th>الموظف</th>
+                <th>الحالة</th>
+                <th>الدخول</th>
+                <th>التأخير</th>
+                <th>بدل سائق؟</th>
+                <th>الخط الفعلي</th>
+                <th>السيارة الفعلية</th>
+                <th>إجراءات</th>
+              </tr>
+            </thead>
+            <tbody id="attendanceTable"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Fingerprint -->
+      <section id="fingerprint" class="section">
+        <div class="section-head">
+          <h2>البصمة / Excel</h2>
+          <button onclick="importFingerprintPrompt()">استيراد ملف مبسط</button>
+        </div>
+        <div class="panel">
+          <p>في هذه النسخة: الاستيراد مبسط يدويًا. ربط Excel الحقيقي سنضيفه لاحقًا بدون تغيير الهيكل.</p>
+        </div>
+      </section>
+
+      <!-- Loans -->
+      <section id="loans" class="section">
+        <div class="section-head">
+          <h2>السلف والديون</h2>
+          <button onclick="addLoan()">إضافة سلفة / دين</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>الموظف</th>
+                <th>النوع</th>
+                <th>المبلغ</th>
+                <th>الشهور</th>
+                <th>القسط</th>
+                <th>المتبقي</th>
+                <th>الخطة</th>
+                <th>إجراءات</th>
+              </tr>
+            </thead>
+            <tbody id="loansTable"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Adjustments -->
+      <section id="adjustments" class="section">
+        <div class="section-head">
+          <h2>الإضافات والخصومات</h2>
+          <button onclick="addAdjustment()">إضافة سجل</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>الموظف</th>
+                <th>النوع</th>
+                <th>المبلغ</th>
+                <th>الشهر</th>
+                <th>ملاحظات</th>
+                <th>إجراءات</th>
+              </tr>
+            </thead>
+            <tbody id="adjustmentsTable"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Payroll -->
+      <section id="payroll" class="section">
+        <div class="section-head">
+          <h2>الرواتب</h2>
+          <div class="actions-row">
+            <button onclick="generatePayroll()">تحديث كشف الرواتب</button>
+            <button class="secondary-btn" onclick="exportPayroll()">Excel</button>
+            <button class="secondary-btn" onclick="exportPayrollPDF()">PDF / طباعة</button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>الموظف</th>
+                <th>النوع</th>
+                <th>أيام العمل</th>
+                <th>الحضور</th>
+                <th>الغياب</th>
+                <th>المستحق</th>
+                <th>الإضافات</th>
+                <th>خصم السلف</th>
+                <th>الخصومات</th>
+                <th>المرحل</th>
+                <th>الصافي</th>
+              </tr>
+            </thead>
+            <tbody id="payrollTable"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Delete Requests -->
+      <section id="deleteRequests" class="section">
+        <div class="section-head">
+          <h2>طلبات الحذف</h2>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>الجدول</th>
+                <th>العنصر</th>
+                <th>الحالة</th>
+                <th>التاريخ</th>
+              </tr>
+            </thead>
+            <tbody id="deleteRequestsTable"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Users -->
+      <section id="users" class="section">
+        <div class="section-head">
+          <h2>المستخدمون</h2>
+          <button onclick="addUser()">إضافة مستخدم</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>اسم المستخدم</th>
+                <th>الاسم الكامل</th>
+                <th>الدور</th>
+                <th>الحالة</th>
+                <th>إجراءات</th>
+              </tr>
+            </thead>
+            <tbody id="usersTable"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Reports -->
+      <section id="reports" class="section">
+        <div class="section-head">
+          <h2>التقارير</h2>
+        </div>
+        <div class="actions-grid">
+          <button onclick="exportEmployees()">تقرير الموظفين Excel</button>
+          <button onclick="exportAttendance()">تقرير الحضور Excel</button>
+          <button onclick="exportPayroll()">تقرير الرواتب Excel</button>
+          <button onclick="exportPayrollPDF()">تقرير الرواتب PDF</button>
+        </div>
+      </section>
+
+      <!-- Backups -->
+      <section id="backups" class="section">
+        <div class="section-head">
+          <h2>النسخ الاحتياطية</h2>
+          <button onclick="createBackup()">إنشاء نسخة احتياطية</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>التاريخ</th>
+                <th>السبب</th>
+                <th>الحجم</th>
+                <th>تحميل</th>
+              </tr>
+            </thead>
+            <tbody id="backupsTable"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Settings -->
+      <section id="settings" class="section">
+        <div class="section-head">
+          <h2>الإعدادات</h2>
+        </div>
+        <div class="panel">
+          <p>في هذه النسخة: اسم الشركة، الدارك مود، الإشعارات الأساسية، والنسخ الاحتياطي المحلي مفعلة.</p>
+          <p>التاريخ والوقت بالأرقام الإنجليزية + الأيقونات الجانبية مؤجلان كما اتفقنا، وسأذكرك بهما قبل النسخة النهائية.</p>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <script src="app.js"></script>
 </body>
-
 </html>
