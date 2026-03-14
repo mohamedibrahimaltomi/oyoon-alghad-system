@@ -42,10 +42,12 @@ const Payroll = {
     const [year, monthNumber] = month.split("-").map(Number);
     const daysInMonth = new Date(year, monthNumber, 0).getDate();
     let count = 0;
+
     for (let d = 1; d <= daysInMonth; d++) {
       const day = new Date(year, monthNumber - 1, d).getDay();
-      if (day !== 5) count += 1; // الجمعة مستبعدة
+      if (day !== 5) count += 1; // الجمعة فقط مستبعدة
     }
+
     return count;
   },
 
@@ -58,6 +60,20 @@ const Payroll = {
     const start = new Date(year, monthNumber - 1, 1);
     const end = new Date(year, monthNumber, 0);
     return { start, end };
+  },
+
+  getEmployeeAttendanceRows(employeeId, month) {
+    return AppState.attendance.filter(
+      (x) => x.employee_id === employeeId && String(x.date).startsWith(month)
+    );
+  },
+
+  getEmployeeLeaveRows(employeeId, month) {
+    return AppState.leaveRequests.filter(
+      (x) =>
+        x.employee_id === employeeId &&
+        (String(x.from_date).startsWith(month) || String(x.to_date).startsWith(month))
+    );
   },
 
   countLeaveDaysInMonth(employeeId, month) {
@@ -84,20 +100,6 @@ const Payroll = {
     }
 
     return count;
-  },
-
-  getEmployeeAttendanceRows(employeeId, month) {
-    return AppState.attendance.filter(
-      (x) => x.employee_id === employeeId && String(x.date).startsWith(month)
-    );
-  },
-
-  getEmployeeLeaveRows(employeeId, month) {
-    return AppState.leaveRequests.filter(
-      (x) =>
-        x.employee_id === employeeId &&
-        (String(x.from_date).startsWith(month) || String(x.to_date).startsWith(month))
-    );
   },
 
   getPricingValue(lineId, vehicleId) {
@@ -185,6 +187,7 @@ const Payroll = {
       const prev = new Date(rows[i - 1].date);
       const curr = new Date(rows[i].date);
       const diffDays = Math.round((curr - prev) / (1000 * 60 * 60 * 24));
+
       if (diffDays === 1) {
         consecutive += 1;
         if (consecutive >= 2) {
@@ -221,13 +224,17 @@ const Payroll = {
         deservedSalary = workDays > 0 ? (monthlyAmount / workDays) * presentDays : 0;
       } else if (method === "reserve_driver") {
         let total = 0;
+
         for (const row of presentRows) {
           total += this.getDailyBase(employee, month, row);
         }
+
         total += leaveDays * this.getDailyBase(employee, month, null);
         deservedSalary = total;
       } else {
-        deservedSalary = workDays > 0 ? (Number(employee.salary || 0) / workDays) * presentDays : 0;
+        deservedSalary = workDays > 0
+          ? (Number(employee.salary || 0) / workDays) * presentDays
+          : 0;
       }
 
       let lateDeduction = 0;
@@ -236,6 +243,7 @@ const Payroll = {
         .forEach((row) => {
           const rule = this.getLateRule(Number(row.late_minutes || 0));
           const dayBase = this.getDailyBase(employee, month, row);
+
           lateDeduction += rule.mode === "days"
             ? dayBase * Number(rule.value || 0)
             : Number(rule.value || 0);
@@ -256,8 +264,12 @@ const Payroll = {
       const loans = AppState.loans.filter(
         (x) => x.employee_id === employee.id && Number(x.remaining_amount || 0) > 0
       );
+
       const loansDeduction = loans.reduce((sum, x) => {
-        return sum + Math.min(Number(x.monthly_installment || 0), Number(x.remaining_amount || 0));
+        return sum + Math.min(
+          Number(x.monthly_installment || 0),
+          Number(x.remaining_amount || 0)
+        );
       }, 0);
 
       const adjustments = AppState.adjustments.filter(
@@ -286,6 +298,7 @@ const Payroll = {
 
       const monthlyEffects = additions - manualDeductions - loansDeduction;
       const gross = Number(deservedSalary || 0) + Number(additions || 0);
+
       const totalDeductions =
         Number(lateDeduction || 0) +
         Number(repeatDeduction || 0) +
@@ -334,6 +347,7 @@ const Payroll = {
         payrollOverrides: AppState.payrollOverrides,
         settings: AppState.settings
       };
+
       const sizeBytes = new Blob([JSON.stringify(payload)]).size;
 
       await sbInsert(TABLES.backups, [{
