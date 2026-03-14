@@ -149,43 +149,10 @@ const Reports = {
     this.addLog("تصدير الرواتب CSV", month);
   },
 
-  getPayrollRowsForMonth(month) {
-    return Payroll.buildPayrollRows(month);
-  },
-
-  getEmployeePayrollRow(employeeId, month) {
-    return this.getPayrollRowsForMonth(month).find((x) => x.employeeId === employeeId) || null;
-  },
-
-  getEmployeeLoanDeduction(employeeId) {
-    const loans = AppState.loans.filter(
-      (x) => x.employee_id === employeeId && Number(x.remaining_amount || 0) > 0
-    );
-
-    return loans.reduce((sum, x) => {
-      return sum + Math.min(
-        Number(x.monthly_installment || 0),
-        Number(x.remaining_amount || 0)
-      );
-    }, 0);
-  },
-
-  getEmployeeAdditions(employeeId, month) {
-    return AppState.adjustments
-      .filter((x) => x.employee_id === employeeId && x.month === month && x.type === "إضافة")
-      .reduce((sum, x) => sum + Number(x.amount || 0), 0);
-  },
-
-  getEmployeeManualDeductions(employeeId, month) {
-    return AppState.adjustments
-      .filter((x) => x.employee_id === employeeId && x.month === month && x.type === "خصم")
-      .reduce((sum, x) => sum + Number(x.amount || 0), 0);
-  },
-
   async exportPayrollPDF() {
     try {
       const month = $("payrollMonth")?.value || currentMonthValue();
-      const rows = this.getPayrollRowsForMonth(month);
+      const rows = Payroll.buildPayrollRows(month);
 
       if (!rows.length) {
         openInfoModal("تنبيه", "لا توجد رواتب لهذا الشهر.");
@@ -238,6 +205,40 @@ const Reports = {
       console.error(err);
       openInfoModal("خطأ", err.message || "تعذر إنشاء ملف PDF.");
     }
+  },
+
+
+  getPayrollRowsForMonth(month) {
+    return Payroll.buildPayrollRows(month);
+  },
+
+  getEmployeePayrollRow(employeeId, month) {
+    return this.getPayrollRowsForMonth(month).find((x) => x.employeeId === employeeId) || null;
+  },
+
+  getEmployeeLoanDeduction(employeeId) {
+    const loans = AppState.loans.filter(
+      (x) => x.employee_id === employeeId && Number(x.remaining_amount || 0) > 0
+    );
+
+    return loans.reduce((sum, x) => {
+      return sum + Math.min(
+        Number(x.monthly_installment || 0),
+        Number(x.remaining_amount || 0)
+      );
+    }, 0);
+  },
+
+  getEmployeeAdditions(employeeId, month) {
+    return AppState.adjustments
+      .filter((x) => x.employee_id === employeeId && x.month === month && x.type === "إضافة")
+      .reduce((sum, x) => sum + Number(x.amount || 0), 0);
+  },
+
+  getEmployeeManualDeductions(employeeId, month) {
+    return AppState.adjustments
+      .filter((x) => x.employee_id === employeeId && x.month === month && x.type === "خصم")
+      .reduce((sum, x) => sum + Number(x.amount || 0), 0);
   },
 
   async exportPayrollMonthPDF(month = currentMonthValue()) {
