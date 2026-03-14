@@ -138,6 +138,14 @@ const App = {
       const month = $("payrollMonth")?.value || currentMonthValue();
       Reports?.exportPayrollMonthPDF?.(month);
     });
+    $("exportPayrollXlsxBtn")?.addEventListener("click", () => {
+      const month = $("payrollMonth")?.value || currentMonthValue();
+      Reports?.exportPayrollExcel?.(month);
+    });
+    $("printAllPayslipsBtn")?.addEventListener("click", () => {
+      const month = $("payrollMonth")?.value || currentMonthValue();
+      Reports?.exportAllEmployeePaySlips?.(month);
+    });
     $("exportEmployeesCsvBtn")?.addEventListener("click", () => Reports?.exportEmployeesCSV?.());
     $("exportAttendanceCsvBtn")?.addEventListener("click", () => Reports?.exportAttendanceCSV?.());
     $("exportPayrollCsvBtn")?.addEventListener("click", () => Reports?.exportPayrollCSV?.());
