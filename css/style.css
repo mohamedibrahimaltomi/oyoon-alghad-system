@@ -235,3 +235,46 @@ body.light-mode .app-modal-card{background:#fff}
   .sidebar.collapsed .menu-group-toggle{justify-content:flex-start}
   .form-grid{grid-template-columns:1fr}
 }
+
+
+.company-logo{object-fit:contain;background:#fff;border-radius:18px;box-shadow:0 8px 24px rgba(15,23,42,.16);padding:6px}
+.company-logo-sm{width:52px;height:52px}
+.company-logo-md{width:64px;height:64px}
+.company-logo-login{width:110px;height:110px;border-radius:24px;padding:10px}
+.topbar-branding{display:flex;align-items:center;gap:14px}
+.topbar-subtitle{color:var(--muted);font-size:13px;margin-top:4px}
+.smart-stats-grid .stat-card.smart strong{font-size:24px}
+.field-full{grid-column:1/-1}
+.helper-text{display:block;color:var(--muted);font-size:12px;margin-top:6px}
+.branding-actions{display:flex;align-items:flex-end}
+.table-actions{display:flex;gap:6px;justify-content:center;flex-wrap:wrap}
+
+body.light-mode,
+body.light-mode .main-layout,
+body.light-mode .page-section,
+body.light-mode .card,
+body.light-mode .table-card,
+body.light-mode .info-box,
+body.light-mode .alerts-box,
+body.light-mode .stat-card,
+body.light-mode .topbar,
+body.light-mode .app-modal-card,
+body.light-mode .menu-btn,
+body.light-mode .menu-group-toggle,
+body.light-mode .brand-text strong,
+body.light-mode .section-head h3,
+body.light-mode .topbar-left h2,
+body.light-mode td,
+body.light-mode p,
+body.light-mode label,
+body.light-mode strong,
+body.light-mode span,
+body.light-mode button { color: #0f172a; }
+body.light-mode .sidebar{color:#0f172a}
+body.light-mode .brand-text span, body.light-mode .topbar-subtitle, body.light-mode .field label, body.light-mode .helper-text{color:#475569}
+body.light-mode .menu-group-toggle{background:linear-gradient(145deg,#f8fbff,#e0edff)}
+body.light-mode .menu-btn.active, body.light-mode .menu-btn:hover{color:#0f172a}
+body.light-mode .sidebar-search input{background:#fff;color:#0f172a;border-color:#cbd5e1}
+body.light-mode .sidebar-search input::placeholder{color:#64748b}
+body.light-mode th, body.light-mode td{border-bottom:1px solid #dbe3ea}
+body.light-mode .card,body.light-mode .table-card,body.light-mode .info-box,body.light-mode .alerts-box,body.light-mode .stat-card,body.light-mode .topbar{background:#fff}
