@@ -149,10 +149,43 @@ const Reports = {
     this.addLog("تصدير الرواتب CSV", month);
   },
 
+  getPayrollRowsForMonth(month) {
+    return Payroll.buildPayrollRows(month);
+  },
+
+  getEmployeePayrollRow(employeeId, month) {
+    return this.getPayrollRowsForMonth(month).find((x) => x.employeeId === employeeId) || null;
+  },
+
+  getEmployeeLoanDeduction(employeeId) {
+    const loans = AppState.loans.filter(
+      (x) => x.employee_id === employeeId && Number(x.remaining_amount || 0) > 0
+    );
+
+    return loans.reduce((sum, x) => {
+      return sum + Math.min(
+        Number(x.monthly_installment || 0),
+        Number(x.remaining_amount || 0)
+      );
+    }, 0);
+  },
+
+  getEmployeeAdditions(employeeId, month) {
+    return AppState.adjustments
+      .filter((x) => x.employee_id === employeeId && x.month === month && x.type === "إضافة")
+      .reduce((sum, x) => sum + Number(x.amount || 0), 0);
+  },
+
+  getEmployeeManualDeductions(employeeId, month) {
+    return AppState.adjustments
+      .filter((x) => x.employee_id === employeeId && x.month === month && x.type === "خصم")
+      .reduce((sum, x) => sum + Number(x.amount || 0), 0);
+  },
+
   async exportPayrollPDF() {
     try {
       const month = $("payrollMonth")?.value || currentMonthValue();
-      const rows = Payroll.buildPayrollRows(month);
+      const rows = this.getPayrollRowsForMonth(month);
 
       if (!rows.length) {
         openInfoModal("تنبيه", "لا توجد رواتب لهذا الشهر.");
@@ -204,6 +237,116 @@ const Reports = {
     } catch (err) {
       console.error(err);
       openInfoModal("خطأ", err.message || "تعذر إنشاء ملف PDF.");
+    }
+  },
+
+  async exportPayrollMonthPDF(month = currentMonthValue()) {
+    try {
+      const rows = this.getPayrollRowsForMonth(month);
+
+      if (!rows.length) {
+        openInfoModal("تنبيه", "لا توجد بيانات رواتب لهذا الشهر.");
+        return;
+      }
+
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF({ orientation: "landscape" });
+
+      doc.setFontSize(16);
+      doc.text(`Oyoon Alghad Payroll Report - ${month}`, 14, 14);
+
+      const body = rows.map((row) => [
+        row.employeeName,
+        row.employeeType,
+        row.workDays,
+        row.presentDays,
+        row.absentDays,
+        row.deservedSalary,
+        row.lateDeduction,
+        row.repeatDeduction,
+        row.monthlyEffects,
+        row.adminAdjustment,
+        row.net
+      ]);
+
+      doc.autoTable({
+        head: [[
+          "Employee",
+          "Type",
+          "Work Days",
+          "Present",
+          "Absent",
+          "Deserved",
+          "Late Deduction",
+          "Repeat Deduction",
+          "Monthly Effects",
+          "Admin Adjustment",
+          "Net Salary"
+        ]],
+        body,
+        startY: 22,
+        styles: { fontSize: 9 },
+        headStyles: { fillColor: [37, 99, 235] }
+      });
+
+      doc.save(`payroll-report-${month}.pdf`);
+      await this.addLog("تصدير تقرير رواتب الشهر PDF", month);
+    } catch (err) {
+      console.error(err);
+      openInfoModal("خطأ", err.message || "تعذر إنشاء تقرير رواتب الشهر.");
+    }
+  },
+
+  async exportEmployeePaySlipPDF(employeeId, month = currentMonthValue()) {
+    try {
+      const row = this.getEmployeePayrollRow(employeeId, month);
+      const employee = AppState.employees.find((x) => x.id === employeeId);
+
+      if (!row || !employee) {
+        openInfoModal("تنبيه", "تعذر إنشاء كشف الراتب لهذا الموظف.");
+        return;
+      }
+
+      const additions = this.getEmployeeAdditions(employeeId, month);
+      const manualDeductions = this.getEmployeeManualDeductions(employeeId, month);
+      const loanDeduction = this.getEmployeeLoanDeduction(employeeId);
+
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+
+      doc.setFontSize(16);
+      doc.text("Oyoon Alghad - Pay Slip", 14, 16);
+
+      doc.setFontSize(11);
+      const lines = [
+        `Month: ${month}`,
+        `Employee No: ${employee.employee_no || "-"}`,
+        `Employee Name: ${employee.name || "-"}`,
+        `Employee Type: ${row.employeeType || "-"}`,
+        `Work Days: ${row.workDays}`,
+        `Present Days: ${row.presentDays}`,
+        `Absent Days: ${row.absentDays}`,
+        `Deserved Salary: ${row.deservedSalary}`,
+        `Additions: ${additions}`,
+        `Late Deduction: ${row.lateDeduction}`,
+        `Repeat Deduction: ${row.repeatDeduction}`,
+        `Loan Deduction: ${loanDeduction}`,
+        `Manual Deductions: ${manualDeductions}`,
+        `Admin Adjustment: ${row.adminAdjustment}`,
+        `Net Salary: ${row.net}`
+      ];
+
+      let y = 30;
+      lines.forEach((line) => {
+        doc.text(line, 14, y);
+        y += 8;
+      });
+
+      doc.save(`payslip-${employee.employee_no || employee.id}-${month}.pdf`);
+      await this.addLog("تصدير كشف راتب PDF", `${employee.name} - ${month}`);
+    } catch (err) {
+      console.error(err);
+      openInfoModal("خطأ", err.message || "تعذر إنشاء كشف الراتب.");
     }
   },
 
