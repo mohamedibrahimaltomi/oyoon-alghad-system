@@ -4,8 +4,6 @@ const App = {
   init() {
     if (!Auth.requireSession()) return;
 
-    Auth.bindSessionActivity();
-
     this.bindSidebar();
     this.bindTheme();
     this.bindNotifications();
@@ -64,10 +62,7 @@ const App = {
 
     $("darkModeBtn")?.addEventListener("click", () => {
       document.body.classList.toggle("light-mode");
-      localStorage.setItem(
-        "oyoon_theme",
-        document.body.classList.contains("light-mode") ? "light" : "dark"
-      );
+      localStorage.setItem("oyoon_theme", document.body.classList.contains("light-mode") ? "light" : "dark");
     });
   },
 
@@ -78,12 +73,7 @@ const App = {
         return;
       }
       const permission = await Notification.requestPermission();
-      openInfoModal(
-        "الإشعارات",
-        permission === "granted"
-          ? "تم تفعيل الإشعارات بنجاح."
-          : "لم يتم تفعيل الإشعارات."
-      );
+      openInfoModal("الإشعارات", permission === "granted" ? "تم تفعيل الإشعارات بنجاح." : "لم يتم تفعيل الإشعارات.");
     });
   },
 
@@ -104,15 +94,9 @@ const App = {
       });
     });
 
-    $("employeesSearch")?.addEventListener("input", () =>
-      Employees?.renderEmployeesTable?.()
-    );
-    $("attendanceSearch")?.addEventListener("input", () =>
-      Attendance?.renderAttendanceTable?.()
-    );
-    $("attendanceHistorySearch")?.addEventListener("input", () =>
-      Attendance?.renderAttendanceHistoryTable?.()
-    );
+    $("employeesSearch")?.addEventListener("input", () => Employees?.renderEmployeesTable?.());
+    $("attendanceSearch")?.addEventListener("input", () => Attendance?.renderAttendanceTable?.());
+    $("attendanceHistorySearch")?.addEventListener("input", () => Attendance?.renderAttendanceHistoryTable?.());
   },
 
   bindSectionButtons() {
@@ -132,6 +116,10 @@ const App = {
     $("refreshPayrollBtn")?.addEventListener("click", () => Payroll?.renderPayrollTable?.());
     $("approvePayrollBtn")?.addEventListener("click", () => Payroll?.approvePayrollMonth?.());
     $("exportPayrollPdfBtn")?.addEventListener("click", () => Reports?.exportPayrollPDF?.());
+    $("exportPayrollMonthPdfBtn")?.addEventListener("click", () => {
+      const month = $("payrollMonth")?.value || currentMonthValue();
+      Reports.exportPayrollMonthPDF(month);
+    });
     $("exportEmployeesCsvBtn")?.addEventListener("click", () => Reports?.exportEmployeesCSV?.());
     $("exportAttendanceCsvBtn")?.addEventListener("click", () => Reports?.exportAttendanceCSV?.());
     $("exportPayrollCsvBtn")?.addEventListener("click", () => Reports?.exportPayrollCSV?.());
@@ -154,10 +142,7 @@ const App = {
       return;
     }
 
-    document.querySelectorAll(".page-section").forEach((section) =>
-      section.classList.remove("active")
-    );
-
+    document.querySelectorAll(".page-section").forEach((section) => section.classList.remove("active"));
     document.querySelectorAll(".menu-btn").forEach((btn) => {
       btn.classList.remove("active");
       if (btn.dataset.section === sectionId) btn.classList.add("active");
@@ -193,16 +178,12 @@ const App = {
   },
 
   bindEnterNavigation(container = document) {
-    const fields = Array.from(
-      container.querySelectorAll("input[data-enter-next], select[data-enter-next], textarea[data-enter-next]")
-    );
-
+    const fields = Array.from(container.querySelectorAll("input[data-enter-next], select[data-enter-next], textarea[data-enter-next]"));
     fields.forEach((field, index) => {
       field.addEventListener("keydown", (e) => {
         if (e.key !== "Enter") return;
         if (field.tagName.toLowerCase() === "textarea") return;
         e.preventDefault();
-
         const next = fields[index + 1];
         if (next) {
           next.focus();
@@ -223,42 +204,28 @@ const App = {
     if ($("todayLate")) $("todayLate").textContent = todayRows.filter((x) => x.status === "تأخير").length;
 
     const alerts = [];
-    if (todayRows.some((x) => x.status === "غياب")) {
-      alerts.push('<div class="alert-item danger">يوجد غياب اليوم</div>');
-    }
-    if (todayRows.some((x) => x.status === "تأخير")) {
-      alerts.push('<div class="alert-item warn">يوجد تأخير اليوم</div>');
-    }
-    if (AppState.deleteRequests.some((x) => x.status === "معلق")) {
-      alerts.push('<div class="alert-item warn">يوجد طلبات حذف معلقة</div>');
-    }
-    if (!alerts.length) {
-      alerts.push('<div class="alert-item success">لا توجد تنبيهات حالياً</div>');
-    }
+    if (todayRows.some((x) => x.status === "غياب")) alerts.push('<div class="alert-item danger">يوجد غياب اليوم</div>');
+    if (todayRows.some((x) => x.status === "تأخير")) alerts.push('<div class="alert-item warn">يوجد تأخير اليوم</div>');
+    if (AppState.deleteRequests.some((x) => x.status === "معلق")) alerts.push('<div class="alert-item warn">يوجد طلبات حذف معلقة</div>');
+    if (!alerts.length) alerts.push('<div class="alert-item success">لا توجد تنبيهات حالياً</div>');
     if ($("dashboardAlerts")) $("dashboardAlerts").innerHTML = alerts.join("");
 
     if ($("attendanceChart") && typeof Chart !== "undefined") {
       if (AppState.attendanceChart) AppState.attendanceChart.destroy();
-
       AppState.attendanceChart = new Chart($("attendanceChart"), {
         type: "bar",
         data: {
           labels: ["حضور", "غياب", "تأخير"],
-          datasets: [
-            {
-              label: "إحصائيات اليوم",
-              data: [
-                todayRows.filter((x) => x.status === "حضور").length,
-                todayRows.filter((x) => x.status === "غياب").length,
-                todayRows.filter((x) => x.status === "تأخير").length
-              ]
-            }
-          ]
+          datasets: [{
+            label: "إحصائيات اليوم",
+            data: [
+              todayRows.filter((x) => x.status === "حضور").length,
+              todayRows.filter((x) => x.status === "غياب").length,
+              todayRows.filter((x) => x.status === "تأخير").length
+            ]
+          }]
         },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false
-        }
+        options: { responsive: true, maintainAspectRatio: false }
       });
     }
   },
