@@ -19,6 +19,10 @@ const Reports = {
     return AppState.vehicles.find((x) => x.id === id)?.name || "-";
   },
 
+  getLogo() {
+    return window.Branding?.getLogo?.() || "assets/logo/company-default.png";
+  },
+
   async addLog(action, details = "") {
     try {
       await sbInsert(TABLES.logs, [{
@@ -149,65 +153,6 @@ const Reports = {
     this.addLog("تصدير الرواتب CSV", month);
   },
 
-  async exportPayrollPDF() {
-    try {
-      const month = $("payrollMonth")?.value || currentMonthValue();
-      const rows = Payroll.buildPayrollRows(month);
-
-      if (!rows.length) {
-        openInfoModal("تنبيه", "لا توجد رواتب لهذا الشهر.");
-        return;
-      }
-
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF({ orientation: "landscape" });
-
-      doc.setFontSize(16);
-      doc.text(`Oyoon Alghad Payroll - ${month}`, 14, 14);
-
-      const body = rows.map((row) => [
-        row.employeeName,
-        row.employeeType,
-        row.workDays,
-        row.presentDays,
-        row.absentDays,
-        row.deservedSalary,
-        row.lateDeduction,
-        row.repeatDeduction,
-        row.monthlyEffects,
-        row.adminAdjustment,
-        row.net
-      ]);
-
-      doc.autoTable({
-        head: [[
-          "Employee",
-          "Type",
-          "Work Days",
-          "Present",
-          "Absent",
-          "Deserved",
-          "Late Deduction",
-          "Repeat Deduction",
-          "Monthly Effects",
-          "Admin Adjustment",
-          "Net"
-        ]],
-        body,
-        startY: 22,
-        styles: { fontSize: 9 },
-        headStyles: { fillColor: [37, 99, 235] }
-      });
-
-      doc.save(`payroll-${month}.pdf`);
-      await this.addLog("تصدير رواتب PDF", month);
-    } catch (err) {
-      console.error(err);
-      openInfoModal("خطأ", err.message || "تعذر إنشاء ملف PDF.");
-    }
-  },
-
-
   getPayrollRowsForMonth(month) {
     return Payroll.buildPayrollRows(month);
   },
@@ -220,13 +165,7 @@ const Reports = {
     const loans = AppState.loans.filter(
       (x) => x.employee_id === employeeId && Number(x.remaining_amount || 0) > 0
     );
-
-    return loans.reduce((sum, x) => {
-      return sum + Math.min(
-        Number(x.monthly_installment || 0),
-        Number(x.remaining_amount || 0)
-      );
-    }, 0);
+    return loans.reduce((sum, x) => sum + Math.min(Number(x.monthly_installment || 0), Number(x.remaining_amount || 0)), 0);
   },
 
   getEmployeeAdditions(employeeId, month) {
@@ -241,57 +180,137 @@ const Reports = {
       .reduce((sum, x) => sum + Number(x.amount || 0), 0);
   },
 
+  openPrintWindow(title, bodyHtml) {
+    const logo = this.getLogo();
+    const html = `<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>${title}</title>
+<style>
+body{font-family:Tahoma,Arial,sans-serif;background:#fff;color:#111;padding:24px;direction:rtl}
+.print-shell{max-width:1100px;margin:0 auto}
+.print-head{display:flex;align-items:center;justify-content:space-between;gap:18px;border-bottom:3px solid #16a34a;padding-bottom:14px;margin-bottom:18px}
+.print-brand{display:flex;align-items:center;gap:16px}
+.print-brand img{width:92px;height:92px;object-fit:contain;border-radius:18px;background:#fff;border:1px solid #d1d5db;padding:6px}
+.print-brand h1{margin:0;font-size:30px;color:#166534}
+.print-brand p{margin:6px 0 0;font-size:14px;color:#374151}
+.print-title{font-size:24px;font-weight:700;color:#0f172a;margin-bottom:6px}
+.print-subtitle{color:#475569;font-size:13px}
+.summary-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 18px;margin:18px 0}
+.summary-item{border:1px solid #dbe4ec;border-radius:12px;padding:10px 12px;background:#f8fafc}
+.summary-item strong{display:block;color:#166534;font-size:13px;margin-bottom:4px}
+.table-wrap{margin-top:14px}
+table{width:100%;border-collapse:collapse}
+th,td{border:1px solid #dbe4ec;padding:10px 8px;text-align:center;font-size:13px}
+th{background:#16a34a;color:#fff}
+tr:nth-child(even) td{background:#f8fafc}
+.print-footer{margin-top:24px;display:flex;justify-content:space-between;gap:20px;align-items:flex-end}
+.footer-sign{margin-top:36px;border-top:1px dashed #94a3b8;padding-top:10px;min-width:260px;text-align:center}
+.note{font-size:12px;color:#64748b}
+@media print{body{padding:0}.print-shell{max-width:none}}
+</style>
+</head>
+<body>
+<div class="print-shell">
+${bodyHtml.replaceAll('__LOGO__', logo)}
+</div>
+<script>window.onload=()=>{setTimeout(()=>window.print(),300)};<\/script>
+</body>
+</html>`;
+    const win = window.open("", "_blank");
+    if (!win) {
+      openInfoModal("تنبيه", "يرجى السماح بفتح النوافذ المنبثقة للطباعة.");
+      return;
+    }
+    win.document.open();
+    win.document.write(html);
+    win.document.close();
+  },
+
+  async exportPayrollPDF() {
+    const month = $("payrollMonth")?.value || currentMonthValue();
+    return this.exportPayrollMonthPDF(month);
+  },
+
   async exportPayrollMonthPDF(month = currentMonthValue()) {
     try {
       const rows = this.getPayrollRowsForMonth(month);
-
       if (!rows.length) {
         openInfoModal("تنبيه", "لا توجد بيانات رواتب لهذا الشهر.");
         return;
       }
 
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF({ orientation: "landscape" });
+      const totalNet = rows.reduce((sum, row) => sum + Number(row.net || 0), 0);
+      const totalLate = rows.reduce((sum, row) => sum + Number(row.lateDeduction || 0), 0);
+      const totalRepeat = rows.reduce((sum, row) => sum + Number(row.repeatDeduction || 0), 0);
+      const totalMonthlyEffects = rows.reduce((sum, row) => sum + Number(row.monthlyEffects || 0), 0);
 
-      doc.setFontSize(16);
-      doc.text(`Oyoon Alghad Payroll Report - ${month}`, 14, 14);
+      const bodyRows = rows.map((row) => `
+        <tr>
+          <td>${safeText(row.employeeName)}</td>
+          <td>${safeText(row.employeeType)}</td>
+          <td>${row.workDays}</td>
+          <td>${row.presentDays}</td>
+          <td>${row.absentDays}</td>
+          <td>${formatMoney(row.deservedSalary)}</td>
+          <td>${formatMoney(row.lateDeduction)}</td>
+          <td>${formatMoney(row.repeatDeduction)}</td>
+          <td>${formatMoney(row.monthlyEffects)}</td>
+          <td>${formatMoney(row.adminAdjustment)}</td>
+          <td>${formatMoney(row.net)}</td>
+        </tr>
+      `).join("");
 
-      const body = rows.map((row) => [
-        row.employeeName,
-        row.employeeType,
-        row.workDays,
-        row.presentDays,
-        row.absentDays,
-        row.deservedSalary,
-        row.lateDeduction,
-        row.repeatDeduction,
-        row.monthlyEffects,
-        row.adminAdjustment,
-        row.net
-      ]);
+      const bodyHtml = `
+        <div class="print-head">
+          <div class="print-brand">
+            <img src="__LOGO__" alt="شعار الشركة" />
+            <div>
+              <h1>عيون الغد</h1>
+              <p>نظام إدارة الموارد البشرية</p>
+            </div>
+          </div>
+          <div>
+            <div class="print-title">تقرير رواتب الشهر</div>
+            <div class="print-subtitle">الشهر: ${safeText(month)}</div>
+          </div>
+        </div>
+        <div class="summary-grid">
+          <div class="summary-item"><strong>إجمالي الصافي</strong>${formatMoney(totalNet)}</div>
+          <div class="summary-item"><strong>إجمالي خصم التأخير</strong>${formatMoney(totalLate)}</div>
+          <div class="summary-item"><strong>إجمالي خصم التكرار</strong>${formatMoney(totalRepeat)}</div>
+          <div class="summary-item"><strong>التأثيرات الشهرية</strong>${formatMoney(totalMonthlyEffects)}</div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>الموظف</th>
+                <th>النوع</th>
+                <th>أيام العمل</th>
+                <th>الحضور</th>
+                <th>الغياب</th>
+                <th>المستحق</th>
+                <th>خصم التأخير</th>
+                <th>خصم التكرار</th>
+                <th>التأثيرات الشهرية</th>
+                <th>تعديل إداري</th>
+                <th>الصافي</th>
+              </tr>
+            </thead>
+            <tbody>${bodyRows}</tbody>
+          </table>
+        </div>
+        <div class="print-footer">
+          <div class="note">اعتماد الإدارة - شركة عيون الغد</div>
+          <div class="footer-sign">اعتماد الإدارة</div>
+        </div>
+      `;
 
-      doc.autoTable({
-        head: [[
-          "Employee",
-          "Type",
-          "Work Days",
-          "Present",
-          "Absent",
-          "Deserved",
-          "Late Deduction",
-          "Repeat Deduction",
-          "Monthly Effects",
-          "Admin Adjustment",
-          "Net Salary"
-        ]],
-        body,
-        startY: 22,
-        styles: { fontSize: 9 },
-        headStyles: { fillColor: [37, 99, 235] }
-      });
-
-      doc.save(`payroll-report-${month}.pdf`);
-      await this.addLog("تصدير تقرير رواتب الشهر PDF", month);
+      this.openPrintWindow(`تقرير رواتب ${month}`, bodyHtml);
+      await this.addLog("طباعة تقرير رواتب الشهر", month);
     } catch (err) {
       console.error(err);
       openInfoModal("خطأ", err.message || "تعذر إنشاء تقرير رواتب الشهر.");
@@ -302,7 +321,6 @@ const Reports = {
     try {
       const row = this.getEmployeePayrollRow(employeeId, month);
       const employee = AppState.employees.find((x) => x.id === employeeId);
-
       if (!row || !employee) {
         openInfoModal("تنبيه", "تعذر إنشاء كشف الراتب لهذا الموظف.");
         return;
@@ -311,40 +329,60 @@ const Reports = {
       const additions = this.getEmployeeAdditions(employeeId, month);
       const manualDeductions = this.getEmployeeManualDeductions(employeeId, month);
       const loanDeduction = this.getEmployeeLoanDeduction(employeeId);
+      const dept = this.departmentName(employee.department_id);
+      const line = this.lineName(employee.line_id);
+      const vehicle = this.vehicleName(employee.vehicle_id);
 
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF();
+      const bodyHtml = `
+        <div class="print-head">
+          <div class="print-brand">
+            <img src="__LOGO__" alt="شعار الشركة" />
+            <div>
+              <h1>عيون الغد</h1>
+              <p>نظام إدارة الموارد البشرية</p>
+            </div>
+          </div>
+          <div>
+            <div class="print-title">كشف راتب</div>
+            <div class="print-subtitle">عن شهر ${safeText(month)}</div>
+          </div>
+        </div>
+        <div class="summary-grid">
+          <div class="summary-item"><strong>اسم الموظف</strong>${safeText(employee.name || '-')}</div>
+          <div class="summary-item"><strong>الرقم الوظيفي</strong>${safeText(employee.employee_no || '-')}</div>
+          <div class="summary-item"><strong>القسم</strong>${safeText(dept)}</div>
+          <div class="summary-item"><strong>نوع الموظف</strong>${safeText(row.employeeType)}</div>
+          <div class="summary-item"><strong>الخط</strong>${safeText(line)}</div>
+          <div class="summary-item"><strong>السيارة</strong>${safeText(vehicle)}</div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>البيان</th><th>القيمة</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>أيام العمل</td><td>${row.workDays}</td></tr>
+              <tr><td>أيام الحضور</td><td>${row.presentDays}</td></tr>
+              <tr><td>أيام الغياب</td><td>${row.absentDays}</td></tr>
+              <tr><td>الراتب المستحق</td><td>${formatMoney(row.deservedSalary)}</td></tr>
+              <tr><td>الإضافات</td><td>${formatMoney(additions)}</td></tr>
+              <tr><td>خصم التأخير</td><td>${formatMoney(row.lateDeduction)}</td></tr>
+              <tr><td>خصم التكرار</td><td>${formatMoney(row.repeatDeduction)}</td></tr>
+              <tr><td>خصم السلف والديون</td><td>${formatMoney(loanDeduction)}</td></tr>
+              <tr><td>الخصومات اليدوية</td><td>${formatMoney(manualDeductions)}</td></tr>
+              <tr><td>التعديل الإداري</td><td>${formatMoney(row.adminAdjustment)}</td></tr>
+              <tr><th>صافي الراتب</th><th>${formatMoney(row.net)}</th></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="print-footer">
+          <div class="note">اعتماد الإدارة - شركة عيون الغد</div>
+          <div class="footer-sign">اعتماد الإدارة</div>
+        </div>
+      `;
 
-      doc.setFontSize(16);
-      doc.text("Oyoon Alghad - Pay Slip", 14, 16);
-
-      doc.setFontSize(11);
-      const lines = [
-        `Month: ${month}`,
-        `Employee No: ${employee.employee_no || "-"}`,
-        `Employee Name: ${employee.name || "-"}`,
-        `Employee Type: ${row.employeeType || "-"}`,
-        `Work Days: ${row.workDays}`,
-        `Present Days: ${row.presentDays}`,
-        `Absent Days: ${row.absentDays}`,
-        `Deserved Salary: ${row.deservedSalary}`,
-        `Additions: ${additions}`,
-        `Late Deduction: ${row.lateDeduction}`,
-        `Repeat Deduction: ${row.repeatDeduction}`,
-        `Loan Deduction: ${loanDeduction}`,
-        `Manual Deductions: ${manualDeductions}`,
-        `Admin Adjustment: ${row.adminAdjustment}`,
-        `Net Salary: ${row.net}`
-      ];
-
-      let y = 30;
-      lines.forEach((line) => {
-        doc.text(line, 14, y);
-        y += 8;
-      });
-
-      doc.save(`payslip-${employee.employee_no || employee.id}-${month}.pdf`);
-      await this.addLog("تصدير كشف راتب PDF", `${employee.name} - ${month}`);
+      this.openPrintWindow(`كشف راتب ${employee.name} ${month}`, bodyHtml);
+      await this.addLog("طباعة كشف راتب", `${employee.name} - ${month}`);
     } catch (err) {
       console.error(err);
       openInfoModal("خطأ", err.message || "تعذر إنشاء كشف الراتب.");
@@ -354,7 +392,6 @@ const Reports = {
   renderBackupsTable() {
     const usage = $("backupUsage");
     const tbody = $("backupsTable");
-
     const totalBytes = AppState.backups.reduce((sum, item) => sum + Number(item.size_bytes || 0), 0);
 
     if (usage) {
