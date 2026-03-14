@@ -42,11 +42,24 @@ const Payroll = {
     const [year, monthNumber] = month.split("-").map(Number);
     const daysInMonth = new Date(year, monthNumber, 0).getDate();
     let count = 0;
+
     for (let d = 1; d <= daysInMonth; d++) {
       const day = new Date(year, monthNumber - 1, d).getDay();
-      if (day !== 5) count += 1; // الجمعة مستبعدة
+      if (day !== 5) count += 1; // الجمعة فقط مستبعدة
     }
+
     return count;
+  },
+
+  isWorkDay(dateObj) {
+    return dateObj.getDay() !== 5; // الجمعة عطلة
+  },
+
+  getMonthRange(month) {
+    const [year, monthNumber] = month.split("-").map(Number);
+    const start = new Date(year, monthNumber - 1, 1);
+    const end = new Date(year, monthNumber, 0);
+    return { start, end };
   },
 
   getEmployeeAttendanceRows(employeeId, month) {
@@ -57,8 +70,36 @@ const Payroll = {
 
   getEmployeeLeaveRows(employeeId, month) {
     return AppState.leaveRequests.filter(
-      (x) => x.employee_id === employeeId && String(x.from_date).startsWith(month)
+      (x) =>
+        x.employee_id === employeeId &&
+        (String(x.from_date).startsWith(month) || String(x.to_date).startsWith(month))
     );
+  },
+
+  countLeaveDaysInMonth(employeeId, month) {
+    const leaves = AppState.leaveRequests.filter((x) => x.employee_id === employeeId);
+    const { start, end } = this.getMonthRange(month);
+
+    let count = 0;
+
+    for (const leave of leaves) {
+      const leaveStart = new Date(leave.from_date);
+      const leaveEnd = new Date(leave.to_date);
+
+      const actualStart = leaveStart > start ? leaveStart : start;
+      const actualEnd = leaveEnd < end ? leaveEnd : end;
+
+      if (actualStart > actualEnd) continue;
+
+      const cursor = new Date(actualStart);
+
+      while (cursor <= actualEnd) {
+        if (this.isWorkDay(cursor)) count += 1;
+        cursor.setDate(cursor.getDate() + 1);
+      }
+    }
+
+    return count;
   },
 
   getPricingValue(lineId, vehicleId) {
@@ -146,6 +187,7 @@ const Payroll = {
       const prev = new Date(rows[i - 1].date);
       const curr = new Date(rows[i].date);
       const diffDays = Math.round((curr - prev) / (1000 * 60 * 60 * 24));
+
       if (diffDays === 1) {
         consecutive += 1;
         if (consecutive >= 2) {
@@ -166,14 +208,14 @@ const Payroll = {
     return AppState.employees.map((employee) => {
       const method = this.employeeTypeMethod(employee.employee_type_id);
       const attendanceRows = this.getEmployeeAttendanceRows(employee.id, month);
-      const leaveRows = this.getEmployeeLeaveRows(employee.id, month);
+      const leaveDays = this.countLeaveDaysInMonth(employee.id, month);
 
       const presentRows = attendanceRows.filter((x) =>
         ["حضور", "تأخير", "إجازة"].includes(x.status)
       );
 
-      const presentDays = presentRows.length + leaveRows.length;
-      const absentDays = attendanceRows.filter((x) => x.status === "غياب").length;
+      const presentDays = presentRows.length + leaveDays;
+      const absentDays = Math.max(0, workDays - presentDays);
 
       let deservedSalary = 0;
 
@@ -182,13 +224,17 @@ const Payroll = {
         deservedSalary = workDays > 0 ? (monthlyAmount / workDays) * presentDays : 0;
       } else if (method === "reserve_driver") {
         let total = 0;
+
         for (const row of presentRows) {
           total += this.getDailyBase(employee, month, row);
         }
-        total += leaveRows.length * this.getDailyBase(employee, month, null);
+
+        total += leaveDays * this.getDailyBase(employee, month, null);
         deservedSalary = total;
       } else {
-        deservedSalary = workDays > 0 ? (Number(employee.salary || 0) / workDays) * presentDays : 0;
+        deservedSalary = workDays > 0
+          ? (Number(employee.salary || 0) / workDays) * presentDays
+          : 0;
       }
 
       let lateDeduction = 0;
@@ -197,6 +243,7 @@ const Payroll = {
         .forEach((row) => {
           const rule = this.getLateRule(Number(row.late_minutes || 0));
           const dayBase = this.getDailyBase(employee, month, row);
+
           lateDeduction += rule.mode === "days"
             ? dayBase * Number(rule.value || 0)
             : Number(rule.value || 0);
@@ -217,8 +264,12 @@ const Payroll = {
       const loans = AppState.loans.filter(
         (x) => x.employee_id === employee.id && Number(x.remaining_amount || 0) > 0
       );
+
       const loansDeduction = loans.reduce((sum, x) => {
-        return sum + Math.min(Number(x.monthly_installment || 0), Number(x.remaining_amount || 0));
+        return sum + Math.min(
+          Number(x.monthly_installment || 0),
+          Number(x.remaining_amount || 0)
+        );
       }, 0);
 
       const adjustments = AppState.adjustments.filter(
@@ -247,6 +298,7 @@ const Payroll = {
 
       const monthlyEffects = additions - manualDeductions - loansDeduction;
       const gross = Number(deservedSalary || 0) + Number(additions || 0);
+
       const totalDeductions =
         Number(lateDeduction || 0) +
         Number(repeatDeduction || 0) +
@@ -295,6 +347,7 @@ const Payroll = {
         payrollOverrides: AppState.payrollOverrides,
         settings: AppState.settings
       };
+
       const sizeBytes = new Blob([JSON.stringify(payload)]).size;
 
       await sbInsert(TABLES.backups, [{
@@ -665,6 +718,8 @@ const Payroll = {
       const rows = this.buildPayrollRows(month);
 
       const existing = AppState.payrollArchive.find((x) => x.month === month);
+      const isNewApproval = !existing;
+
       const payload = {
         month,
         rows,
@@ -677,19 +732,29 @@ const Payroll = {
         await sbInsert(TABLES.payrollArchive, [payload]);
       }
 
-      for (const loan of AppState.loans.filter((x) => Number(x.remaining_amount || 0) > 0)) {
-        const installment = Math.min(
-          Number(loan.monthly_installment || 0),
-          Number(loan.remaining_amount || 0)
-        );
-        const remaining = Math.max(0, Number(loan.remaining_amount || 0) - installment);
-        await sbUpdate(TABLES.loans, loan.id, { remaining_amount: remaining });
+      if (isNewApproval) {
+        for (const loan of AppState.loans.filter((x) => Number(x.remaining_amount || 0) > 0)) {
+          const installment = Math.min(
+            Number(loan.monthly_installment || 0),
+            Number(loan.remaining_amount || 0)
+          );
+
+          const remaining = Math.max(
+            0,
+            Number(loan.remaining_amount || 0) - installment
+          );
+
+          await sbUpdate(TABLES.loans, loan.id, {
+            remaining_amount: remaining
+          });
+        }
       }
 
       await this.addLog("اعتماد رواتب شهر", month);
       await loadCoreData();
       await this.saveBackup(`اعتماد رواتب ${month}`);
       App.renderAll();
+
       openInfoModal("تم", `تم اعتماد رواتب شهر ${month} بنجاح.`);
     } catch (err) {
       console.error(err);
