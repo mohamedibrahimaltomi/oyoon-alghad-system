@@ -4,6 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>تسجيل الدخول - عيون الغد</title>
+  <link rel="icon" href="assets/logo/company-default.png" />
+  <link rel="apple-touch-icon" href="assets/logo/company-default.png" />
   <meta name="description" content="تسجيل الدخول إلى نظام عيون الغد" />
   <link rel="manifest" href="manifest.json" />
   <link rel="stylesheet" href="css/style.css" />
@@ -13,12 +15,10 @@
   <section id="loginPage" class="login-page">
     <div class="login-shell">
       <div class="login-brand">
-        <div class="brand-logo-box login-logo-box">
-          <img src="assets/logo/company-default.png" alt="شعار الشركة" class="brand-logo-image" />
-        </div>
+        <img data-company-logo class="company-logo company-logo-login" src="assets/logo/company-default.png" alt="شعار الشركة" />
         <div>
-          <h1>شركة عيون الغد</h1>
-          <p>نظام الموارد البشرية والمرتبات</p>
+          <h1 data-company-name>شركة عيون الغد</h1>
+          <p data-company-subtitle>نظام إدارة الموارد البشرية</p>
         </div>
       </div>
 
@@ -50,6 +50,7 @@
   </section>
 
   <script src="config/supabase.js"></script>
+  <script src="js/branding.js"></script>
   <script src="js/auth.js"></script>
 </body>
 </html>

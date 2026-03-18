@@ -1,9 +1,18 @@
+<script>
+const user = sessionStorage.getItem("oyoon_current_user");
+
+if (!user) {
+  window.location.href = "/login";
+}
+</script>
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>لوحة التحكم - عيون الغد</title>
+  <link rel="icon" href="assets/logo/company-default.png" />
+  <link rel="apple-touch-icon" href="assets/logo/company-default.png" />
   <meta name="description" content="لوحة التحكم لنظام عيون الغد" />
   <link rel="manifest" href="manifest.json" />
   <link rel="stylesheet" href="css/style.css" />
@@ -19,12 +28,10 @@
     <aside class="sidebar">
       <div class="sidebar-top">
         <div class="sidebar-brand">
-          <div class="brand-logo-box header-logo-box">
-            <img src="assets/logo/company-default.png" alt="شعار الشركة" class="brand-logo-image" />
-          </div>
+          <img data-company-logo class="company-logo company-logo-sm" src="assets/logo/company-default.png" alt="شعار الشركة" />
           <div class="brand-text">
             <strong>عيون الغد</strong>
-            <span>نسخة سحابية نهائية</span>
+            <span>نظام إدارة الموارد البشرية</span>
           </div>
         </div>
         <button id="sidebarCollapseBtn" class="icon-btn" title="تصغير القائمة">☰</button>
@@ -41,6 +48,7 @@
           </button>
           <div id="group-dashboard" class="menu-group-items open">
             <button class="menu-btn active" data-section="dashboardSection">لوحة التحكم</button>
+            <button class="menu-btn" data-section="executiveSection">اللوحة التنفيذية</button>
           </div>
         </div>
 
@@ -118,12 +126,16 @@
 
     <main class="main-layout">
       <header class="topbar">
-        <div class="topbar-left">
-          <h2 id="currentSectionTitle">لوحة التحكم</h2>
-          <p id="liveDateTime">--</p>
+        <div class="topbar-left topbar-branding">
+          <img data-company-logo class="company-logo company-logo-md" src="assets/logo/company-default.png" alt="شعار الشركة" />
+          <div>
+            <h2 id="currentSectionTitle">لوحة التحكم</h2>
+            <p class="topbar-subtitle"><span data-company-name>شركة عيون الغد</span> - <span data-company-subtitle>نظام إدارة الموارد البشرية</span></p>
+            <p id="liveDateTime">--</p>
+          </div>
         </div>
 
-        <div class="topbar-right">
+        <div class="topbar-right"><div class="global-search-wrap"><input id="globalSearchInput" class="global-search-input" type="text" placeholder="بحث سريع شامل..." /><div id="globalSearchResults" class="global-search-results"></div></div>
           <span id="currentUserBadge" class="user-badge">-</span>
           <button id="darkModeBtn" class="btn btn-light">الوضع الليلي</button>
           <button id="notifyBtn" class="btn btn-light">الإشعارات</button>
@@ -132,30 +144,66 @@
       </header>
 
       <section id="dashboardSection" class="page-section active">
-        <div class="dashboard-hero card">
-          <div class="dashboard-hero-text">
-            <div class="hero-badge">لوحة التحكم التنفيذية</div>
-            <h3>إدارة الموارد البشرية بشكل أوضح وأسرع</h3>
-            <p>متابعة يومية للحضور والغياب والتأخير والرواتب من شاشة واحدة، بتصميم مريح على الجوال والكمبيوتر.</p>
+        <div class="stats-grid dashboard-hero-stats">
+          <div class="stat-card stat-card-pro">
+            <div class="stat-card-icon">👥</div>
+            <div class="stat-card-body"><span>عدد الموظفين</span><strong id="employeesCount">0</strong></div>
           </div>
-          <div class="dashboard-hero-actions">
-            <button id="heroSearchFocusBtn" class="btn btn-light">بحث سريع</button>
-            <button id="notifyBtnHero" class="btn btn-primary">الإشعارات</button>
+          <div class="stat-card stat-card-pro">
+            <div class="stat-card-icon">✅</div>
+            <div class="stat-card-body"><span>حضور اليوم</span><strong id="todayAttendance">0</strong></div>
+          </div>
+          <div class="stat-card stat-card-pro">
+            <div class="stat-card-icon">🚫</div>
+            <div class="stat-card-body"><span>غياب اليوم</span><strong id="todayAbsence">0</strong></div>
+          </div>
+          <div class="stat-card stat-card-pro">
+            <div class="stat-card-icon">⏱️</div>
+            <div class="stat-card-body"><span>تأخير اليوم</span><strong id="todayLate">0</strong></div>
           </div>
         </div>
-
-        <div class="stats-grid executive-grid">
-          <div class="stat-card stat-card-icon employees-card"><div class="stat-icon">👥</div><span>عدد الموظفين</span><strong id="employeesCount">0</strong></div>
-          <div class="stat-card stat-card-icon attendance-card"><div class="stat-icon">✅</div><span>حضور اليوم</span><strong id="todayAttendance">0</strong></div>
-          <div class="stat-card stat-card-icon late-card"><div class="stat-icon">⏱️</div><span>تأخير اليوم</span><strong id="todayLate">0</strong></div>
-          <div class="stat-card stat-card-icon absence-card"><div class="stat-icon">🚫</div><span>غياب اليوم</span><strong id="todayAbsence">0</strong></div>
-          <div class="stat-card stat-card-icon payroll-card"><div class="stat-icon">💰</div><span>إجمالي الرواتب هذا الشهر</span><strong id="monthPayrollTotal">0.00</strong></div>
-          <div class="stat-card stat-card-icon loans-card"><div class="stat-icon">🧾</div><span>إجمالي السلف المتبقية</span><strong id="remainingLoansTotal">0.00</strong></div>
+        <div class="stats-grid smart-stats-grid">
+          <div class="stat-card stat-card-pro smart"><div class="stat-card-icon">💰</div><div class="stat-card-body"><span>إجمالي الرواتب هذا الشهر</span><strong id="monthPayrollTotal">0</strong></div></div>
+          <div class="stat-card stat-card-pro smart"><div class="stat-card-icon">🧾</div><div class="stat-card-body"><span>عدد الموظفين الحاضرين اليوم</span><strong id="dashboardPresentToday">0</strong></div></div>
+          <div class="stat-card stat-card-pro smart"><div class="stat-card-icon">⏰</div><div class="stat-card-body"><span>المتأخرين اليوم</span><strong id="dashboardLateToday">0</strong></div></div>
+          <div class="stat-card stat-card-pro smart"><div class="stat-card-icon">🏦</div><div class="stat-card-body"><span>إجمالي السلف المتبقية</span><strong id="remainingLoansTotal">0</strong></div></div>
+          <div class="stat-card stat-card-pro smart"><div class="stat-card-icon">🔔</div><div class="stat-card-body"><span>تنبيه الغياب</span><strong id="absenceAlertCount">0</strong></div></div>
         </div>
+        <div class="dashboard-grid dashboard-grid-3">
+          <div class="card"><div class="card-head"><h3>إحصائيات اليوم</h3></div><div class="chart-box"><canvas id="attendanceChart"></canvas></div></div>
+          <div class="card"><div class="card-head"><h3>إجمالي الرواتب لكل شهر</h3></div><div class="chart-box"><canvas id="payrollChart"></canvas></div></div>
+          <div class="card"><div class="card-head"><h3>التنبيهات</h3></div><div id="dashboardAlerts" class="alerts-box"></div></div>
+        </div>
+        <div class="dashboard-grid executive-grid">
+          <div class="card">
+            <div class="card-head"><h3>أكثر الموظفين تأخرًا هذا الشهر</h3></div>
+            <ul id="topLateEmployeesList" class="smart-list"></ul>
+          </div>
+          <div class="card">
+            <div class="card-head"><h3>الموظفون الموقوفون أو غير النشطين</h3></div>
+            <ul id="inactiveEmployeesList" class="smart-list"></ul>
+          </div>
+          <div class="card">
+            <div class="card-head"><h3>التنبيهات التنفيذية</h3></div>
+            <ul id="executiveAlertsList" class="smart-list"></ul>
+          </div>
+        </div>
+      </section>
 
-        <div class="dashboard-grid dashboard-grid-main">
-          <div class="card"><div class="card-head"><h3>إحصائيات اليوم</h3><p>ملخص سريع للحضور والانصراف</p></div><div class="chart-box"><canvas id="attendanceChart"></canvas></div></div>
-          <div class="card"><div class="card-head"><h3>التنبيهات</h3><p>أهم ما يحتاج المراجعة اليوم</p></div><div id="dashboardAlerts" class="alerts-box"></div></div>
+      <section id="executiveSection" class="page-section">
+        <div class="section-head"><h3>اللوحة التنفيذية</h3></div>
+        <div class="stats-grid smart-stats-grid">
+          <div class="stat-card smart"><span>عدد الموظفين</span><strong id="employeesCountExec">0</strong></div>
+          <div class="stat-card smart"><span>إجمالي الرواتب هذا الشهر</span><strong id="monthPayrollTotalExec">0</strong></div>
+          <div class="stat-card smart"><span>الغياب اليومي</span><strong id="todayAbsenceExec">0</strong></div>
+          <div class="stat-card smart"><span>أعلى الخصومات</span><strong id="topDeductionsExec">0</strong></div>
+          <div class="stat-card smart"><span>أكثر المتأخرين</span><strong id="topLateExec">0</strong></div>
+          <div class="stat-card smart"><span>غير النشطين</span><strong id="inactiveExec">0</strong></div>
+        </div>
+        <div class="dashboard-grid executive-grid">
+          <div class="card"><div class="card-head"><h3>أكثر الموظفين تأخرًا</h3></div><ul id="topLateEmployeesListExec" class="smart-list"></ul></div>
+          <div class="card"><div class="card-head"><h3>الموظفون غير النشطين</h3></div><ul id="inactiveEmployeesListExec" class="smart-list"></ul></div>
+          <div class="card"><div class="card-head"><h3>التنبيهات التنفيذية</h3></div><ul id="executiveAlertsListExec" class="smart-list"></ul></div>
         </div>
       </section>
 
@@ -171,16 +219,16 @@
       <section id="attendanceHistorySection" class="page-section"><div class="section-head"><h3>سجل الحضور الشهري</h3><input id="attendanceHistorySearch" type="text" class="search-input" placeholder="ابحث..." /></div><div class="table-card"><table><thead><tr><th>الموظف</th><th>التاريخ</th><th>الحالة</th><th>التأخير</th></tr></thead><tbody id="attendanceHistoryTable"></tbody></table></div></section>
       <section id="leaveSection" class="page-section"><div class="section-head"><h3>الإجازات</h3><button id="addLeaveBtn" class="btn btn-primary">إضافة إجازة</button></div><div class="table-card"><table><thead><tr><th>الموظف</th><th>النوع</th><th>من</th><th>إلى</th><th>ملاحظات</th><th>إجراءات</th></tr></thead><tbody id="leaveTable"></tbody></table></div></section>
       <section id="fingerprintSection" class="page-section"><div class="section-head"><h3>استيراد البصمة Excel / CSV</h3><div class="section-actions"><input type="file" id="fingerprintFile" accept=".xlsx,.xls,.csv" /><button id="previewFingerprintBtn" class="btn btn-light">معاينة</button><button id="importFingerprintBtn" class="btn btn-primary">استيراد</button></div></div><div class="info-box">يتم الاعتماد أولًا على الرقم الوظيفي، ثم يُحسب التأخير تلقائيًا حسب وقت بداية الدوام.</div><div class="table-card"><table><thead><tr><th>الرقم الوظيفي</th><th>التاريخ</th><th>وقت الدخول</th><th>التأخير</th><th>الحالة</th><th>المطابقة</th></tr></thead><tbody id="fingerprintPreviewTable"></tbody></table></div></section>
-      <section id="payrollSection" class="page-section"><div class="section-head"><h3>الرواتب</h3><div class="section-actions"><input id="payrollMonth" type="month" /><button id="refreshPayrollBtn" class="btn btn-light">تحديث الرواتب</button><button id="approvePayrollBtn" class="btn btn-primary">اعتماد الشهر</button><button id="exportPayrollPdfBtn" class="btn btn-danger">PDF الرواتب</button></div></div><div class="info-box">سائق الخط = مرتب الخط ÷ أيام العمل × الحضور. سائق الاحتياط إذا اشتغل بدل خط يُحسب له يوم الخط لذلك اليوم فقط. الموظف العادي = الراتب ÷ أيام العمل × الحضور.</div><div class="table-card"><table><thead><tr><th>الموظف</th><th>النوع</th><th>أيام العمل</th><th>الحضور</th><th>الغياب</th><th>المستحق</th><th>خصم التأخير</th><th>خصم التكرار</th><th>التأثيرات الشهرية</th><th>تعديل إداري</th><th>الصافي</th><th>تحكم</th></tr></thead><tbody id="payrollTable"></tbody></table></div></section>
+      <section id="payrollSection" class="page-section"><div class="section-head"><h3>الرواتب</h3><div class="section-actions"><input id="payrollMonth" type="month" /><button id="refreshPayrollBtn" class="btn btn-light">تحديث الرواتب</button><button id="approvePayrollBtn" class="btn btn-primary">اعتماد الشهر</button><button id="exportPayrollPdfBtn" class="btn btn-danger">تقرير الرواتب</button><button id="exportPayrollMonthPdfBtn" class="btn btn-primary">تقرير رواتب الشهر</button><button id="exportPayrollXlsxBtn" class="btn btn-light">Excel الرواتب</button><button id="printAllPayslipsBtn" class="btn btn-danger">طباعة كل كشوف الرواتب</button></div></div><div class="info-box">سائق الخط = مرتب الخط ÷ أيام العمل × الحضور. سائق الاحتياط إذا اشتغل بدل خط يُحسب له يوم الخط لذلك اليوم فقط. الموظف العادي = الراتب ÷ أيام العمل × الحضور.</div><div class="table-card"><table><thead><tr><th>الموظف</th><th>النوع</th><th>أيام العمل</th><th>الحضور</th><th>الغياب</th><th>المستحق</th><th>خصم التأخير</th><th>خصم التكرار</th><th>التأثيرات الشهرية</th><th>تعديل إداري</th><th>الصافي</th><th>تحكم</th></tr></thead><tbody id="payrollTable"></tbody></table></div></section>
       <section id="payrollArchiveSection" class="page-section"><div class="section-head"><h3>أرشيف الرواتب</h3></div><div class="table-card"><table><thead><tr><th>الشهر</th><th>عدد الموظفين</th><th>إجمالي الصافي</th></tr></thead><tbody id="payrollArchiveTable"></tbody></table></div></section>
       <section id="loansSection" class="page-section"><div class="section-head"><h3>السلف والديون</h3><button id="addLoanBtn" class="btn btn-primary">إضافة</button></div><div class="table-card"><table><thead><tr><th>الموظف</th><th>النوع</th><th>المبلغ</th><th>عدد الأشهر</th><th>القسط</th><th>المتبقي</th><th>إجراءات</th></tr></thead><tbody id="loansTable"></tbody></table></div></section>
       <section id="adjustmentsSection" class="page-section"><div class="section-head"><h3>الإضافات والخصومات</h3><button id="addAdjustmentBtn" class="btn btn-primary">إضافة</button></div><div class="table-card"><table><thead><tr><th>الموظف</th><th>النوع</th><th>المبلغ</th><th>الشهر</th><th>ملاحظات</th><th>إجراءات</th></tr></thead><tbody id="adjustmentsTable"></tbody></table></div></section>
-      <section id="reportsSection" class="page-section"><div class="section-head"><h3>التقارير</h3></div><div class="card"><div class="form-grid"><div class="field"><label for="reportDepartmentFilter">القسم</label><select id="reportDepartmentFilter"></select></div><div class="field"><label for="reportTypeFilter">نوع الموظف</label><select id="reportTypeFilter"></select></div><div class="field"><label for="reportLineFilter">الخط</label><select id="reportLineFilter"></select></div></div><div class="form-actions"><button id="exportEmployeesCsvBtn" class="btn btn-light">تصدير الموظفين CSV</button><button id="exportAttendanceCsvBtn" class="btn btn-light">تصدير الحضور CSV</button><button id="exportPayrollCsvBtn" class="btn btn-primary">تصدير الرواتب CSV</button></div></div></section>
+      <section id="reportsSection" class="page-section"><div class="section-head"><h3>التقارير</h3></div><div class="card"><div class="form-grid"><div class="field"><label for="reportDepartmentFilter">القسم</label><select id="reportDepartmentFilter"></select></div><div class="field"><label for="reportTypeFilter">نوع الموظف</label><select id="reportTypeFilter"></select></div><div class="field"><label for="reportLineFilter">الخط</label><select id="reportLineFilter"></select></div></div><div class="form-actions"><button id="exportEmployeesCsvBtn" class="btn btn-light">تصدير الموظفين Excel</button><button id="exportAttendanceCsvBtn" class="btn btn-light">تصدير الحضور Excel</button><button id="exportPayrollCsvBtn" class="btn btn-primary">تصدير الرواتب Excel</button><button id="exportAttendanceMonthlyBtn" class="btn btn-light">تقرير حضور شهر كامل</button><button id="exportAbsenceReportBtn" class="btn btn-light">تقرير غياب</button><button id="exportLoansReportBtn" class="btn btn-light">تقرير سلف وديون</button><button id="exportEmployeesByDepartmentBtn" class="btn btn-light">تقرير الموظفين حسب القسم</button><button id="exportDriversByLineBtn" class="btn btn-light">تقرير السائقين حسب الخط</button></div></div></section>
       <section id="usersSection" class="page-section"><div class="section-head"><h3>المستخدمون</h3><button id="addUserBtn" class="btn btn-primary">إضافة مستخدم</button></div><div class="table-card"><table><thead><tr><th>اسم المستخدم</th><th>الاسم الكامل</th><th>الدور</th><th>الحالة</th><th>إجراءات</th></tr></thead><tbody id="usersTable"></tbody></table></div></section>
       <section id="deleteRequestsSection" class="page-section"><div class="section-head"><h3>طلبات الحذف</h3></div><div class="table-card"><table><thead><tr><th>الجدول</th><th>العنصر</th><th>الحالة</th><th>الوقت</th></tr></thead><tbody id="deleteRequestsTable"></tbody></table></div></section>
       <section id="logsSection" class="page-section"><div class="section-head"><h3>سجل العمليات</h3></div><div class="table-card"><table><thead><tr><th>الإجراء</th><th>المستخدم</th><th>الوقت</th><th>التفاصيل</th></tr></thead><tbody id="logsTable"></tbody></table></div></section>
-      <section id="backupsSection" class="page-section"><div class="section-head"><h3>النسخ الاحتياطية</h3><button id="createBackupBtn" class="btn btn-primary">إنشاء نسخة</button></div><div id="backupUsage" class="info-box"></div><div class="table-card"><table><thead><tr><th>الوقت</th><th>السبب</th><th>الحجم</th><th>تحميل</th></tr></thead><tbody id="backupsTable"></tbody></table></div></section>
-      <section id="settingsSection" class="page-section"><div class="section-head"><h3>الإعدادات</h3><button id="saveSettingsBtn" class="btn btn-primary">حفظ الإعدادات</button></div><div class="card"><div class="form-grid"><div class="field"><label for="setting_work_start_time">وقت بداية الدوام</label><input id="setting_work_start_time" type="time" /></div><div class="field"><label for="setting_late_1_minutes">حد التأخير 1 بالدقائق</label><input id="setting_late_1_minutes" type="number" /></div><div class="field"><label for="setting_late_1_mode">نوع خصم 1</label><select id="setting_late_1_mode"><option value="days">أيام</option><option value="amount">قيمة</option></select></div><div class="field"><label for="setting_late_1_value">قيمة خصم 1</label><input id="setting_late_1_value" type="number" step="0.01" /></div><div class="field"><label for="setting_late_2_minutes">حد التأخير 2 بالدقائق</label><input id="setting_late_2_minutes" type="number" /></div><div class="field"><label for="setting_late_2_mode">نوع خصم 2</label><select id="setting_late_2_mode"><option value="days">أيام</option><option value="amount">قيمة</option></select></div><div class="field"><label for="setting_late_2_value">قيمة خصم 2</label><input id="setting_late_2_value" type="number" step="0.01" /></div><div class="field"><label for="setting_late_3_minutes">حد التأخير 3 بالدقائق</label><input id="setting_late_3_minutes" type="number" /></div><div class="field"><label for="setting_late_3_mode">نوع خصم 3</label><select id="setting_late_3_mode"><option value="days">أيام</option><option value="amount">قيمة</option></select></div><div class="field"><label for="setting_late_3_value">قيمة خصم 3</label><input id="setting_late_3_value" type="number" step="0.01" /></div><div class="field"><label for="setting_repeat_enabled">تفعيل عقوبة التكرار</label><select id="setting_repeat_enabled"><option value="1">مفعل</option><option value="0">غير مفعل</option></select></div><div class="field"><label for="setting_repeat_mode">نوع عقوبة التكرار</label><select id="setting_repeat_mode"><option value="days">أيام</option><option value="amount">قيمة</option></select></div><div class="field"><label for="setting_repeat_value">قيمة عقوبة التكرار</label><input id="setting_repeat_value" type="number" step="0.01" /></div></div></div></section>
+      <section id="backupsSection" class="page-section"><div class="section-head"><h3>النسخ الاحتياطية</h3><div class="section-actions"><button id="createBackupBtn" class="btn btn-primary">إنشاء نسخة</button><input id="restoreBackupFile" type="file" accept=".json" /><button id="restoreBackupBtn" class="btn btn-light">استرجاع نسخة احتياطية</button></div></div><div id="backupUsage" class="info-box"></div><div class="table-card"><table><thead><tr><th>الوقت</th><th>السبب</th><th>الحجم</th><th>تحميل</th></tr></thead><tbody id="backupsTable"></tbody></table></div></section>
+      <section id="settingsSection" class="page-section"><div class="section-head"><h3>الإعدادات</h3><button id="saveSettingsBtn" class="btn btn-primary">حفظ الإعدادات</button></div><div class="card"><div class="form-grid"><div class="field"><label for="setting_work_start_time">وقت بداية الدوام</label><input id="setting_work_start_time" type="time" /></div><div class="field"><label for="setting_late_1_minutes">حد التأخير 1 بالدقائق</label><input id="setting_late_1_minutes" type="number" /></div><div class="field"><label for="setting_late_1_mode">نوع خصم 1</label><select id="setting_late_1_mode"><option value="days">أيام</option><option value="amount">قيمة</option></select></div><div class="field"><label for="setting_late_1_value">قيمة خصم 1</label><input id="setting_late_1_value" type="number" step="0.01" /></div><div class="field"><label for="setting_late_2_minutes">حد التأخير 2 بالدقائق</label><input id="setting_late_2_minutes" type="number" /></div><div class="field"><label for="setting_late_2_mode">نوع خصم 2</label><select id="setting_late_2_mode"><option value="days">أيام</option><option value="amount">قيمة</option></select></div><div class="field"><label for="setting_late_2_value">قيمة خصم 2</label><input id="setting_late_2_value" type="number" step="0.01" /></div><div class="field"><label for="setting_late_3_minutes">حد التأخير 3 بالدقائق</label><input id="setting_late_3_minutes" type="number" /></div><div class="field"><label for="setting_late_3_mode">نوع خصم 3</label><select id="setting_late_3_mode"><option value="days">أيام</option><option value="amount">قيمة</option></select></div><div class="field"><label for="setting_late_3_value">قيمة خصم 3</label><input id="setting_late_3_value" type="number" step="0.01" /></div><div class="field"><label for="setting_repeat_enabled">تفعيل عقوبة التكرار</label><select id="setting_repeat_enabled"><option value="1">مفعل</option><option value="0">غير مفعل</option></select></div><div class="field"><label for="setting_repeat_mode">نوع عقوبة التكرار</label><select id="setting_repeat_mode"><option value="days">أيام</option><option value="amount">قيمة</option></select></div><div class="field"><label for="setting_repeat_value">قيمة عقوبة التكرار</label><input id="setting_repeat_value" type="number" step="0.01" /></div><div class="field"><label for="companyNameSetting">اسم الشركة</label><input id="companyNameSetting" type="text" /></div><div class="field"><label for="companySubtitleSetting">الوصف</label><input id="companySubtitleSetting" type="text" /></div><div class="field"><label for="companyAddressSetting">العنوان</label><input id="companyAddressSetting" type="text" /></div><div class="field"><label for="companyPhoneSetting">رقم الهاتف</label><input id="companyPhoneSetting" type="text" /></div><div class="field"><label for="companySignatureSetting">توقيع الإدارة</label><input id="companySignatureSetting" type="text" /></div><div class="field"><label for="companySealSetting">الختم</label><input id="companySealSetting" type="text" /></div><div class="field field-full"><label for="brandingLogoFile">شعار الشركة</label><div class="branding-preview-wrap"><img id="brandingLogoPreview" class="branding-preview" src="assets/logo/company-default.png" alt="معاينة الشعار" /><div><input id="brandingLogoFile" type="file" accept="image/*" /><small class="helper-text">اختر صورة للشعار لتظهر في شاشة الدخول، أعلى التطبيق، والتقارير.</small></div></div></div><div class="field field-full branding-actions"><button id="resetBrandingBtn" type="button" class="btn btn-light">إعادة الشعار الافتراضي</button><button id="saveCompanySettingsBtn" type="button" class="btn btn-primary">حفظ إعدادات الشركة</button></div></div></div></section>
     </main>
   </div>
 
@@ -198,13 +246,14 @@
     </div>
   </div>
 
-  <script src="config/supabase.js"></script>
-  <script src="js/auth_split.js"></script>
-  <script src="js/employees.js"></script>
-  <script src="js/drivers.js"></script>
-  <script src="js/attendance.js"></script>
-  <script src="js/payroll.js"></script>
-  <script src="js/reports.js"></script>
-  <script src="js/app_split.js"></script>
+<script src="config/supabase.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/employees.js"></script>
+<script src="js/drivers.js"></script>
+<script src="js/attendance.js"></script>
+<script src="js/payroll.js"></script>
+<script src="js/reports.js"></script>
+<script src="js/branding.js"></script>
+<script src="js/app.js"></script>
 </body>
 </html>
