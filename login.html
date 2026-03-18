@@ -1,30 +1,56 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>تسجيل الدخول - عيون الغد</title>
-<link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>تسجيل الدخول - عيون الغد</title>
+  <link rel="icon" href="assets/logo/company-default.png" />
+  <link rel="apple-touch-icon" href="assets/logo/company-default.png" />
+  <meta name="description" content="تسجيل الدخول إلى نظام عيون الغد" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="stylesheet" href="css/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
+<body>
+  <section id="loginPage" class="login-page">
+    <div class="login-shell">
+      <div class="login-brand">
+        <img data-company-logo class="company-logo company-logo-login" src="assets/logo/company-default.png" alt="شعار الشركة" />
+        <div>
+          <h1 data-company-name>شركة عيون الغد</h1>
+          <p data-company-subtitle>نظام إدارة الموارد البشرية</p>
+        </div>
+      </div>
 
-<body class="login-page">
+      <form id="loginForm" class="login-card">
+        <div class="login-card-head">
+          <h2>تسجيل الدخول</h2>
+          <p>اسم مستخدم + كلمة مرور</p>
+        </div>
 
-<div class="login-container">
+        <div class="form-grid one">
+          <div class="field">
+            <label for="loginUsername">اسم المستخدم</label>
+            <input id="loginUsername" type="text" autocomplete="username" data-enter-next />
+          </div>
 
-    <!-- شعار النظام -->
-    <div class="logo-box">
-        <img src="assets/logo.png" class="logo-img">
+          <div class="field">
+            <label for="loginPassword">كلمة المرور</label>
+            <input id="loginPassword" type="password" autocomplete="current-password" data-enter-next />
+          </div>
+        </div>
+
+        <div class="login-actions">
+          <button id="loginBtn" type="submit" class="btn btn-primary">دخول</button>
+        </div>
+
+        <div id="loginError" class="message-box error hidden"></div>
+      </form>
     </div>
+  </section>
 
-    <h2>تسجيل الدخول</h2>
-
-    <form>
-        <input type="text" placeholder="اسم المستخدم">
-        <input type="password" placeholder="كلمة المرور">
-        <button type="submit">دخول</button>
-    </form>
-
-</div>
-
+  <script src="config/supabase.js"></script>
+  <script src="js/branding.js"></script>
+  <script src="js/auth.js"></script>
 </body>
 </html>
