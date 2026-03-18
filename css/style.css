@@ -306,3 +306,31 @@ body.light-mode .topbar-subtitle, body.light-mode #liveDateTime, body.light-mode
 .print-signature{margin-top:20px;text-align:center;min-width:220px}
 .print-signature .line{border-top:1px solid #0f172a;margin-top:42px;padding-top:8px}
 @media print{body{background:#fff!important}.print-shell{padding:8mm}}
+
+
+/* تحسينات نهائية للوضع الفاتح والهوية */
+.topbar-branding{display:flex;align-items:center;gap:12px}
+.topbar-subtitle{margin-top:4px}
+.company-logo-sm{width:34px;height:34px;padding:4px;border-radius:12px}
+.company-logo-md{display:none}
+.company-logo-login{width:132px;height:132px;max-width:70%;padding:6px;border-radius:18px}
+.table-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.form-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+.smart-stats-grid .stat-card{background:linear-gradient(145deg,rgba(37,99,235,.12),rgba(255,255,255,.04));border:1px solid rgba(96,165,250,.2)}
+body.light-mode .smart-stats-grid .stat-card{background:linear-gradient(145deg,#eff6ff,#ffffff);border-color:#bfdbfe}
+body.light-mode .sidebar{background:linear-gradient(180deg,#f8fbff,#e8f2ff);border-left:1px solid #d6e2f0}
+body.light-mode .menu-group{background:#ffffff;border-color:#dbe3ea}
+body.light-mode .menu-btn{background:transparent;color:#0f172a}
+body.light-mode .menu-btn.active,body.light-mode .menu-btn:hover{background:#dbeafe;color:#0f172a}
+body.light-mode .menu-icon-3d{box-shadow:0 4px 12px rgba(37,99,235,.15), inset 0 2px 6px rgba(255,255,255,.8)}
+body.light-mode .topbar, body.light-mode .card, body.light-mode .table-card, body.light-mode .info-box, body.light-mode .alerts-box, body.light-mode .stat-card, body.light-mode .app-modal-card{background:#ffffff!important;color:#0f172a!important;border-color:#dbe3ea}
+body.light-mode .topbar h2, body.light-mode .section-head h3, body.light-mode .card h3, body.light-mode strong, body.light-mode td, body.light-mode th, body.light-mode span, body.light-mode p, body.light-mode label, body.light-mode .menu-title{color:#0f172a!important}
+body.light-mode .topbar-subtitle, body.light-mode #liveDateTime, body.light-mode .field label, body.light-mode .helper-text{color:#475569!important}
+body.light-mode input, body.light-mode select, body.light-mode textarea{background:#fff!important;color:#0f172a!important;border:1px solid #cbd5e1!important}
+body.light-mode .btn-light{background:#fff;color:#0f172a;border:1px solid #cbd5e1}
+body.light-mode .table-card table tr:nth-child(even) td{background:#f8fbff}
+body.light-mode .table-card table tr:nth-child(odd) td{background:#fff}
+body.light-mode .alert-item.success{background:#dcfce7;color:#166534}
+body.light-mode .alert-item.warn{background:#fef3c7;color:#92400e}
+body.light-mode .alert-item.danger{background:#fee2e2;color:#991b1b}
+@media (max-width:900px){.company-logo-login{width:110px;height:110px}.topbar-branding{align-items:flex-start}}
