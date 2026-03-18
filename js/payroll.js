@@ -422,7 +422,7 @@ const Payroll = {
           <td>
             <div class="table-actions">
               <button class="btn btn-light" onclick="Payroll.openPayrollOverrideModal('${month}', '${row.employeeId}')">تعديل</button>
-              <button class="btn btn-primary" onclick="Reports.exportEmployeePaySlipPDF('${row.employeeId}', '${month}')">كشف راتب</button>
+              <button class="btn btn-primary" onclick="Reports.exportEmployeePaySlipPDF('${row.employeeId}', '${month}')">طباعة كشف راتب</button>
             </div>
           </td>
         </tr>

@@ -121,10 +121,10 @@ const Reports = {
         <meta charset="UTF-8" />
         <title>${safeText(title)}</title>
         <style>
-          @font-face{font-family:'Tajawal';src:url('${this.companyLogo().startsWith("data:") ? "" : "assets/fonts/Tajawal-Regular.ttf"}') format('truetype');font-weight:400}
-          @font-face{font-family:'Tajawal';src:url('${this.companyLogo().startsWith("data:") ? "" : "assets/fonts/Tajawal-Bold.ttf"}') format('truetype');font-weight:700}
+          @font-face{font-family:'Tajawal';src:url('${location.origin}/assets/fonts/Tajawal-Regular.ttf') format('truetype');font-weight:400}
+          @font-face{font-family:'Tajawal';src:url('${location.origin}/assets/fonts/Tajawal-Bold.ttf') format('truetype');font-weight:700}
           body{font-family:'Tajawal',Arial,sans-serif;direction:rtl;margin:0;background:#fff;color:#0f172a}
-          .print-shell{padding:24px}
+          .print-shell{padding:24px}.print-toolbar{display:flex;justify-content:flex-start;margin-bottom:12px}.print-toolbar button{border:none;background:#2563eb;color:#fff;padding:10px 14px;border-radius:10px;font-family:'Tajawal';cursor:pointer}
           .print-head{display:flex;justify-content:space-between;align-items:center;gap:20px;margin-bottom:24px;border-bottom:2px solid #dbeafe;padding-bottom:16px}
           .print-brand{display:flex;align-items:center;gap:14px}
           .print-brand img{width:68px;height:68px;object-fit:contain;border:1px solid #dbeafe;border-radius:12px;padding:6px;background:#fff}
@@ -149,7 +149,7 @@ const Reports = {
         </style>
       </head>
       <body>
-        <div class="print-shell">${bodyHtml}</div>
+        <div class="print-shell"><div class="print-toolbar no-print"><button onclick="window.print()">طباعة</button></div>${bodyHtml}</div>
         <script>
           window.onload = function() {
             setTimeout(function(){ window.print(); }, 350);
@@ -436,6 +436,11 @@ const Reports = {
       console.error(err);
       openInfoModal("خطأ", err.message || "تعذر إنشاء كشف الراتب.");
     }
+  },
+
+
+  exportEmployeePayslip(employeeId, month = currentMonthValue()) {
+    return this.exportEmployeePaySlipPDF(employeeId, month);
   },
 
 
