@@ -645,3 +645,130 @@ body.light-mode .smart-list li{background:#f8fbff !important;border-color:#dbe6f
   .login-card,.login-brand,.topbar,.card,.table-card,.info-box,.alerts-box,.stat-card{border-radius:20px !important;}
   .login-actions .btn-primary{width:100%;}
 }
+
+
+
+/* ==== GLOBAL FIX: LOGO CONTAINER (auto fit) ==== */
+.logo-box,
+.company-logo-login,
+.brand-logo,
+.header-logo,
+.dashboard-logo{
+width:90px;
+height:90px;
+max-width:90px;
+max-height:90px;
+min-width:90px;
+min-height:90px;
+display:flex;
+align-items:center;
+justify-content:center;
+overflow:hidden;
+border-radius:16px;
+background:#ffffff;
+padding:6px;
+box-sizing:border-box;
+}
+
+.logo-box img,
+.company-logo-login img,
+.brand-logo img,
+.header-logo img,
+.dashboard-logo img{
+width:100%;
+height:100%;
+object-fit:contain;
+}
+
+/* mobile */
+@media (max-width:768px){
+.logo-box,
+.company-logo-login,
+.brand-logo,
+.header-logo,
+.dashboard-logo{
+width:70px;
+height:70px;
+max-width:70px;
+max-height:70px;
+}
+}
+
+/* ==== LIGHT MODE COMPLETE FIX ==== */
+.light-mode{
+background:#f3f6fb;
+color:#1f2937;
+}
+
+.light-mode .card,
+.light-mode .box,
+.light-mode .panel{
+background:#ffffff;
+color:#1f2937;
+border:1px solid #e5e7eb;
+box-shadow:0 4px 12px rgba(0,0,0,0.05);
+}
+
+.light-mode .sidebar{
+background:#ffffff;
+border-left:1px solid #e5e7eb;
+}
+
+.light-mode .sidebar a{
+color:#1f2937;
+font-weight:500;
+}
+
+.light-mode input,
+.light-mode select,
+.light-mode textarea{
+background:#ffffff;
+color:#1f2937;
+border:1px solid #d1d5db;
+}
+
+.light-mode table{
+background:#ffffff;
+color:#1f2937;
+}
+
+.light-mode th{
+background:#f1f5f9;
+color:#111827;
+}
+
+.light-mode td{
+border-bottom:1px solid #e5e7eb;
+}
+
+.light-mode button{
+background:#2563eb;
+color:#ffffff;
+}
+
+/* ==== DASHBOARD CARDS ==== */
+.dashboard-stats{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
+gap:14px;
+}
+
+.dashboard-card{
+background:linear-gradient(180deg,#0f172a,#111827);
+border-radius:16px;
+padding:16px;
+color:white;
+display:flex;
+align-items:center;
+gap:10px;
+}
+
+.dashboard-card i{
+font-size:22px;
+}
+
+.light-mode .dashboard-card{
+background:#ffffff;
+color:#111827;
+border:1px solid #e5e7eb;
+}
