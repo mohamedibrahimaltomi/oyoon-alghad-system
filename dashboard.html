@@ -144,18 +144,30 @@ if (!user) {
       </header>
 
       <section id="dashboardSection" class="page-section active">
-        <div class="stats-grid">
-          <div class="stat-card"><span>عدد الموظفين</span><strong id="employeesCount">0</strong></div>
-          <div class="stat-card"><span>حضور اليوم</span><strong id="todayAttendance">0</strong></div>
-          <div class="stat-card"><span>غياب اليوم</span><strong id="todayAbsence">0</strong></div>
-          <div class="stat-card"><span>تأخير اليوم</span><strong id="todayLate">0</strong></div>
+        <div class="stats-grid dashboard-hero-stats">
+          <div class="stat-card stat-card-pro">
+            <div class="stat-card-icon">👥</div>
+            <div class="stat-card-body"><span>عدد الموظفين</span><strong id="employeesCount">0</strong></div>
+          </div>
+          <div class="stat-card stat-card-pro">
+            <div class="stat-card-icon">✅</div>
+            <div class="stat-card-body"><span>حضور اليوم</span><strong id="todayAttendance">0</strong></div>
+          </div>
+          <div class="stat-card stat-card-pro">
+            <div class="stat-card-icon">🚫</div>
+            <div class="stat-card-body"><span>غياب اليوم</span><strong id="todayAbsence">0</strong></div>
+          </div>
+          <div class="stat-card stat-card-pro">
+            <div class="stat-card-icon">⏱️</div>
+            <div class="stat-card-body"><span>تأخير اليوم</span><strong id="todayLate">0</strong></div>
+          </div>
         </div>
         <div class="stats-grid smart-stats-grid">
-          <div class="stat-card smart"><span>إجمالي الرواتب هذا الشهر</span><strong id="monthPayrollTotal">0</strong></div>
-          <div class="stat-card smart"><span>عدد الموظفين الحاضرين اليوم</span><strong id="dashboardPresentToday">0</strong></div>
-          <div class="stat-card smart"><span>المتأخرين اليوم</span><strong id="dashboardLateToday">0</strong></div>
-          <div class="stat-card smart"><span>إجمالي السلف المتبقية</span><strong id="remainingLoansTotal">0</strong></div>
-          <div class="stat-card smart"><span>تنبيه الغياب</span><strong id="absenceAlertCount">0</strong></div>
+          <div class="stat-card stat-card-pro smart"><div class="stat-card-icon">💰</div><div class="stat-card-body"><span>إجمالي الرواتب هذا الشهر</span><strong id="monthPayrollTotal">0</strong></div></div>
+          <div class="stat-card stat-card-pro smart"><div class="stat-card-icon">🧾</div><div class="stat-card-body"><span>عدد الموظفين الحاضرين اليوم</span><strong id="dashboardPresentToday">0</strong></div></div>
+          <div class="stat-card stat-card-pro smart"><div class="stat-card-icon">⏰</div><div class="stat-card-body"><span>المتأخرين اليوم</span><strong id="dashboardLateToday">0</strong></div></div>
+          <div class="stat-card stat-card-pro smart"><div class="stat-card-icon">🏦</div><div class="stat-card-body"><span>إجمالي السلف المتبقية</span><strong id="remainingLoansTotal">0</strong></div></div>
+          <div class="stat-card stat-card-pro smart"><div class="stat-card-icon">🔔</div><div class="stat-card-body"><span>تنبيه الغياب</span><strong id="absenceAlertCount">0</strong></div></div>
         </div>
         <div class="dashboard-grid dashboard-grid-3">
           <div class="card"><div class="card-head"><h3>إحصائيات اليوم</h3></div><div class="chart-box"><canvas id="attendanceChart"></canvas></div></div>
