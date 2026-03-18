@@ -383,3 +383,265 @@ body.light-mode .smart-list li{background:#fff}
   .table-card td{border:none;padding:6px 0;text-align:right}
   .table-card td::before{content:attr(data-label);display:block;color:var(--muted);font-size:12px;margin-bottom:2px}
 }
+
+/* ===== التصميم النهائي: احتواء الشعار + وضع فاتح واضح + لوحة تحكم احترافية ===== */
+.company-logo,
+.company-logo-login,
+.company-logo-md,
+.company-logo-sm,
+.branding-preview{
+  display:block !important;
+  background:#ffffff !important;
+  object-fit:contain !important;
+  object-position:center center !important;
+  overflow:hidden !important;
+  box-shadow:0 10px 22px rgba(15,23,42,.12) !important;
+}
+.company-logo-login{
+  width:104px !important;
+  height:104px !important;
+  min-width:104px !important;
+  min-height:104px !important;
+  max-width:104px !important;
+  max-height:104px !important;
+  border-radius:24px !important;
+  padding:10px !important;
+  margin-inline:auto !important;
+}
+.company-logo-md{
+  width:64px !important;
+  height:64px !important;
+  min-width:64px !important;
+  min-height:64px !important;
+  max-width:64px !important;
+  max-height:64px !important;
+  border-radius:18px !important;
+  padding:6px !important;
+}
+.company-logo-sm{
+  width:46px !important;
+  height:46px !important;
+  min-width:46px !important;
+  min-height:46px !important;
+  max-width:46px !important;
+  max-height:46px !important;
+  border-radius:14px !important;
+  padding:4px !important;
+}
+.company-logo,
+.company-logo-login,
+.company-logo-md,
+.company-logo-sm{aspect-ratio:1/1 !important;}
+
+.login-shell{
+  grid-template-columns:minmax(0,1fr) minmax(340px,430px) !important;
+  gap:24px !important;
+}
+.login-brand{
+  align-items:center !important;
+  justify-content:center !important;
+  min-height:260px;
+}
+.login-brand > div{flex:1; min-width:0;}
+.login-brand h1{font-size:clamp(34px,5vw,52px) !important;line-height:1.15 !important;}
+.login-brand p{font-size:clamp(16px,2.2vw,20px) !important;line-height:1.7 !important;}
+.login-card{
+  border-radius:28px !important;
+  box-shadow:0 20px 45px rgba(2,6,23,.25) !important;
+}
+.login-card-head h2{font-size:clamp(28px,4vw,40px) !important;}
+.login-actions .btn-primary{min-width:110px;min-height:52px;font-size:18px;border-radius:18px;}
+
+.topbar-branding{
+  display:flex !important;
+  align-items:center !important;
+  gap:14px !important;
+}
+.topbar-branding > div{min-width:0;}
+.topbar-branding h2{font-size:clamp(24px,4vw,34px) !important;line-height:1.2 !important;}
+.topbar-subtitle{line-height:1.7 !important;}
+
+body.light-mode{
+  background:#eef4fb !important;
+  color:#0f172a !important;
+}
+body.light-mode .main-layout,
+body.light-mode .page-section{background:transparent !important;color:#0f172a !important;}
+body.light-mode .sidebar{
+  background:linear-gradient(180deg,#ffffff,#edf5ff) !important;
+  border-left:1px solid #dbe6f2 !important;
+  color:#0f172a !important;
+}
+body.light-mode .sidebar-top,
+body.light-mode .menu-group,
+body.light-mode .topbar,
+body.light-mode .card,
+body.light-mode .table-card,
+body.light-mode .info-box,
+body.light-mode .alerts-box,
+body.light-mode .stat-card,
+body.light-mode .app-modal-card{
+  background:#ffffff !important;
+  color:#0f172a !important;
+  border:1px solid #dbe6f2 !important;
+  box-shadow:0 10px 28px rgba(15,23,42,.06) !important;
+}
+body.light-mode .menu-group-toggle{
+  background:linear-gradient(180deg,#f8fbff,#eef5ff) !important;
+  color:#0f172a !important;
+}
+body.light-mode .menu-group-items{background:#ffffff !important;}
+body.light-mode .menu-btn{
+  color:#0f172a !important;
+  background:transparent !important;
+  border:1px solid transparent !important;
+}
+body.light-mode .menu-btn:hover,
+body.light-mode .menu-btn.active{
+  background:#e0ecff !important;
+  color:#0f172a !important;
+  border-color:#bfd4ff !important;
+}
+body.light-mode .brand-text strong,
+body.light-mode .brand-text span,
+body.light-mode .section-head h3,
+body.light-mode .card-head h3,
+body.light-mode .topbar-left h2,
+body.light-mode h1,
+body.light-mode h2,
+body.light-mode h3,
+body.light-mode h4,
+body.light-mode h5,
+body.light-mode h6,
+body.light-mode p,
+body.light-mode span,
+body.light-mode strong,
+body.light-mode label,
+body.light-mode td,
+body.light-mode th,
+body.light-mode button{color:#0f172a !important;}
+body.light-mode .brand-text span,
+body.light-mode .topbar-subtitle,
+body.light-mode #liveDateTime,
+body.light-mode .helper-text,
+body.light-mode .field label{color:#475569 !important;}
+body.light-mode .sidebar-search input,
+body.light-mode .global-search-input,
+body.light-mode input,
+body.light-mode select,
+body.light-mode textarea{
+  background:#ffffff !important;
+  color:#0f172a !important;
+  border:1px solid #c9d7e8 !important;
+}
+body.light-mode .sidebar-search input::placeholder,
+body.light-mode .global-search-input::placeholder,
+body.light-mode input::placeholder{color:#64748b !important;}
+body.light-mode th{
+  background:#edf4ff !important;
+  color:#1d4ed8 !important;
+  border-bottom:1px solid #cfddf0 !important;
+}
+body.light-mode td{
+  background:#ffffff !important;
+  color:#0f172a !important;
+  border-bottom:1px solid #e6edf5 !important;
+}
+body.light-mode .icon-btn{background:#e8eef6 !important;color:#0f172a !important;}
+body.light-mode .btn-light{background:#ffffff !important;color:#0f172a !important;border:1px solid #c9d7e8 !important;}
+body.light-mode .user-badge{background:linear-gradient(145deg,#e0ecff,#bfd7ff) !important;color:#123b86 !important;}
+body.light-mode .login-page{
+  background:linear-gradient(180deg,#eff5fb,#dfeaf7) !important;
+}
+body.light-mode .login-brand{background:#ffffff !important;border:1px solid #dbe6f2 !important;}
+body.light-mode .login-card{background:#ffffff !important;}
+
+.stats-grid{gap:16px !important;}
+.stat-card-pro{
+  display:flex !important;
+  align-items:center !important;
+  gap:14px !important;
+  padding:18px 16px !important;
+  border-radius:22px !important;
+  background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.03));
+}
+body.light-mode .stat-card-pro{
+  background:linear-gradient(180deg,#ffffff,#f8fbff) !important;
+}
+.stat-card-icon{
+  width:56px;
+  height:56px;
+  border-radius:18px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:26px;
+  background:linear-gradient(145deg,#eff6ff,#cfe1ff 48%,#9fc3ff);
+  box-shadow:0 8px 20px rgba(37,99,235,.18);
+  flex:0 0 auto;
+}
+.stat-card-body{display:flex;flex-direction:column;gap:4px;min-width:0;}
+.stat-card-body span{font-size:13px;color:var(--muted);}
+.stat-card-body strong{font-size:30px;line-height:1;font-weight:800;}
+.dashboard-grid-3{grid-template-columns:1.2fr 1fr .9fr !important;}
+.executive-grid{grid-template-columns:repeat(3,minmax(0,1fr)) !important;}
+.smart-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px;}
+.smart-list li{padding:12px 14px;border-radius:16px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.06);}
+body.light-mode .smart-list li{background:#f8fbff !important;border-color:#dbe6f2 !important;color:#0f172a !important;}
+
+.table-card{overflow:auto !important;}
+.table-card table{min-width:900px;}
+.table-actions{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;}
+
+@media (max-width: 980px){
+  .dashboard-grid-3,
+  .executive-grid,
+  .dashboard-grid{grid-template-columns:1fr !important;}
+}
+@media (max-width: 900px){
+  .login-shell{grid-template-columns:1fr !important;}
+  .login-brand{min-height:auto;padding:20px !important;flex-direction:row !important;align-items:center !important;}
+  .topbar{padding:16px !important;}
+  .topbar-branding{width:100%;align-items:center !important;}
+  .topbar-right{width:100%;display:grid !important;grid-template-columns:1fr 1fr;}
+  .global-search-wrap{grid-column:1/-1;}
+}
+@media (max-width: 768px){
+  .sidebar{padding:14px 12px !important;}
+  .menu-group-toggle{padding:13px 14px !important;}
+  .menu-btn{padding:12px 14px !important;font-size:15px !important;}
+  .company-logo-login{
+    width:88px !important;
+    height:88px !important;
+    min-width:88px !important;
+    min-height:88px !important;
+    max-width:88px !important;
+    max-height:88px !important;
+    border-radius:22px !important;
+  }
+  .company-logo-md{
+    width:52px !important;height:52px !important;min-width:52px !important;min-height:52px !important;max-width:52px !important;max-height:52px !important;
+  }
+  .company-logo-sm{
+    width:42px !important;height:42px !important;min-width:42px !important;min-height:42px !important;max-width:42px !important;max-height:42px !important;
+  }
+  .login-brand{gap:14px !important;}
+  .login-brand h1{font-size:34px !important;}
+  .login-brand p{font-size:16px !important;}
+  .topbar-branding h2{font-size:22px !important;}
+  .section-actions{display:grid !important;grid-template-columns:1fr 1fr;gap:8px !important;width:100%;}
+  .section-actions > *{width:100% !important;}
+  .stats-grid{grid-template-columns:1fr 1fr !important;}
+  .stat-card-pro{padding:14px 12px !important;gap:10px !important;}
+  .stat-card-icon{width:48px;height:48px;font-size:22px;border-radius:16px;}
+  .stat-card-body strong{font-size:24px !important;}
+  .table-card{padding:10px !important;}
+  .table-card table{min-width:760px;}
+  .topbar-right{grid-template-columns:1fr !important;}
+}
+@media (max-width: 520px){
+  .stats-grid{grid-template-columns:1fr !important;}
+  .login-page{padding:16px !important;}
+  .login-card,.login-brand,.topbar,.card,.table-card,.info-box,.alerts-box,.stat-card{border-radius:20px !important;}
+  .login-actions .btn-primary{width:100%;}
+}
